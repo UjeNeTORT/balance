@@ -1,0 +1,5 @@
+- variables && class members: PascalCase
+- namespace Balance
+- class methods: camelCase
+- use include guards in headers
+- tab = 4 whitespaces
