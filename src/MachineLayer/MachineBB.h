@@ -28,54 +28,42 @@ class MachineBB {
 
     int LabelIdx = -1; // used for asm printing
 public:
-    MachineBB(MachineFunction *MF, std::string Name = "") : MF(MF), Name(Name), LabelIdx(MF->getNewMBBIdx()) {}
+    MachineBB(MachineFunction *MF, std::string Name = "");
 
-    void insertMI(MachineBB::iterator I, MachineInst *MI) {
-        Instructions.insert(I, MI);
-        MI->getMBB() = this;
-    };
+    void insertMI(MachineBB::iterator I, MachineInst *MI);
 
-    void insertMI(MachineInst *MI) { insertMI(end(), MI); };
+    void insertMI(MachineInst *MI);
 
-    iterator begin() { return Instructions.begin(); }
-    iterator end()   { return Instructions.end(); }
+    iterator begin();
+    iterator end();
 
-    const_iterator begin() const { return Instructions.begin(); }
-    const_iterator end()   const { return Instructions.end(); }
+    const_iterator begin() const;
+    const_iterator end() const;
 
-    int getLabelIdx() const { return LabelIdx; }
-    void setLabelIdx(int LabelIdxNew) { LabelIdx = LabelIdxNew; }
+    int getLabelIdx() const;
+    void setLabelIdx(int LabelIdxNew);
 
-    void addSuccessor(MachineBB *Succ) { Successors.push_back(Succ); }
-    void addPredecessor(MachineBB *Pred) { Predecessors.push_back(Pred); }
+    void addSuccessor(MachineBB *Succ);
+    void addPredecessor(MachineBB *Pred);
 
-    succ_iterator succ_begin() { return Successors.begin(); }
-    succ_iterator succ_end()   { return Successors.end(); }
+    succ_iterator succ_begin();
+    succ_iterator succ_end();
 
-    const_succ_iterator succ_begin() const { return Successors.begin(); }
-    const_succ_iterator succ_end()   const { return Successors.end(); }
+    const_succ_iterator succ_begin() const;
+    const_succ_iterator succ_end() const;
 
-    pred_iterator pred_begin() { return Predecessors.begin(); }
-    pred_iterator pred_end()   { return Predecessors.end(); }
+    pred_iterator pred_begin();
+    pred_iterator pred_end();
 
-    const_pred_iterator pred_begin() const { return Predecessors.begin(); }
-    const_pred_iterator pred_end()   const { return Predecessors.end(); }
+    const_pred_iterator pred_begin() const;
+    const_pred_iterator pred_end() const;
 
-    MachineFunction *getMF() const { return MF; }
-    void setMF(MachineFunction *NewMF) { MF = NewMF; }
+    MachineFunction *getMF() const;
+    void setMF(MachineFunction *NewMF);
 
-    void printReferenceName(std::ostream &OS) const {
-        OS << "MBB." << LabelIdx;
-    }
+    void printReferenceName(std::ostream &OS) const;
 
-    void print(std::ostream &OS) const {
-        if (!Name.empty()) OS << "\"" << Name << "\"\n";
-        printReferenceName(OS);
-        OS << ":\n";
-        for (const MachineInst *MI : Instructions) {
-            OS << "    " << *MI << "\n";
-        }
-    }
+    void print(std::ostream &OS) const;
 };
 
 } // namespace Balance

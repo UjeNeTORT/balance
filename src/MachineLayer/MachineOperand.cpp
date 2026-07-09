@@ -1,7 +1,7 @@
 #include "MachineOperand.h"
 #include "MachineBB.h"
 
-#include "../Utils/Utils.h"
+#include "Utils/Utils.h"
 
 #include <cassert>
 #include <iostream>

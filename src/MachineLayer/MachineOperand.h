@@ -1,7 +1,7 @@
 #ifndef MACHINE_OPERAND_H
 #define MACHINE_OPERAND_H
 
-#include "../RISCV/RISCVRegisters.h"
+#include "RISCV/RISCVRegisters.h"
 
 #include <cstdint>
 #include <iostream>

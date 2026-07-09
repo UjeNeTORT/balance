@@ -2,7 +2,6 @@
 #include "MachineBB.h"
 
 #include <iostream>
-#include <memory>
 
 namespace Balance {
 
