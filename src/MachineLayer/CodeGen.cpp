@@ -12,23 +12,20 @@ int main() {
 
     MachineFunction MFMain("main");
 
-    MachineBB MBB0(&MFMain);
-    MachineBB MBB1(&MFMain);
+    MachineBB *MBB0 = MFMain.createMBB("entry");
+    MachineBB *MBB1 = MFMain.createMBB("exit");
 
     Register Reg0 = 0;
     Register Reg1 = 1;
 
     MachineInst AddReg1Reg0 = MachineInst(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1);
     MachineInst AuipcReg1Reg0 = MachineInst(RISCVOpcode::AUIPC).addReg(Reg0);
-    MachineInst Jmp = MachineInst(RISCVOpcode::JAL).addMBB(&MBB0);
-    MBB0.InsertMI(&AddReg1Reg0);
-    MBB0.InsertMI(&AddReg1Reg0);
-    MBB1.InsertMI(&AuipcReg1Reg0);
-    MBB1.InsertMI(&AddReg1Reg0);
-    MBB1.InsertMI(&Jmp);
-
-    MFMain.InsertMBB(&MBB0);
-    MFMain.InsertMBB(&MBB1);
+    MachineInst Jmp = MachineInst(RISCVOpcode::JAL).addMBB(MBB0);
+    MBB0->insertMI(&AddReg1Reg0);
+    MBB0->insertMI(&AddReg1Reg0);
+    MBB1->insertMI(&AuipcReg1Reg0);
+    MBB1->insertMI(&AddReg1Reg0);
+    MBB1->insertMI(&Jmp);
 
     MFMain.print(std::cout);
 

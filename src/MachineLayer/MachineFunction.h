@@ -1,6 +1,7 @@
 #ifndef MACHINE_FUNCTION_H
 #define MACHINE_FUNCTION_H
 
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -11,23 +12,21 @@ namespace Balance {
 class MachineBB;
 
 class MachineFunction {
-    std::list<MachineBB *> BasicBlocks;
-    using iterator = std::list<MachineBB *>::iterator;
-    using const_iterator = std::list<MachineBB *>::const_iterator;
+    std::list<MachineBB> BasicBlocks;
+    using iterator = std::list<MachineBB>::iterator;
+    using const_iterator = std::list<MachineBB>::const_iterator;
 
     int MBBIdx = 0; // incremented each time as a new MBB is created
     std::string Name;
-
-private:
-    int getNewMBBIdx();
-
 public:
     MachineFunction(std::string Name);
+
     std::string_view getName() const;
 
-    void InsertMBB(MachineBB *MBB);
+    MachineBB *createMBB(const std::string &Name = "");
+    MachineBB *createMBB(iterator Pos, const std::string &Name = "");
 
-    void InsertMBB(iterator I, MachineBB *MBB);
+    int getNewMBBIdx();
 
     iterator begin();
     iterator end();
