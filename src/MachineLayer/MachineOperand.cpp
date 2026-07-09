@@ -34,10 +34,10 @@ void MachineOperand::print(std::ostream &OS) const {
 
     switch (Type) {
     case MOType::VirtReg:
-        OS << "VReg" << RegId;
+        OS << "%VReg" << RegId;
         break;
     case MOType::PhysReg:
-        OS << "PReg" << RegId; // TODO: getRegName(RegId)
+        OS << RegId; // TODO: getRegName(RegId) for physical
         break;
     case MOType::Imm:
         OS << Imm;

@@ -29,7 +29,7 @@ void MachineInst::print(std::ostream &OS) const {
   bool First = true;
 
   std::for_each(Operands.begin(), Operands.end(),
-    [&First, &OS](MachineOperand Op) {
+    [&First, &OS](const MachineOperand &Op) {
       if ( First ) First = false; else OS << ", ";
       Op.print(OS);
     }

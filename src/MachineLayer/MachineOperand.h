@@ -5,8 +5,6 @@
 
 #include <cstdint>
 #include <iostream>
-#include <unordered_map>
-#include <variant>
 
 namespace Balance {
 
@@ -49,7 +47,7 @@ class Register {
 public:
     Register(unsigned RegId) : RegId(RegId) {}
     unsigned getId() const { return RegId; }
-    void print(std::ostream &OS) const { OS << "VReg" << RegId; }
+    void print(std::ostream &OS) const { OS << "%VReg" << RegId; }
 };
 
 } // namespace Balance

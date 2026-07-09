@@ -21,11 +21,13 @@ int main() {
     MachineInst AddReg1Reg0 = MachineInst(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1);
     MachineInst AuipcReg1Reg0 = MachineInst(RISCVOpcode::AUIPC).addReg(Reg0);
     MachineInst Jmp = MachineInst(RISCVOpcode::JAL).addMBB(MBB0);
-    MBB0->insertMI(&AddReg1Reg0);
-    MBB0->insertMI(&AddReg1Reg0);
-    MBB1->insertMI(&AuipcReg1Reg0);
-    MBB1->insertMI(&AddReg1Reg0);
-    MBB1->insertMI(&Jmp);
+
+    MBB0->createMI(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1);
+    MBB0->insertMI(AddReg1Reg0);
+    MBB0->insertMI(AddReg1Reg0);
+    MBB1->insertMI(AuipcReg1Reg0);
+    MBB1->insertMI(AddReg1Reg0);
+    MBB1->insertMI(Jmp);
 
     MFMain.print(std::cout);
 
