@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 
 project(balance_compiler CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, default to Release")
     set(CMAKE_BUILD_TYPE Release)
