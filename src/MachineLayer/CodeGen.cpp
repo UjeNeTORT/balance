@@ -28,6 +28,10 @@ MachineFunction createTestMF() {
     MBB0->createMI(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1).addReg(Reg2);
     MBB0->insertMI(AddReg1Reg0);
     MBB0->insertMI(AddReg1Reg0);
+    // MBB0->createMI(RISCVOpcode::JAL).addMBB(MBB1);
+
+    MBB0->addSuccessor(MBB1);
+
     MBB1->insertMI(AuipcReg1Reg0);
     MBB1->insertMI(AddReg1Reg0);
     MBB1->insertMI(Jmp);
@@ -41,11 +45,6 @@ int main() {
 
     PassManager PM;
 
-    PM.registerPass(std::make_unique<VerifierPass>());
-    PM.registerPass(std::make_unique<VerifierPass>());
-    PM.registerPass(std::make_unique<VerifierPass>());
-    PM.registerPass(std::make_unique<VerifierPass>());
-    PM.registerPass(std::make_unique<VerifierPass>());
     PM.registerPass(std::make_unique<VerifierPass>());
 
     PM.run(TestMF);

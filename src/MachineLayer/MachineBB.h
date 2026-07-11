@@ -15,7 +15,7 @@ class MachineBB {
     int LabelIdx = -1; // used for asm printing
 
     std::string Name = ""; // mostly for comments & debug
-    mutable std::string ReferenceName = ""; // for asm printing
+    std::string ReferenceName = ""; // for asm printing
 
     std::list<MachineInst> Instructions;
     using iterator = std::list<MachineInst>::iterator;
@@ -42,6 +42,8 @@ public:
 
     void addSuccessor(MachineBB *Succ);
     void addPredecessor(MachineBB *Pred);
+    void addSuccessorOneWay(MachineBB *Succ);
+    void addPredecessorOneWay(MachineBB *Pred);
 
     MachineFunction *getMF() const;
     void setMF(MachineFunction *NewMF);

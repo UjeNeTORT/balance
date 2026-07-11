@@ -15,10 +15,6 @@ MachineBB::MachineBB(MachineFunction *MF, std::string Name) : MF(MF), LabelIdx(M
 MachineInst &MachineBB::createMI(MachineBB::iterator I, RISCVOpcode Opcode) {
     MachineInst *MI = &*Instructions.emplace(I, Opcode);
     MI->setMBB(this);
-    if (isControlTransferInst(*MI)) {
-        std::cerr << "WARN: added control transfer to MBB, its destination is unknown, MBB succ and preds not updated!\n";
-        // TODO:
-    }
     return *MI;
 };
 
@@ -29,10 +25,6 @@ MachineInst &MachineBB::createMI(RISCVOpcode Opcode) {
 MachineInst *MachineBB::insertMI(MachineBB::iterator I, MachineInst MI) {
     MI.setMBB(this);
     I = Instructions.insert(I, MI);
-    if (isControlTransferInst(MI)) {
-        I->getMBB()->addPredecessor(this);
-        addSuccessor(I->getMBB());
-    }
     return &*--I;
 };
 
@@ -40,8 +32,9 @@ MachineInst *MachineBB::insertMI(MachineInst MI) {
     return insertMI(end(), MI);
 };
 
-
-int MachineBB::getLabelIdx() const { return LabelIdx; }
+int MachineBB::getLabelIdx() const {
+    return LabelIdx;
+}
 
 void MachineBB::setLabelIdx(int LabelIdxNew) {
     LabelIdx = LabelIdxNew;
@@ -49,9 +42,31 @@ void MachineBB::setLabelIdx(int LabelIdxNew) {
 }
 
 void MachineBB::addSuccessor(MachineBB *Succ) {
+    assert(Succ);
+    if (this == Succ) return;
+
+    addSuccessorOneWay(Succ);
+    Succ->addPredecessorOneWay(this);
+}
+
+void MachineBB::addPredecessor(MachineBB *Pred) {
+    assert(Pred);
+    if (this == Pred) return;
+
+    Predecessors.push_back(Pred);
+    addPredecessorOneWay(Pred);
+    Pred->addSuccessorOneWay(this);
+}
+
+void MachineBB::addSuccessorOneWay(MachineBB *Succ) {
+    assert(Succ);
+    if (this == Succ) return;
     Successors.push_back(Succ);
 }
-void MachineBB::addPredecessor(MachineBB *Pred) {
+
+void MachineBB::addPredecessorOneWay(MachineBB *Pred) {
+    assert(Pred);
+    if (this == Pred) return;
     Predecessors.push_back(Pred);
 }
 
@@ -94,19 +109,36 @@ void MachineBB::print(std::ostream &OS) const {
     auto &&UsesVec = Uses(*this);
 
     bool First = true;
-    auto PrintNextMO = [&OS, &First](const Register &Reg) {
+    auto PrintNext = [&OS, &First](const auto &Reg) {
         if (First) First = false;
         else OS << ", ";
         OS << Reg;
     };
 
     OS << "Defs: ";
-    std::for_each(DefsVec.begin(), DefsVec.end(), PrintNextMO);
+    std::for_each(DefsVec.begin(), DefsVec.end(), PrintNext);
     OS << "\n";
     First = true;
     OS << "Uses: ";
-    std::for_each(UsesVec.begin(), UsesVec.end(), PrintNextMO);
+    std::for_each(UsesVec.begin(), UsesVec.end(), PrintNext);
     OS << "\n";
+
+    auto PrintNextMBB = [&OS, &First](const MachineBB *MBB) {
+        if (First) First = false;
+        else OS << ", ";
+        OS << MBB->getReferenceName();
+    };
+
+    First = true;
+    OS << "Successors: ";
+    std::for_each(succ_begin(), succ_end(), PrintNextMBB);
+    OS << "\n";
+
+    First = true;
+    OS << "Predecessors: ";
+    std::for_each(pred_begin(), pred_end(), PrintNextMBB);
+    OS << "\n";
+
 
     OS << getReferenceName();
     OS << ":\n";
