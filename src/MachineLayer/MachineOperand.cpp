@@ -6,7 +6,7 @@
 #include <cassert>
 #include <iostream>
 
-using namespace Balance;
+namespace Balance {
 
 MachineOperand MachineOperand::createVReg(unsigned int RegId) {
     MachineOperand MO;
@@ -30,8 +30,6 @@ MachineOperand MachineOperand::createMBB(MachineBB *MBB) {
 }
 
 void MachineOperand::print(std::ostream &OS) const {
-    using MOType = MachineOperand::MOType;
-
     switch (Type) {
     case MOType::VirtReg:
         OS << "%VReg" << RegId;
@@ -51,3 +49,47 @@ void MachineOperand::print(std::ostream &OS) const {
     }
 }
 
+bool isVirtReg(const MachineOperand &MO) {
+    return MO.getType() == MOType::VirtReg;
+};
+
+bool isDef(const MachineOperand &MO) {
+    // the first MO is always a Def of a MI
+    if (MO.getMI() == nullptr) return false;
+    return MO.getMI()->getOperands()[0] == MO;
+}
+
+bool isUse(const MachineOperand &MO) {
+    return !isDef(MO);
+}
+
+bool MachineOperand::operator==(const MachineOperand &MO2) const {
+    if (Type != MO2.Type) return false;
+    switch(Type) {
+        case MOType::VirtReg:
+            return RegId == MO2.RegId;
+            break;
+        case MOType::PhysReg:
+            return RegId == MO2.RegId;
+            break;
+        case MOType::Imm:
+            return Imm == MO2.Imm;
+            break;
+        case MOType::MachineBB:
+            return MBB == MO2.MBB;
+            break;
+        default:
+            unreachable("Unexpected MOType");
+            break;
+    };
+}
+
+bool MachineOperand::operator!=(const MachineOperand &MO2) const {
+    return !(*this == MO2);
+}
+
+void operator<<(std::ostream &OS, const MachineOperand &MO) {
+    MO.print(OS);
+}
+
+} // namespace Balance

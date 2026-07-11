@@ -1,4 +1,8 @@
 #include "MachineBB.h"
+#include "LiveRanges.h"
+
+#include <algorithm>
+#include <cassert>
 
 namespace Balance {
 
@@ -6,7 +10,11 @@ MachineBB::MachineBB(MachineFunction *MF, std::string Name) : MF(MF), Name(Name)
 
 MachineInst &MachineBB::createMI(MachineBB::iterator I, RISCVOpcode Opcode) {
     MachineInst *MI = &*Instructions.emplace(I, Opcode);
-    MI->getMBB() = this;
+    MI->setMBB(this);
+    if (isControlTransferInst(*MI)) {
+        std::cerr << "WARN: added control transfer to MBB, its destination is unknown, MBB succ and preds not updated!\n";
+        // TODO:
+    }
     return *MI;
 };
 
@@ -15,8 +23,12 @@ MachineInst &MachineBB::createMI(RISCVOpcode Opcode) {
 };
 
 MachineInst *MachineBB::insertMI(MachineBB::iterator I, MachineInst MI) {
-    MI.getMBB() = this;
+    MI.setMBB(this);
     I = Instructions.insert(I, MI);
+    if (isControlTransferInst(MI)) {
+        I->getMBB()->addPredecessor(this);
+        addSuccessor(I->getMBB());
+    }
     return &*--I;
 };
 
@@ -28,8 +40,32 @@ MachineInst *MachineBB::insertMI(MachineInst MI) {
 int MachineBB::getLabelIdx() const { return LabelIdx; }
 void MachineBB::setLabelIdx(int LabelIdxNew) { LabelIdx = LabelIdxNew; }
 
-void MachineBB::addSuccessor(MachineBB *Succ) { Successors.push_back(Succ); }
-void MachineBB::addPredecessor(MachineBB *Pred) { Predecessors.push_back(Pred); }
+void MachineBB::addSuccessor(MachineBB *Succ) {
+    Successors.push_back(Succ);
+}
+void MachineBB::addPredecessor(MachineBB *Pred) {
+    Predecessors.push_back(Pred);
+}
+
+bool MachineBB::verify() const {
+    bool Valid = true;
+    std::for_each(Successors.begin(), Successors.end(), [&Valid, this](MachineBB *Succ) {
+        Valid &= std::find(Succ->pred_begin(), Succ->pred_end(), this) != Succ->pred_end();
+        // assert(Valid && "Successor does not have this MBB as a predecessor");
+    });
+
+    std::for_each(pred_begin(), pred_end(), [&Valid, this](MachineBB *Pred) {
+        Valid &= std::find(Pred->succ_begin(), Pred->succ_end(), this) != Pred->succ_end();
+        // assert(Valid && "Predecessor does not have this MBB as a successor")
+    });
+
+    // check that each MI stored in this MBB knows its MBB
+    Valid &= std::all_of(Instructions.begin(), Instructions.end(), [this](const MachineInst &MI) {
+        return MI.getMBB() == this;
+    });
+
+    return Valid;
+}
 
 MachineFunction *MachineBB::getMF() const { return MF; }
 void MachineBB::setMF(MachineFunction *NewMF) { MF = NewMF; }
@@ -40,6 +76,24 @@ void MachineBB::printReferenceName(std::ostream &OS) const {
 
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
+
+    auto &&DefsSet = Defs(*this);
+    auto &&UsesSet = Uses(*this);
+
+    bool First = true;
+    auto PrintNextMO = [&OS, &First](const MachineOperand *MO) {
+        if (First) First = false;
+        else OS << ", ";
+        OS << *MO;
+    };
+
+    OS << "Defs: ";
+    std::for_each(DefsSet.begin(), DefsSet.end(), PrintNextMO);
+    OS << "\n";
+    First = true;
+    OS << "Uses: ";
+    std::for_each(UsesSet.begin(), UsesSet.end(), PrintNextMO);
+
     printReferenceName(OS);
     OS << ":\n";
     for (const MachineInst &MI : Instructions) {

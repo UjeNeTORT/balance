@@ -1,10 +1,30 @@
 // ai-generated
 #include "MIROpcodes.h"
-#include "../Utils/Utils.h"
+#include "MachineInst.h"
+
+#include "Utils/Utils.h"
 
 #include <string_view>
 
 namespace Balance {
+
+bool isControlTransferInst(const MachineInst &MI) {
+    switch (MI.getOpcode()) {
+    case G_BR:
+    case G_BRCOND:
+    case JAL:
+    case JALR:
+    case BEQ:
+    case BNE:
+    case BLT:
+    case BGE:
+    case BLTU:
+    case BGEU:
+        return true;
+    default:
+        return false;
+    }
+}
 
 // ai-generated
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {

@@ -45,8 +45,9 @@ public:
     MachineFunction *getMF() const;
     void setMF(MachineFunction *NewMF);
 
-    void printReferenceName(std::ostream &OS) const;
+    bool verify() const;
 
+    void printReferenceName(std::ostream &OS) const;
     void print(std::ostream &OS) const;
 
     iterator begin();

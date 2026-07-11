@@ -7,7 +7,7 @@ namespace Balance {
 
 int MachineFunction::getNewMBBIdx() { return MBBIdx++; }
 
-MachineFunction::MachineFunction(std::string Name) : Name(Name) {}
+MachineFunction::MachineFunction(const std::string &Name) : Name(Name) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
 
@@ -15,6 +15,7 @@ MachineBB *MachineFunction::createMBB(const std::string &Name) {
     BasicBlocks.emplace_back(this, Name);
     return &*--BasicBlocks.end();
 }
+
 MachineBB *MachineFunction::createMBB(MachineFunction::iterator Pos, const std::string &Name) {
     iterator MBB = BasicBlocks.emplace(Pos, this, Name);
     return &*MBB;

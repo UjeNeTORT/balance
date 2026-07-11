@@ -7,6 +7,7 @@ add_library(MachineLayer STATIC
     MachineBB.cpp
     MachineInst.cpp
     MachineOperand.cpp
+    LiveRanges.cpp
 )
 
 add_library(MIRInfo STATIC
