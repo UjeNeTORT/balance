@@ -2,13 +2,14 @@
 #define LIVE_RANGES_H
 
 #include "MachineBB.h"
+#include "MachineOperand.h"
 
-#include <unordered_set>
+#include <vector>
 
 namespace Balance {
 
-std::unordered_set<const MachineOperand *> Defs(const MachineBB &MBB);
-std::unordered_set<const MachineOperand *> Uses(const MachineBB &MBB);
+std::vector<Register> Defs(const MachineBB &MBB);
+std::vector<Register> Uses(const MachineBB &MBB);
 
 class LiveRanges;
 

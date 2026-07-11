@@ -29,6 +29,50 @@ MachineOperand MachineOperand::createMBB(MachineBB *MBB) {
     return MO;
 }
 
+bool MachineOperand::isVReg() const {
+    return Type == MOType::VirtReg;
+}
+
+bool MachineOperand::isPhysReg() const {
+    return Type == MOType::PhysReg;
+}
+
+bool MachineOperand::isImm() const {
+    return Type == MOType::Imm;
+}
+
+bool MachineOperand::isMBB() const {
+    return Type == MOType::MachineBB;
+}
+
+unsigned MachineOperand::getVReg() const {
+    assert(isVReg() && "Wrong type for accessor");
+    return RegId;
+}
+
+unsigned MachineOperand::getPhysReg() const {
+    assert(isPhysReg() && "Wrong type for accessor");
+    return RegId;
+}
+
+uint64_t MachineOperand::getImm() const {
+    assert(isImm() && "Wrong type for accessor");
+    return Imm;
+}
+
+MachineBB *MachineOperand::getMBB() const {
+    assert(isMBB() && "Wrong type for accessor");
+    return MBB;
+}
+
+MachineInst *MachineOperand::getMI() const {
+    return MI;
+}
+
+void MachineOperand::setMI(MachineInst *NewMI) {
+    MI = NewMI;
+}
+
 void MachineOperand::print(std::ostream &OS) const {
     switch (Type) {
     case MOType::VirtReg:
@@ -49,18 +93,28 @@ void MachineOperand::print(std::ostream &OS) const {
     }
 }
 
-bool isVirtReg(const MachineOperand &MO) {
-    return MO.getType() == MOType::VirtReg;
-};
-
-bool isDef(const MachineOperand &MO) {
-    // the first MO is always a Def of a MI
-    if (MO.getMI() == nullptr) return false;
-    return MO.getMI()->getOperands()[0] == MO;
+bool MachineOperand::isDef() const {
+    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
+        && "Checking isDef() on a non register operand makes no sense");
+    return IsDef;
 }
 
-bool isUse(const MachineOperand &MO) {
-    return !isDef(MO);
+bool MachineOperand::isUse() const {
+    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
+        && "Checking isUse() on a non register operand makes no sense");
+    return IsUse;
+}
+
+void MachineOperand::setIsDef(bool NewIsDef) {
+    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
+        && "Setting setIsDef() on a non register operand makes no sense");
+    IsDef = NewIsDef;
+}
+
+void MachineOperand::setIsUse(bool NewIsUse) {
+    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
+        && "Setting setIsUse() on a non register operand makes no sense");
+    IsUse = NewIsUse;
 }
 
 bool MachineOperand::operator==(const MachineOperand &MO2) const {
@@ -88,8 +142,14 @@ bool MachineOperand::operator!=(const MachineOperand &MO2) const {
     return !(*this == MO2);
 }
 
-void operator<<(std::ostream &OS, const MachineOperand &MO) {
+std::ostream &operator<<(std::ostream &OS, const MachineOperand &MO) {
     MO.print(OS);
+    return OS;
+}
+
+std::ostream &operator<<(std::ostream &OS, const Register &Reg) {
+    Reg.print(OS);
+    return OS;
 }
 
 } // namespace Balance

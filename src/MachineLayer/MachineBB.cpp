@@ -77,22 +77,23 @@ void MachineBB::printReferenceName(std::ostream &OS) const {
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
-    auto &&DefsSet = Defs(*this);
-    auto &&UsesSet = Uses(*this);
+    auto &&DefsVec = Defs(*this);
+    auto &&UsesVec = Uses(*this);
 
     bool First = true;
-    auto PrintNextMO = [&OS, &First](const MachineOperand *MO) {
+    auto PrintNextMO = [&OS, &First](const Register &Reg) {
         if (First) First = false;
         else OS << ", ";
-        OS << *MO;
+        OS << Reg;
     };
 
     OS << "Defs: ";
-    std::for_each(DefsSet.begin(), DefsSet.end(), PrintNextMO);
+    std::for_each(DefsVec.begin(), DefsVec.end(), PrintNextMO);
     OS << "\n";
     First = true;
     OS << "Uses: ";
-    std::for_each(UsesSet.begin(), UsesSet.end(), PrintNextMO);
+    std::for_each(UsesVec.begin(), UsesVec.end(), PrintNextMO);
+    OS << "\n";
 
     printReferenceName(OS);
     OS << ":\n";

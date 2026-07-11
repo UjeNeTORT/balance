@@ -19,8 +19,6 @@ class MachineInst {
     using iterator = std::vector<MachineOperand>::iterator;
     using const_iterator = std::vector<MachineOperand>::const_iterator;
 
-    bool IsDef;
-    bool IsUse;
     bool IsTerminator = false; // whether terminates MBB
 
     MachineBB *MBB = nullptr;
@@ -30,10 +28,16 @@ public:
     MachineInst &addReg(Register Reg);
     MachineInst &addImm(uint64_t Imm);
     MachineInst &addMBB(MachineBB *MBB);
+    MachineInst &addMO(MachineOperand MO);
 
     RISCVOpcode getOpcode() const { return Opcode; }
     MachineBB *getMBB() const { return MBB; }
-    void setMBB(MachineBB *NewMBB) { MBB = NewMBB;}
+    void setMBB(MachineBB *NewMBB) { MBB = NewMBB; }
+
+    bool isTerminator() const { return IsTerminator; }
+
+    std::vector<Register> getDefs() const;
+    std::vector<Register> getUses() const;
 
     std::vector<MachineOperand> &getOperands() { return Operands; }
     const std::vector<MachineOperand> &getOperands() const { return Operands; }
@@ -47,8 +51,8 @@ public:
     const_iterator end()   const { return Operands.end(); }
 };
 
-} // namespace Balance
-
 std::ostream &operator<<(std::ostream &OS, const Balance::MachineInst &MI);
+
+} // namespace Balance
 
 #endif // MACHINE_INST_H
