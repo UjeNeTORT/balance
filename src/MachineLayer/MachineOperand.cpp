@@ -85,7 +85,7 @@ void MachineOperand::print(std::ostream &OS) const {
         OS << Imm;
         break;
     case MOType::MachineBB:
-        MBB->printReferenceName(OS);
+        OS << MBB->getReferenceName();
         break;
     default:
         unreachable("Unexpected MOType");

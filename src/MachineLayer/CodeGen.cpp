@@ -1,15 +1,17 @@
 #include "MIROpcodes.h"
+#include "MIRPasses/VerifierPass.h"
 #include "MachineInst.h"
 #include "MachineOperand.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
+#include "PassManager.h"
 
 #include <iostream>
+#include <memory>
 
 using namespace Balance;
 
-int main() {
-
+MachineFunction createTestMF() {
     MachineFunction MFMain("main");
 
     MachineBB *MBB0 = MFMain.createMBB("entry");
@@ -31,6 +33,22 @@ int main() {
     MBB1->insertMI(Jmp);
 
     MFMain.print(std::cout);
+    return MFMain;
+}
 
-  return 0;
+int main() {
+    MachineFunction TestMF = createTestMF();
+
+    PassManager PM;
+
+    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<VerifierPass>());
+
+    PM.run(TestMF);
+
+    return 0;
 }

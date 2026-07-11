@@ -8,7 +8,6 @@
 namespace Balance {
 
 class Pass {
-
     std::string Name;
 public:
     Pass(const std::string &Name) : Name(Name) {}

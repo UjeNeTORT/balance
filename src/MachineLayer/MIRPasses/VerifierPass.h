@@ -4,11 +4,23 @@
 #include "MachineFunction.h"
 #include "Pass.h"
 
+#include <iostream>
 namespace Balance {
 
 class VerifierPass final : public Pass {
 public:
+    VerifierPass(const std::string Name = "Verifier") : Pass(Name) {}
+
     bool run(MachineFunction &MF) override;
+
+    bool verifyCFG(MachineFunction &MF, std::string &Msg) const;
+    // bool verifyMBB(MachineFunction &MF, std::string &Msg) const;
+    // bool verifyMIDefs(MachineFunction &MF, std::string &Msg) const;
+    // bool verifyMIUses(MachineFunction &MF, std::string &Msg) const;
+
+    void reportSuccess(std::ostream &OS = std::cerr, const std::string &Msg = "");
+    void reportFail(std::ostream &OS = std::cerr, const std::string &Msg = "");
+    void reportFailAndTerminate(std::ostream &OS = std::cerr, const std::string &Msg = "");
 };
 
 } // namespace Balance

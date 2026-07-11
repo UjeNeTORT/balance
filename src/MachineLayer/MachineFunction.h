@@ -26,6 +26,8 @@ public:
     MachineBB *createMBB(const std::string &Name = "");
     MachineBB *createMBB(iterator Pos, const std::string &Name = "");
 
+    std::list<MachineBB> &getBasicBlocks() { return BasicBlocks; }
+
     int getNewMBBIdx();
 
     iterator begin();
