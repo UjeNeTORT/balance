@@ -87,7 +87,6 @@ std::string_view MachineBB::getReferenceName() const {
     return ReferenceName;
 }
 
-
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
