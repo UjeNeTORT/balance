@@ -1,4 +1,3 @@
-// ai-generated
 #include "MIROpcodes.h"
 #include "MachineInst.h"
 
@@ -8,281 +7,248 @@
 
 namespace Balance {
 
-bool isControlTransferInst(const MachineInst &MI) {
-    switch (MI.getOpcode()) {
-    case G_BR:
-    case G_BRCOND:
-    case JAL:
-    case JALR:
-    case BEQ:
-    case BNE:
-    case BLT:
-    case BGE:
-    case BLTU:
-    case BGEU:
-        return true;
-    default:
-        return false;
-    }
+// ai-generated
+namespace {
+struct MIRInstrInfo {
+    const char *asmstring;
+    bool isControlTransfer;
+    int numDefs;
+    int numUses;
+    int numOperands;
+};
+
+static const MIRInstrInfo MIRInstructionDB[] = {
+    // cti - control transfer instruction (bb terminator)
+    // asm-string, is-cti, num-defs, num-uses, num-operands
+    { "G_ADD",         false, 1, 2, 3 },
+    { "G_SUB",         false, 1, 2, 3 },
+    { "G_MUL",         false, 1, 2, 3 },
+    { "G_AND",         false, 1, 2, 3 },
+    { "G_OR",          false, 1, 2, 3 },
+    { "G_XOR",         false, 1, 2, 3 },
+    { "G_SHL",         false, 1, 2, 3 },
+    { "G_LSHR",        false, 1, 2, 3 },
+    { "G_ASHR",        false, 1, 2, 3 },
+    { "G_LOAD",        false, 1, 1, 2 },
+    { "G_STORE",       false, 0, 2, 2 },
+    { "G_CONSTANT",    false, 1, 0, 1 },
+    { "G_FRAME_INDEX", false, 1, 0, 1 },
+    { "G_BR",          true,  0, 0, 1 },
+    { "G_BRCOND",      true,  0, 1, 2 },
+    { "LUI",           false, 1, 0, 2 },
+    { "AUIPC",         false, 1, 0, 2 },
+    { "ADDI",          false, 1, 1, 3 },
+    { "SLTI",          false, 1, 1, 3 },
+    { "SLTIU",         false, 1, 1, 3 },
+    { "XORI",          false, 1, 1, 3 },
+    { "ORI",           false, 1, 1, 3 },
+    { "ANDI",          false, 1, 1, 3 },
+    { "SLLI",          false, 1, 1, 3 },
+    { "SRLI",          false, 1, 1, 3 },
+    { "SRAI",          false, 1, 1, 3 },
+    { "ADD",           false, 1, 2, 3 },
+    { "SUB",           false, 1, 2, 3 },
+    { "SLL",           false, 1, 2, 3 },
+    { "SLT",           false, 1, 2, 3 },
+    { "SLTU",          false, 1, 2, 3 },
+    { "XOR",           false, 1, 2, 3 },
+    { "SRL",           false, 1, 2, 3 },
+    { "SRA",           false, 1, 2, 3 },
+    { "OR",            false, 1, 2, 3 },
+    { "AND",           false, 1, 2, 3 },
+    { "ADDIW",         false, 1, 1, 3 },
+    { "SLLIW",         false, 1, 1, 3 },
+    { "SRLIW",         false, 1, 1, 3 },
+    { "SRAIW",         false, 1, 1, 3 },
+    { "ADDW",          false, 1, 2, 3 },
+    { "SUBW",          false, 1, 2, 3 },
+    { "SLLW",          false, 1, 2, 3 },
+    { "SRLW",          false, 1, 2, 3 },
+    { "SRAW",          false, 1, 2, 3 },
+    { "LB",            false, 1, 1, 3 },
+    { "LH",            false, 1, 1, 3 },
+    { "LW",            false, 1, 1, 3 },
+    { "LD",            false, 1, 1, 3 },
+    { "LBU",           false, 1, 1, 3 },
+    { "LHU",           false, 1, 1, 3 },
+    { "LWU",           false, 1, 1, 3 },
+    { "SB",            false, 0, 2, 3 },
+    { "SH",            false, 0, 2, 3 },
+    { "SW",            false, 0, 2, 3 },
+    { "SD",            false, 0, 2, 3 },
+    { "JAL",           true,  1, 0, 2 },
+    { "JALR",          true,  1, 1, 3 },
+    { "BEQ",           true,  0, 2, 3 },
+    { "BNE",           true,  0, 2, 3 },
+    { "BLT",           true,  0, 2, 3 },
+    { "BGE",           true,  0, 2, 3 },
+    { "BLTU",          true,  0, 2, 3 },
+    { "BGEU",          true,  0, 2, 3 },
+    { "ECALL",         false, 0, 0, 0 },
+    { "EBREAK",        false, 0, 0, 0 },
+    { "FENCE",         false, 0, 0, 0 },
+    { "FENCE_I",       false, 0, 0, 0 },
+    { "CSRRW",         false, 1, 1, 3 },
+    { "CSRRS",         false, 1, 1, 3 },
+    { "CSRRC",         false, 1, 1, 3 },
+    { "CSRRWI",        false, 1, 0, 3 },
+    { "CSRRSI",        false, 1, 0, 3 },
+    { "CSRRCI",        false, 1, 0, 3 },
+    { "MUL",           false, 1, 2, 3 },
+    { "MULH",          false, 1, 2, 3 },
+    { "MULHSU",        false, 1, 2, 3 },
+    { "MULHU",         false, 1, 2, 3 },
+    { "DIV",           false, 1, 2, 3 },
+    { "DIVU",          false, 1, 2, 3 },
+    { "REM",           false, 1, 2, 3 },
+    { "REMU",          false, 1, 2, 3 },
+    { "MULW",          false, 1, 2, 3 },
+    { "DIVW",          false, 1, 2, 3 },
+    { "DIVUW",         false, 1, 2, 3 },
+    { "REMW",          false, 1, 2, 3 },
+    { "REMUW",         false, 1, 2, 3 },
+    { "LR_W",          false, 1, 1, 2 },
+    { "SC_W",          false, 1, 2, 3 },
+    { "AMOSWAP_W",     false, 1, 2, 3 },
+    { "AMOADD_W",      false, 1, 2, 3 },
+    { "AMOXOR_W",      false, 1, 2, 3 },
+    { "AMOAND_W",      false, 1, 2, 3 },
+    { "AMOOR_W",       false, 1, 2, 3 },
+    { "AMOMIN_W",      false, 1, 2, 3 },
+    { "AMOMAX_W",      false, 1, 2, 3 },
+    { "AMOMINU_W",     false, 1, 2, 3 },
+    { "AMOMAXU_W",     false, 1, 2, 3 },
+    { "LR_D",          false, 1, 1, 2 },
+    { "SC_D",          false, 1, 2, 3 },
+    { "AMOSWAP_D",     false, 1, 2, 3 },
+    { "AMOADD_D",      false, 1, 2, 3 },
+    { "AMOXOR_D",      false, 1, 2, 3 },
+    { "AMOAND_D",      false, 1, 2, 3 },
+    { "AMOOR_D",       false, 1, 2, 3 },
+    { "AMOMIN_D",      false, 1, 2, 3 },
+    { "AMOMAX_D",      false, 1, 2, 3 },
+    { "AMOMINU_D",     false, 1, 2, 3 },
+    { "AMOMAXU_D",     false, 1, 2, 3 },
+    { "FLW",           false, 1, 1, 3 },
+    { "FSW",           false, 0, 2, 3 },
+    { "FMADD_S",       false, 1, 3, 4 },
+    { "FMSUB_S",       false, 1, 3, 4 },
+    { "FNMSUB_S",      false, 1, 3, 4 },
+    { "FNMADD_S",      false, 1, 3, 4 },
+    { "FADD_S",        false, 1, 2, 3 },
+    { "FSUB_S",        false, 1, 2, 3 },
+    { "FMUL_S",        false, 1, 2, 3 },
+    { "FDIV_S",        false, 1, 2, 3 },
+    { "FSQRT_S",       false, 1, 1, 2 },
+    { "FSGNJ_S",       false, 1, 2, 3 },
+    { "FSGNJN_S",      false, 1, 2, 3 },
+    { "FSGNJX_S",      false, 1, 2, 3 },
+    { "FMIN_S",        false, 1, 2, 3 },
+    { "FMAX_S",        false, 1, 2, 3 },
+    { "FCVT_W_S",      false, 1, 1, 2 },
+    { "FCVT_WU_S",     false, 1, 1, 2 },
+    { "FCVT_S_W",      false, 1, 1, 2 },
+    { "FCVT_S_WU",     false, 1, 1, 2 },
+    { "FMV_X_W",       false, 1, 1, 2 },
+    { "FMV_W_X",       false, 1, 1, 2 },
+    { "FEQ_S",         false, 1, 2, 3 },
+    { "FLT_S",         false, 1, 2, 3 },
+    { "FLE_S",         false, 1, 2, 3 },
+    { "FCLASS_S",      false, 1, 1, 2 },
+    { "FCVT_L_S",      false, 1, 1, 2 },
+    { "FCVT_LU_S",     false, 1, 1, 2 },
+    { "FCVT_S_L",      false, 1, 1, 2 },
+    { "FCVT_S_LU",     false, 1, 1, 2 },
+    { "FLD",           false, 1, 1, 3 },
+    { "FSD",           false, 0, 2, 3 },
+    { "FMADD_D",       false, 1, 3, 4 },
+    { "FMSUB_D",       false, 1, 3, 4 },
+    { "FNMSUB_D",      false, 1, 3, 4 },
+    { "FNMADD_D",      false, 1, 3, 4 },
+    { "FADD_D",        false, 1, 2, 3 },
+    { "FSUB_D",        false, 1, 2, 3 },
+    { "FMUL_D",        false, 1, 2, 3 },
+    { "FDIV_D",        false, 1, 2, 3 },
+    { "FSQRT_D",       false, 1, 1, 2 },
+    { "FSGNJ_D",       false, 1, 2, 3 },
+    { "FSGNJN_D",      false, 1, 2, 3 },
+    { "FSGNJX_D",      false, 1, 2, 3 },
+    { "FMIN_D",        false, 1, 2, 3 },
+    { "FMAX_D",        false, 1, 2, 3 },
+    { "FCVT_S_D",      false, 1, 1, 2 },
+    { "FCVT_D_S",      false, 1, 1, 2 },
+    { "FEQ_D",         false, 1, 2, 3 },
+    { "FLT_D",         false, 1, 2, 3 },
+    { "FLE_D",         false, 1, 2, 3 },
+    { "FCLASS_D",      false, 1, 1, 2 },
+    { "FCVT_W_D",      false, 1, 1, 2 },
+    { "FCVT_WU_D",     false, 1, 1, 2 },
+    { "FCVT_D_W",      false, 1, 1, 2 },
+    { "FCVT_D_WU",     false, 1, 1, 2 },
+    { "FCVT_L_D",      false, 1, 1, 2 },
+    { "FCVT_LU_D",     false, 1, 1, 2 },
+    { "FMV_X_D",       false, 1, 1, 2 },
+    { "FCVT_D_L",      false, 1, 1, 2 },
+    { "FCVT_D_LU",     false, 1, 1, 2 },
+    { "FMV_D_X",       false, 1, 1, 2 },
+    { "C_ADDI4SPN",    false, 1, 1, 2 },
+    { "C_FLD",         false, 1, 1, 2 },
+    { "C_LW",          false, 1, 1, 2 },
+    { "C_LD",          false, 1, 1, 2 },
+    { "C_FSD",         false, 0, 2, 2 },
+    { "C_SW",          false, 0, 2, 2 },
+    { "C_SD",          false, 0, 2, 2 },
+    { "C_NOP",         false, 0, 0, 0 },
+    { "C_ADDI",        false, 1, 1, 2 },
+    { "C_ADDIW",       false, 1, 1, 2 },
+    { "C_LI",          false, 1, 0, 1 },
+    { "C_ADDI16SP",    false, 1, 1, 2 },
+    { "C_LUI",         false, 1, 0, 1 },
+    { "C_SRLI",        false, 1, 1, 2 },
+    { "C_SRAI",        false, 1, 1, 2 },
+    { "C_ANDI",        false, 1, 1, 2 },
+    { "C_SUB",         false, 1, 2, 2 },
+    { "C_XOR",         false, 1, 2, 2 },
+    { "C_OR",          false, 1, 2, 2 },
+    { "C_AND",         false, 1, 2, 2 },
+    { "C_SUBW",        false, 1, 2, 2 },
+    { "C_ADDW",        false, 1, 2, 2 },
+    { "C_J",           true,  0, 0, 1 },
+    { "C_BEQZ",        true,  0, 1, 2 },
+    { "C_BNEZ",        true,  0, 1, 2 },
+    { "C_SLLI",        false, 1, 1, 2 },
+    { "C_FLDSP",       false, 1, 1, 2 },
+    { "C_LWSP",        false, 1, 1, 2 },
+    { "C_LDSP",        false, 1, 1, 2 },
+    { "C_JR",          true,  0, 1, 1 },
+    { "C_MV",          false, 1, 1, 2 },
+    { "C_EBREAK",      false, 0, 0, 0 },
+    { "C_JALR",        true,  1, 1, 1 },
+    { "C_ADD",         false, 1, 2, 2 },
+    { "C_FSDSP",       false, 0, 2, 2 },
+    { "C_SWSP",        false, 0, 2, 2 },
+    { "C_SDSP",        false, 0, 2, 2 },
+};
 }
 
-// ai-generated
+bool isControlTransferInst(const MachineInst &MI) {
+    return MIRInstructionDB[MI.getOpcode()].isControlTransfer;
+}
+
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {
-    switch (Opcode) {
-    case G_ADD:         return "G_ADD";
-    case G_SUB:         return "G_SUB";
-    case G_MUL:         return "G_MUL";
-    case G_AND:         return "G_AND";
-    case G_OR:          return "G_OR";
-    case G_XOR:         return "G_XOR";
-    case G_SHL:         return "G_SHL";
-    case G_LSHR:        return "G_LSHR";
-    case G_ASHR:        return "G_ASHR";
-    case G_LOAD:        return "G_LOAD";
-    case G_STORE:       return "G_STORE";
-    case G_CONSTANT:    return "G_CONSTANT";
-    case G_FRAME_INDEX: return "G_FRAME_INDEX";
-    case G_BR:          return "G_BR";
-    case G_BRCOND:      return "G_BRCOND";
-    case LUI:           return "LUI";
-    case AUIPC:         return "AUIPC";
-    case ADDI:          return "ADDI";
-    case SLTI:          return "SLTI";
-    case SLTIU:         return "SLTIU";
-    case XORI:          return "XORI";
-    case ORI:           return "ORI";
-    case ANDI:          return "ANDI";
-    case SLLI:          return "SLLI";
-    case SRLI:          return "SRLI";
-    case SRAI:          return "SRAI";
-    case ADD:           return "ADD";
-    case SUB:           return "SUB";
-    case SLL:           return "SLL";
-    case SLT:           return "SLT";
-    case SLTU:          return "SLTU";
-    case XOR:           return "XOR";
-    case SRL:           return "SRL";
-    case SRA:           return "SRA";
-    case OR:            return "OR";
-    case AND:           return "AND";
-    case ADDIW:         return "ADDIW";
-    case SLLIW:         return "SLLIW";
-    case SRLIW:         return "SRLIW";
-    case SRAIW:         return "SRAIW";
-    case ADDW:          return "ADDW";
-    case SUBW:          return "SUBW";
-    case SLLW:          return "SLLW";
-    case SRLW:          return "SRLW";
-    case SRAW:          return "SRAW";
-    case LB:            return "LB";
-    case LH:            return "LH";
-    case LW:            return "LW";
-    case LD:            return "LD";
-    case LBU:           return "LBU";
-    case LHU:           return "LHU";
-    case LWU:           return "LWU";
-    case SB:            return "SB";
-    case SH:            return "SH";
-    case SW:            return "SW";
-    case SD:            return "SD";
-    case JAL:           return "JAL";
-    case JALR:          return "JALR";
-    case BEQ:           return "BEQ";
-    case BNE:           return "BNE";
-    case BLT:           return "BLT";
-    case BGE:           return "BGE";
-    case BLTU:          return "BLTU";
-    case BGEU:          return "BGEU";
-    case ECALL:         return "ECALL";
-    case EBREAK:        return "EBREAK";
-    case FENCE:         return "FENCE";
-    case FENCE_I:       return "FENCE_I";
-    case CSRRW:         return "CSRRW";
-    case CSRRS:         return "CSRRS";
-    case CSRRC:         return "CSRRC";
-    case CSRRWI:        return "CSRRWI";
-    case CSRRSI:        return "CSRRSI";
-    case CSRRCI:        return "CSRRCI";
-    case MUL:           return "MUL";
-    case MULH:          return "MULH";
-    case MULHSU:        return "MULHSU";
-    case MULHU:         return "MULHU";
-    case DIV:           return "DIV";
-    case DIVU:          return "DIVU";
-    case REM:           return "REM";
-    case REMU:          return "REMU";
-    case MULW:          return "MULW";
-    case DIVW:          return "DIVW";
-    case DIVUW:         return "DIVUW";
-    case REMW:          return "REMW";
-    case REMUW:         return "REMUW";
-    case LR_W:          return "LR_W";
-    case SC_W:          return "SC_W";
-    case AMOSWAP_W:     return "AMOSWAP_W";
-    case AMOADD_W:      return "AMOADD_W";
-    case AMOXOR_W:      return "AMOXOR_W";
-    case AMOAND_W:      return "AMOAND_W";
-    case AMOOR_W:       return "AMOOR_W";
-    case AMOMIN_W:      return "AMOMIN_W";
-    case AMOMAX_W:      return "AMOMAX_W";
-    case AMOMINU_W:     return "AMOMINU_W";
-    case AMOMAXU_W:     return "AMOMAXU_W";
-    case LR_D:          return "LR_D";
-    case SC_D:          return "SC_D";
-    case AMOSWAP_D:     return "AMOSWAP_D";
-    case AMOADD_D:      return "AMOADD_D";
-    case AMOXOR_D:      return "AMOXOR_D";
-    case AMOAND_D:      return "AMOAND_D";
-    case AMOOR_D:       return "AMOOR_D";
-    case AMOMIN_D:      return "AMOMIN_D";
-    case AMOMAX_D:      return "AMOMAX_D";
-    case AMOMINU_D:     return "AMOMINU_D";
-    case AMOMAXU_D:     return "AMOMAXU_D";
-    case FLW:           return "FLW";
-    case FSW:           return "FSW";
-    case FMADD_S:       return "FMADD_S";
-    case FMSUB_S:       return "FMSUB_S";
-    case FNMSUB_S:      return "FNMSUB_S";
-    case FNMADD_S:      return "FNMADD_S";
-    case FADD_S:        return "FADD_S";
-    case FSUB_S:        return "FSUB_S";
-    case FMUL_S:        return "FMUL_S";
-    case FDIV_S:        return "FDIV_S";
-    case FSQRT_S:       return "FSQRT_S";
-    case FSGNJ_S:       return "FSGNJ_S";
-    case FSGNJN_S:      return "FSGNJN_S";
-    case FSGNJX_S:      return "FSGNJX_S";
-    case FMIN_S:        return "FMIN_S";
-    case FMAX_S:        return "FMAX_S";
-    case FCVT_W_S:      return "FCVT_W_S";
-    case FCVT_WU_S:     return "FCVT_WU_S";
-    case FCVT_S_W:      return "FCVT_S_W";
-    case FCVT_S_WU:     return "FCVT_S_WU";
-    case FMV_X_W:       return "FMV_X_W";
-    case FMV_W_X:       return "FMV_W_X";
-    case FEQ_S:         return "FEQ_S";
-    case FLT_S:         return "FLT_S";
-    case FLE_S:         return "FLE_S";
-    case FCLASS_S:      return "FCLASS_S";
-    case FCVT_L_S:      return "FCVT_L_S";
-    case FCVT_LU_S:     return "FCVT_LU_S";
-    case FCVT_S_L:      return "FCVT_S_L";
-    case FCVT_S_LU:     return "FCVT_S_LU";
-    case FLD:           return "FLD";
-    case FSD:           return "FSD";
-    case FMADD_D:       return "FMADD_D";
-    case FMSUB_D:       return "FMSUB_D";
-    case FNMSUB_D:      return "FNMSUB_D";
-    case FNMADD_D:      return "FNMADD_D";
-    case FADD_D:        return "FADD_D";
-    case FSUB_D:        return "FSUB_D";
-    case FMUL_D:        return "FMUL_D";
-    case FDIV_D:        return "FDIV_D";
-    case FSQRT_D:       return "FSQRT_D";
-    case FSGNJ_D:       return "FSGNJ_D";
-    case FSGNJN_D:      return "FSGNJN_D";
-    case FSGNJX_D:      return "FSGNJX_D";
-    case FMIN_D:        return "FMIN_D";
-    case FMAX_D:        return "FMAX_D";
-    case FCVT_S_D:      return "FCVT_S_D";
-    case FCVT_D_S:      return "FCVT_D_S";
-    case FEQ_D:         return "FEQ_D";
-    case FLT_D:         return "FLT_D";
-    case FLE_D:         return "FLE_D";
-    case FCLASS_D:      return "FCLASS_D";
-    case FCVT_W_D:      return "FCVT_W_D";
-    case FCVT_WU_D:     return "FCVT_WU_D";
-    case FCVT_D_W:      return "FCVT_D_W";
-    case FCVT_D_WU:     return "FCVT_D_WU";
-    case FCVT_L_D:      return "FCVT_L_D";
-    case FCVT_LU_D:     return "FCVT_LU_D";
-    case FMV_X_D:       return "FMV_X_D";
-    case FCVT_D_L:      return "FCVT_D_L";
-    case FCVT_D_LU:     return "FCVT_D_LU";
-    case FMV_D_X:       return "FMV_D_X";
-    case C_ADDI4SPN:    return "C_ADDI4SPN";
-    case C_FLD:         return "C_FLD";
-    case C_LW:          return "C_LW";
-    case C_LD:          return "C_LD";
-    case C_FSD:         return "C_FSD";
-    case C_SW:          return "C_SW";
-    case C_SD:          return "C_SD";
-    case C_NOP:         return "C_NOP";
-    case C_ADDI:        return "C_ADDI";
-    case C_ADDIW:       return "C_ADDIW";
-    case C_LI:          return "C_LI";
-    case C_ADDI16SP:    return "C_ADDI16SP";
-    case C_LUI:         return "C_LUI";
-    case C_SRLI:        return "C_SRLI";
-    case C_SRAI:        return "C_SRAI";
-    case C_ANDI:        return "C_ANDI";
-    case C_SUB:         return "C_SUB";
-    case C_XOR:         return "C_XOR";
-    case C_OR:          return "C_OR";
-    case C_AND:         return "C_AND";
-    case C_SUBW:        return "C_SUBW";
-    case C_ADDW:        return "C_ADDW";
-    case C_J:           return "C_J";
-    case C_BEQZ:        return "C_BEQZ";
-    case C_BNEZ:        return "C_BNEZ";
-    case C_SLLI:        return "C_SLLI";
-    case C_FLDSP:       return "C_FLDSP";
-    case C_LWSP:        return "C_LWSP";
-    case C_LDSP:        return "C_LDSP";
-    case C_JR:          return "C_JR";
-    case C_MV:          return "C_MV";
-    case C_EBREAK:      return "C_EBREAK";
-    case C_JALR:        return "C_JALR";
-    case C_ADD:         return "C_ADD";
-    case C_FSDSP:       return "C_FSDSP";
-    case C_SWSP:        return "C_SWSP";
-    case C_SDSP:        return "C_SDSP";
+    if (Opcode >= G_ADD && Opcode <= C_SDSP) {
+        return MIRInstructionDB[Opcode].asmstring;
     }
     unreachable("Unknown RISCVOpcode");
     return "";
 }
 
-// ai-generated
 unsigned getNumDefs(RISCVOpcode Opcode) {
-    switch (Opcode) {
-    // 0 defs
-    case G_STORE:
-    case G_BR:
-    case G_BRCOND:
-    case SB:
-    case SH:
-    case SW:
-    case SD:
-    case BEQ:
-    case BNE:
-    case BLT:
-    case BGE:
-    case BLTU:
-    case BGEU:
-    case ECALL:
-    case EBREAK:
-    case FENCE:
-    case FENCE_I:
-    case FSW:
-    case FSD:
-    case C_FSD:
-    case C_SW:
-    case C_SD:
-    case C_NOP:
-    case C_J:
-    case C_BEQZ:
-    case C_BNEZ:
-    case C_JR:
-    case C_EBREAK:
-    case C_FSDSP:
-    case C_SWSP:
-    case C_SDSP:
-        return 0;
-
-    // 1 def
-    default:
-        return 1;
+    if (Opcode >= G_ADD && Opcode <= C_SDSP) {
+        return MIRInstructionDB[Opcode].numDefs;
     }
+    unreachable("Unknown RISCVOpcode");
+    return 0;
 }
 
 } // namespace Balance

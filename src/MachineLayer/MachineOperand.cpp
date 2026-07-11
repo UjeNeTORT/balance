@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <string>
 
 namespace Balance {
 
@@ -73,24 +74,32 @@ void MachineOperand::setMI(MachineInst *NewMI) {
     MI = NewMI;
 }
 
-void MachineOperand::print(std::ostream &OS) const {
+std::string MachineOperand::getAsmString() const {
+    std::string AsmString;
+
     switch (Type) {
     case MOType::VirtReg:
-        OS << "%VReg" << RegId;
+        AsmString += "%VReg" + std::to_string(RegId);
         break;
     case MOType::PhysReg:
-        OS << RegId; // TODO: getRegName(RegId) for physical
+        AsmString += "PhysReg" + std::to_string(RegId); // TODO: getRegName(RegId) for physical
         break;
     case MOType::Imm:
-        OS << Imm;
+        AsmString += std::to_string(Imm);
         break;
     case MOType::MachineBB:
-        MBB->printReferenceName(OS);
+        AsmString += MBB->getReferenceName();
         break;
     default:
         unreachable("Unexpected MOType");
         break;
     }
+
+    return AsmString;
+}
+
+void MachineOperand::print(std::ostream &OS) const {
+    OS << getAsmString();
 }
 
 bool MachineOperand::isDef() const {

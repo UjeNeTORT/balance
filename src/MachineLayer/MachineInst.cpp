@@ -65,16 +65,22 @@ std::vector<Register> MachineInst::getUses() const {
     return Uses;
 }
 
-void MachineInst::print(std::ostream &OS) const {
-    OS << getInstNameByOpcode(Opcode) << " ";
-    bool First = true;
+std::string MachineInst::getAsmString() const {
+    std::string AsmString = std::string(getInstNameByOpcode(Opcode)) + " ";
 
+    bool First = true;
     std::for_each(Operands.begin(), Operands.end(),
-        [&First, &OS](const MachineOperand &Op) {
-        if ( First ) First = false; else OS << ", ";
-        Op.print(OS);
+        [&First, &AsmString](const MachineOperand &Op) {
+            if ( First ) First = false; else AsmString += ", ";
+            AsmString += std::string(Op.getAsmString());
         }
     );
+
+    return AsmString;
+}
+
+void MachineInst::print(std::ostream &OS) const {
+    OS << getAsmString();
 }
 
 std::ostream &operator<<(std::ostream &OS, const MachineInst &MI) {

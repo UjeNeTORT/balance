@@ -12,7 +12,10 @@ namespace Balance {
 class MachineBB {
     MachineFunction *MF;
 
+    int LabelIdx = -1; // used for asm printing
+
     std::string Name = ""; // mostly for comments & debug
+    std::string ReferenceName = ""; // for asm printing
 
     std::list<MachineInst> Instructions;
     using iterator = std::list<MachineInst>::iterator;
@@ -25,8 +28,6 @@ class MachineBB {
     std::vector<MachineBB *> Predecessors;
     using pred_iterator = std::vector<MachineBB *>::iterator;
     using const_pred_iterator = std::vector<MachineBB *>::const_iterator;
-
-    int LabelIdx = -1; // used for asm printing
 public:
     MachineBB(MachineFunction *MF, std::string Name = "");
 
@@ -41,14 +42,20 @@ public:
 
     void addSuccessor(MachineBB *Succ);
     void addPredecessor(MachineBB *Pred);
+    void addSuccessorOneWay(MachineBB *Succ);
+    void addPredecessorOneWay(MachineBB *Pred);
 
     MachineFunction *getMF() const;
     void setMF(MachineFunction *NewMF);
 
     bool verify() const;
 
-    void printReferenceName(std::ostream &OS) const;
+    std::string_view getReferenceName() const;
+    void updateReferenceName();
     void print(std::ostream &OS) const;
+
+    std::vector<MachineBB *> getSuccessors() const;
+    std::vector<MachineBB *> getPredecessors() const;
 
     iterator begin();
     iterator end();
