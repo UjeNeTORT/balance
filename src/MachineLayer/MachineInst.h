@@ -22,7 +22,6 @@ class MachineInst {
     bool IsTerminator = false; // whether terminates MBB
 
     MachineBB *MBB = nullptr;
-
 public:
     MachineInst(RISCVOpcode Opcode) : Opcode(Opcode) {}
     MachineInst &addReg(Register Reg);
@@ -42,6 +41,7 @@ public:
     std::vector<MachineOperand> &getOperands() { return Operands; }
     const std::vector<MachineOperand> &getOperands() const { return Operands; }
 
+    std::string getAsmString() const;
     void print(std::ostream &OS) const;
 
     iterator begin() { return Operands.begin(); }

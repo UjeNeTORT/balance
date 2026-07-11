@@ -1,5 +1,6 @@
 #include "VerifierPass.h"
 
+#include "MIROpcodes.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
 
@@ -74,6 +75,20 @@ bool VerifierPass::verifyCFG(MachineFunction &MF, std::string &Msg) const {
                 + " -> "
                 + std::string(MBB.getReferenceName())
                 + ": Predecessor does not know its successor\n";
+                Fail = true;
+            }
+        }
+    }
+    return Fail;
+}
+bool VerifierPass::verifyMBB(MachineFunction &MF, std::string &Msg) const {
+    assert(Msg.empty());
+
+    bool Fail = false;
+    for (const MachineBB &MBB : MF) {
+        for (const MachineInst &MI : MBB) {
+            if (MI.getMBB() != &MBB) {
+                Msg += "\"" + MI.getAsmString() + "\" does not point to " + std::string(MBB.getReferenceName()) + "\n";
                 Fail = true;
             }
         }

@@ -58,7 +58,7 @@ public:
     void setIsDef(bool NewIsDef = true);
     void setIsUse(bool NewIsUse = true);
 
-    std::string_view getAsmString() const;
+    std::string getAsmString() const;
     void print(std::ostream &OS) const;
 
     bool operator==(const MachineOperand &MO2) const;

@@ -14,7 +14,7 @@ public:
     bool run(MachineFunction &MF) override;
 
     bool verifyCFG(MachineFunction &MF, std::string &Msg) const;
-    // bool verifyMBB(MachineFunction &MF, std::string &Msg) const;
+    bool verifyMBB(MachineFunction &MF, std::string &Msg) const;
     // bool verifyMIDefs(MachineFunction &MF, std::string &Msg) const;
     // bool verifyMIUses(MachineFunction &MF, std::string &Msg) const;
 
