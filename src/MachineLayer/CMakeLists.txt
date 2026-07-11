@@ -16,6 +16,7 @@ add_library(MIRInfo STATIC
 )
 
 target_link_libraries(balancc MachineLayer MIRInfo MIRPasses Utils)
+target_link_libraries(MachineLayer MIRPasses)
 
 target_include_directories(balancc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(balancc PRIVATE ${PROJECT_SOURCE_DIR}/src)
