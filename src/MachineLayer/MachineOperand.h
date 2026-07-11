@@ -68,10 +68,13 @@ public:
 // general register class
 class Register {
     unsigned RegId;
+    enum class Type { Virt, Phys } Type = Type::Virt;
     enum State { Define, Used, LastUsed } State;
 
 public:
     Register(unsigned RegId) : RegId(RegId) {}
+    enum Type getType() const { return Type; }
+    void setType(enum Type NewT) { Type = NewT; }
     unsigned getId() const { return RegId; }
     void print(std::ostream &OS) const { OS << "%VReg" << RegId; }
 
@@ -79,9 +82,20 @@ public:
     bool operator!=(const Register &Reg2) const { return !(*this == Reg2); }
 };
 
+
 std::ostream &operator<<(std::ostream &OS, const MachineOperand &MO);
 std::ostream &operator<<(std::ostream &OS, const Register &Reg);
 
 } // namespace Balance
+namespace std {
+template<> struct hash<Balance::Register> {
+    size_t operator()(const Balance::Register &R) const noexcept {
+        size_t h1 = hash<unsigned>{}(R.getId());
+        size_t h2 = hash<unsigned>{}(static_cast<unsigned>(R.getType()));
+        return h1 ^ (h2 << 1);
+    }
+};
+} // namespace std
+
 
 #endif // MACHINE_OPERAND_H

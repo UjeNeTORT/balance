@@ -6,36 +6,35 @@
 
 #include <algorithm>
 #include <vector>
+#include <unordered_set>
 
 namespace Balance {
 
-std::vector<Register> Defs(const MachineBB &MBB) {
-    std::vector<Register> Defs;
+std::unordered_set<Register> Defs(const MachineBB &MBB) {
+    std::unordered_set<Register> Defs;
 
-    auto InsertIfIsNotSame = [&Defs](const Register &Reg) {
-        if (std::find(Defs.begin(), Defs.end(), Reg) == Defs.end()) {
-            Defs.push_back(Reg);
-        }
+    auto SetInsert = [&Defs](Register R) {
+        Defs.insert(R);
     };
 
     for (const auto &MI : MBB) {
         const auto &MIDefs = MI.getDefs();
-        std::for_each(MIDefs.begin(), MIDefs.end(), InsertIfIsNotSame);
+        std::for_each(MIDefs.begin(), MIDefs.end(), SetInsert);
     }
 
     return Defs;
 }
 
-std::vector<Register> Uses(const MachineBB &MBB) {
-    std::vector<Register> Uses;
-    auto InsertIfIsNotSame = [&Uses](const Register &Reg) {
-        if (std::find(Uses.begin(), Uses.end(), Reg) == Uses.end()) {
-            Uses.push_back(Reg);
-        }
+std::unordered_set<Register> Uses(const MachineBB &MBB) {
+    std::unordered_set<Register> Uses;
+
+    auto SetInsert = [&Uses](Register R) {
+        Uses.insert(R);
     };
+
     for (const auto &MI : MBB) {
         const auto &MIUses = MI.getUses();
-        std::for_each(MIUses.begin(), MIUses.end(), InsertIfIsNotSame);
+        std::for_each(MIUses.begin(), MIUses.end(), SetInsert);
     }
 
     return Uses;

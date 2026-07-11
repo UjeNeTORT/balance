@@ -4,12 +4,12 @@
 #include "MachineBB.h"
 #include "MachineOperand.h"
 
-#include <vector>
+#include <unordered_set>
 
 namespace Balance {
 
-std::vector<Register> Defs(const MachineBB &MBB);
-std::vector<Register> Uses(const MachineBB &MBB);
+std::unordered_set<Register> Defs(const MachineBB &MBB);
+std::unordered_set<Register> Uses(const MachineBB &MBB);
 
 class LiveRanges;
 
