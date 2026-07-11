@@ -17,15 +17,18 @@ int main() {
 
     Register Reg0 = 0;
     Register Reg1 = 1;
+    Register Reg2 = 2;
 
-    MachineInst AddReg1Reg0 = MachineInst(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1);
-    MachineInst AuipcReg1Reg0 = MachineInst(RISCVOpcode::AUIPC).addReg(Reg0);
+    MachineInst AddReg1Reg0 = MachineInst(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1).addReg(Reg2);
+    MachineInst AuipcReg1Reg0 = MachineInst(RISCVOpcode::AUIPC).addReg(Reg0).addImm(0x100);
     MachineInst Jmp = MachineInst(RISCVOpcode::JAL).addMBB(MBB0);
-    MBB0->insertMI(&AddReg1Reg0);
-    MBB0->insertMI(&AddReg1Reg0);
-    MBB1->insertMI(&AuipcReg1Reg0);
-    MBB1->insertMI(&AddReg1Reg0);
-    MBB1->insertMI(&Jmp);
+
+    MBB0->createMI(RISCVOpcode::ADD).addReg(Reg0).addReg(Reg1).addReg(Reg2);
+    MBB0->insertMI(AddReg1Reg0);
+    MBB0->insertMI(AddReg1Reg0);
+    MBB1->insertMI(AuipcReg1Reg0);
+    MBB1->insertMI(AddReg1Reg0);
+    MBB1->insertMI(Jmp);
 
     MFMain.print(std::cout);
 

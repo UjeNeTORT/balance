@@ -10,13 +10,13 @@
 namespace Balance {
 
 class MachineBB {
-    std::list<MachineInst *> Instructions;
-    using iterator = std::list<MachineInst *>::iterator;
-    using const_iterator = std::list<MachineInst *>::const_iterator;
-
     MachineFunction *MF;
 
     std::string Name = ""; // mostly for comments & debug
+
+    std::list<MachineInst> Instructions;
+    using iterator = std::list<MachineInst>::iterator;
+    using const_iterator = std::list<MachineInst>::const_iterator;
 
     std::vector<MachineBB *> Successors;
     using succ_iterator = std::vector<MachineBB *>::iterator;
@@ -30,21 +30,31 @@ class MachineBB {
 public:
     MachineBB(MachineFunction *MF, std::string Name = "");
 
-    void insertMI(MachineBB::iterator I, MachineInst *MI);
+    MachineInst &createMI(MachineBB::iterator I, RISCVOpcode Opcode);
+    MachineInst &createMI(RISCVOpcode Opcode);
 
-    void insertMI(MachineInst *MI);
-
-    iterator begin();
-    iterator end();
-
-    const_iterator begin() const;
-    const_iterator end() const;
+    MachineInst *insertMI(MachineBB::iterator I, MachineInst MI);
+    MachineInst *insertMI(MachineInst MI);
 
     int getLabelIdx() const;
     void setLabelIdx(int LabelIdxNew);
 
     void addSuccessor(MachineBB *Succ);
     void addPredecessor(MachineBB *Pred);
+
+    MachineFunction *getMF() const;
+    void setMF(MachineFunction *NewMF);
+
+    bool verify() const;
+
+    void printReferenceName(std::ostream &OS) const;
+    void print(std::ostream &OS) const;
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
 
     succ_iterator succ_begin();
     succ_iterator succ_end();
@@ -57,13 +67,6 @@ public:
 
     const_pred_iterator pred_begin() const;
     const_pred_iterator pred_end() const;
-
-    MachineFunction *getMF() const;
-    void setMF(MachineFunction *NewMF);
-
-    void printReferenceName(std::ostream &OS) const;
-
-    void print(std::ostream &OS) const;
 };
 
 } // namespace Balance

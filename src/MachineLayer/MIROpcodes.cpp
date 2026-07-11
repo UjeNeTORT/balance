@@ -1,10 +1,30 @@
 // ai-generated
 #include "MIROpcodes.h"
-#include "../Utils/Utils.h"
+#include "MachineInst.h"
+
+#include "Utils/Utils.h"
 
 #include <string_view>
 
 namespace Balance {
+
+bool isControlTransferInst(const MachineInst &MI) {
+    switch (MI.getOpcode()) {
+    case G_BR:
+    case G_BRCOND:
+    case JAL:
+    case JALR:
+    case BEQ:
+    case BNE:
+    case BLT:
+    case BGE:
+    case BLTU:
+    case BGEU:
+        return true;
+    default:
+        return false;
+    }
+}
 
 // ai-generated
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {
@@ -220,6 +240,49 @@ std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {
     }
     unreachable("Unknown RISCVOpcode");
     return "";
+}
+
+// ai-generated
+unsigned getNumDefs(RISCVOpcode Opcode) {
+    switch (Opcode) {
+    // 0 defs
+    case G_STORE:
+    case G_BR:
+    case G_BRCOND:
+    case SB:
+    case SH:
+    case SW:
+    case SD:
+    case BEQ:
+    case BNE:
+    case BLT:
+    case BGE:
+    case BLTU:
+    case BGEU:
+    case ECALL:
+    case EBREAK:
+    case FENCE:
+    case FENCE_I:
+    case FSW:
+    case FSD:
+    case C_FSD:
+    case C_SW:
+    case C_SD:
+    case C_NOP:
+    case C_J:
+    case C_BEQZ:
+    case C_BNEZ:
+    case C_JR:
+    case C_EBREAK:
+    case C_FSDSP:
+    case C_SWSP:
+    case C_SDSP:
+        return 0;
+
+    // 1 def
+    default:
+        return 1;
+    }
 }
 
 } // namespace Balance

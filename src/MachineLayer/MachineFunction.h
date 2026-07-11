@@ -19,7 +19,7 @@ class MachineFunction {
     int MBBIdx = 0; // incremented each time as a new MBB is created
     std::string Name;
 public:
-    MachineFunction(std::string Name);
+    MachineFunction(const std::string &Name);
 
     std::string_view getName() const;
 

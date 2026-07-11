@@ -87,6 +87,10 @@ enum RISCVOpcode {
     C_JR, C_MV, C_EBREAK, C_JALR, C_ADD, C_FSDSP, C_SWSP, C_SDSP
 };
 
+class MachineInst;
+bool isControlTransferInst(const MachineInst &MI);
+unsigned getNumDefs(RISCVOpcode Opcode);
+
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode);
 
 } // namespace Balance
