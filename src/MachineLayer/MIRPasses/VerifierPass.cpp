@@ -3,6 +3,7 @@
 #include "MIROpcodes.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
+#include "MachineOperand.h"
 
 #include <algorithm>
 #include <cassert>
@@ -24,9 +25,8 @@ bool VerifierPass::run(MachineFunction &MF) {
 
     bool Fail = false;
     Fail |= RunAndHandleFail(verifyCFG(MF, Msg));
-    // Fail |= RunAndHandleFail(verifyMBB(MF, Msg));
-    // Fail |= RunAndHandleFail(verifyMIDefs(MF, Msg));
-    // Fail |= RunAndHandleFail(verifyMIUses(MF, Msg));
+    Fail |= RunAndHandleFail(verifyMBB(MF, Msg));
+    Fail |= RunAndHandleFail(verifyMIDefsUses(MF, Msg));
 
     // TODO: in release mode this pass should be disabled
 
@@ -89,6 +89,34 @@ bool VerifierPass::verifyMBB(MachineFunction &MF, std::string &Msg) const {
         for (const MachineInst &MI : MBB) {
             if (MI.getMBB() != &MBB) {
                 Msg += "\"" + MI.getAsmString() + "\" does not point to " + std::string(MBB.getReferenceName()) + "\n";
+                Fail = true;
+            }
+        }
+    }
+    return Fail;
+}
+
+bool VerifierPass::verifyMIDefsUses(MachineFunction &MF, std::string &Msg) const {
+    assert(Msg.empty());
+
+    bool Fail = false;
+    for (const MachineBB &MBB : MF) {
+        for (const MachineInst &MI : MBB) {
+            unsigned NumDefs = 0;
+            for (const auto &MO : MI.getOperands()) {
+                if (!(MO.isVReg() || MO.isPhysReg())) continue;
+                if (MO.isDef()) {
+                    NumDefs++;
+                    if (MO.isUse()) {
+                        Msg += "\"" + MI.getAsmString() + "\": operand is both def and use: " + MO.getAsmString() + "\n";
+                        Fail = true;
+                    }
+                }
+            }
+
+            unsigned ExpectedNumDefs = getNumDefs(MI.getOpcode());
+            if (NumDefs != ExpectedNumDefs) {
+                Msg += "\"" + MI.getAsmString() + "\": has " + std::to_string(NumDefs) + " defs, but expected " + std::to_string(ExpectedNumDefs) + "\n";
                 Fail = true;
             }
         }
