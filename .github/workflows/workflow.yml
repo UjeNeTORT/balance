@@ -41,14 +41,12 @@ jobs:
                   compiler: msvc
                   cc: cl
                   cxx: cl
-                  generator: -G "Visual Studio 17 2022"
 
                 - os: windows-latest
                   build_type: Debug
                   compiler: msvc
                   cc: cl
                   cxx: cl
-                  generator: -G "Visual Studio 17 2022"
 
         steps:
             - name: Checkout
