@@ -11,7 +11,7 @@ class MachineFunction;
 
 class LivenessAnalysis final : public Pass {
 public:
-    LivenessAnalysis(const std::string &Name) : Pass(Name) {}
+    LivenessAnalysis(const std::string &Name = "LivenessAnalysis") : Pass(Name) {}
 
     bool run(MachineFunction &MF) override;
 };

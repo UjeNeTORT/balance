@@ -11,11 +11,11 @@
 
 namespace Balance {
 
-std::unordered_set<Register> ComputeDefs(const MachineBB &MBB, bool ExcludePhi) {
+std::unordered_set<Register> ComputeDefs(const MachineBB &B) {
     std::unordered_set<Register> Defs;
 
-    for (const auto &MI : MBB) {
-        if (ExcludePhi && MI.getOpcode() == PHI) continue;
+    for (const auto &MI : B) {
+        if (MI.getOpcode() == PHI) continue;
         const auto &MIDefs = MI.getDefs();
         Defs.insert(MIDefs.begin(), MIDefs.end());
     }
@@ -23,11 +23,11 @@ std::unordered_set<Register> ComputeDefs(const MachineBB &MBB, bool ExcludePhi) 
     return Defs;
 }
 
-std::unordered_set<Register> ComputeUses(const MachineBB &MBB, bool ExcludePhi) {
+std::unordered_set<Register> ComputeUses(const MachineBB &B) {
     std::unordered_set<Register> Uses;
 
-    for (const auto &MI : MBB) {
-        if (ExcludePhi && MI.getOpcode() == PHI) continue;
+    for (const auto &MI : B) {
+        if (MI.getOpcode() == PHI) continue;
         const auto &MIUses = MI.getUses();
         Uses.insert(MIUses.begin(), MIUses.end());
     }
@@ -37,13 +37,13 @@ std::unordered_set<Register> ComputeUses(const MachineBB &MBB, bool ExcludePhi) 
 
 // use is upward-exposed in a bb when there is no local definition PRECEDING it,
 // i.e. live range escapes the bb at the top
-std::unordered_set<Register> ComputeUpwardExposed(const MachineBB &MBB, bool ExcludePhi) {
+std::unordered_set<Register> ComputeUpwardExposed(const MachineBB &B) {
     std::unordered_set<Register> UE;
 
     // handle case when use comes before def (possible for physical regs)
     std::unordered_set<Register> RollingDefs;
-    for (const auto &MI : MBB) {
-        if (ExcludePhi && MI.getOpcode() == PHI) continue;
+    for (const auto &MI : B) {
+        if (MI.getOpcode() == PHI) continue;
         const auto &MIUses = MI.getUses();
         const auto &MIDefs = MI.getDefs();
 
@@ -59,10 +59,10 @@ std::unordered_set<Register> ComputeUpwardExposed(const MachineBB &MBB, bool Exc
     return UE;
 }
 
-std::unordered_set<Register> ComputePhiDefs(const MachineBB &MBB) {
+std::unordered_set<Register> ComputePhiDefs(const MachineBB &B) {
     std::unordered_set<Register> PhiDefs;
 
-    for (const auto &MI : MBB) {
+    for (const auto &MI : B) {
         if (MI.getOpcode() != PHI) continue;
         const auto &MIDefs = MI.getDefs();
         PhiDefs.insert(MIDefs.begin(), MIDefs.end());
@@ -71,10 +71,10 @@ std::unordered_set<Register> ComputePhiDefs(const MachineBB &MBB) {
     return PhiDefs;
 }
 
-std::unordered_set<Register> ComputePhiUses(const MachineBB &MBB) {
+std::unordered_set<Register> ComputePhiUses(const MachineBB &B) {
     std::unordered_set<Register> PhiUses;
 
-    const auto &Successors = MBB.getSuccessors();
+    const auto &Successors = B.getSuccessors();
     for (const MachineBB *Succ : Successors) {
         for (const auto &MI : *Succ) {
             if (MI.getOpcode() != PHI) continue;
@@ -90,7 +90,7 @@ std::unordered_set<Register> ComputePhiUses(const MachineBB &MBB) {
 
                 // if none of MOs come from this MBB, skip such PHI,
                 // otherwise Register corresponding to this MBB will be added to PhiUses
-                if (MOMBB.getMBB() != &MBB) continue;
+                if (MOMBB.getMBB() != &B) continue;
                 PhiUses.insert(MOReg.getReg());
             }
         }
@@ -101,13 +101,13 @@ std::unordered_set<Register> ComputePhiUses(const MachineBB &MBB) {
 
 // dataflow equation:
 // LiveIns(B) = PhiDefs(B) U UpwardExposed(B) U (LiveOuts(B) \ Defs(B))
-std::unordered_set<Register> ComputeLiveIns(const MachineBB &MBB) {
+std::unordered_set<Register> ComputeLiveIns(MachineBB &B) {
     std::unordered_set<Register> LiveIns;
 
-    const auto &PhiDefsVec = ComputePhiDefs(MBB);
-    const auto &UpwardExposedVec = ComputeUpwardExposed(MBB);
-    const auto &LiveOutsVec = ComputeLiveOuts(MBB);
-    const auto &DefsVec = ComputeDefs(MBB);
+    const auto &PhiDefsVec = ComputePhiDefs(B);
+    const auto &UpwardExposedVec = ComputeUpwardExposed(B);
+    const auto &LiveOutsVec = ComputeLiveOuts(B);
+    const auto &DefsVec = ComputeDefs(B);
 
     auto InsertIfNotInDefsB = [&LiveIns, &DefsVec](Register R) {
         if (DefsVec.find(R) == DefsVec.end()) {
@@ -119,20 +119,22 @@ std::unordered_set<Register> ComputeLiveIns(const MachineBB &MBB) {
     LiveIns.insert(UpwardExposedVec.begin(), UpwardExposedVec.end());
     std::for_each(LiveOutsVec.begin(), LiveOutsVec.end(), InsertIfNotInDefsB);
 
+    B.setLiveIns(LiveIns);
+
     return LiveIns;
 }
 
 // dataflow equation:
 // LiveOuts = for each direct successor S of B,
 //  U [(LiveIns(S) \ PhiDefs(S)) U PhiUses(B)]
-std::unordered_set<Register> ComputeLiveOuts(const MachineBB &B) {
+std::unordered_set<Register> ComputeLiveOuts(MachineBB &B) {
     std::unordered_set<Register> LiveOuts;
 
     const auto &PhiUsesVec = ComputePhiUses(B);
     LiveOuts.insert(PhiUsesVec.begin(), PhiUsesVec.end());
 
-    for (const MachineBB *Succ : B.getSuccessors()) {
-        const MachineBB &S = *Succ;
+    for (MachineBB *Succ : B.getSuccessors()) {
+        MachineBB &S = *Succ;
         const auto &LiveInsVec = ComputeLiveIns(S);
         const auto &PhiDefsVec = ComputePhiDefs(S);
 
@@ -143,6 +145,8 @@ std::unordered_set<Register> ComputeLiveOuts(const MachineBB &B) {
         };
         std::for_each(LiveInsVec.begin(), LiveInsVec.end(), InsertIfNotInPhiDefsS);
     }
+
+    B.setLiveOuts(LiveOuts);
 
     return LiveOuts;
 }

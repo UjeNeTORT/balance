@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <unordered_set>
 
 namespace Balance {
 
@@ -41,12 +42,20 @@ void MachineBB::setLabelIdx(int LabelIdxNew) {
     ReferenceName = getReferenceName();
 }
 
-std::set<Register> &MachineBB::getLiveIns() {
+const std::unordered_set<Register> &MachineBB::getLiveIns() {
     return LiveIns;
 }
 
-std::set<Register> &MachineBB::getLiveOuts() {
+const std::unordered_set<Register> &MachineBB::getLiveOuts() {
     return LiveOuts;
+}
+
+void MachineBB::setLiveIns(const std::unordered_set<Register> &LiveInsNew) {
+    LiveIns = LiveInsNew;
+}
+
+void MachineBB::setLiveOuts(const std::unordered_set<Register> &LiveOutsNew) {
+    LiveOuts = LiveOutsNew;
 }
 
 void MachineBB::addSuccessor(MachineBB *Succ) {
@@ -113,7 +122,7 @@ std::string_view MachineBB::getReferenceName() const {
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
-    auto &&DefsVec = ComputeDefs(*this, false);
+    auto &&DefsVec = ComputeDefs(*this);
     auto &&UsesVec = ComputeUses(*this);
 
     bool First = true;
@@ -149,14 +158,14 @@ void MachineBB::print(std::ostream &OS) const {
 
     First = true;
     OS << "LiveIns: ";
-    const auto &LiveInsVec = ComputeLiveIns(*this);
-    std::for_each(LiveInsVec.begin(), LiveInsVec.end(), PrintNext);
+    // const auto &LiveInsVec = ComputeLiveIns(*this);
+    std::for_each(LiveIns.begin(), LiveIns.end(), PrintNext);
     OS << "\n";
 
     First = true;
     OS << "LiveOuts: ";
-    const auto &LiveOutsVec = ComputeLiveOuts(*this);
-    std::for_each(LiveOutsVec.begin(), LiveOutsVec.end(), PrintNext);
+    // const auto &LiveOutsVec = ComputeLiveOuts(*this);
+    std::for_each(LiveOuts.begin(), LiveOuts.end(), PrintNext);
     OS << "\n";
 
     OS << getReferenceName();

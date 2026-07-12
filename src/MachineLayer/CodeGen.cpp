@@ -1,10 +1,12 @@
 #include "MIROpcodes.h"
-#include "MIRPasses/VerifierPass.h"
 #include "MachineInst.h"
 #include "MachineOperand.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
 #include "PassManager.h"
+
+#include "MIRPasses/VerifierPass.h"
+#include "MIRPasses/LivenessAnalysis.h"
 
 #include "RISCV/RISCVRegisters.h"
 
@@ -96,6 +98,7 @@ int main() {
     PassManager PM;
 
     PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass(std::make_unique<LivenessAnalysis>());
 
     PM.run(TestMF);
 
