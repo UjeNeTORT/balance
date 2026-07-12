@@ -27,6 +27,7 @@ bool VerifierPass::run(MachineFunction &MF) {
     Fail |= RunAndHandleFail(verifyCFG(MF, Msg));
     Fail |= RunAndHandleFail(verifyMBB(MF, Msg));
     Fail |= RunAndHandleFail(verifyMIDefsUses(MF, Msg));
+    Fail |= RunAndHandleFail(verifySingleEntryMBB(MF, Msg));
 
     // TODO: in release mode this pass should be disabled
 
@@ -120,6 +121,23 @@ bool VerifierPass::verifyMIDefsUses(MachineFunction &MF, std::string &Msg) const
                 Fail = true;
             }
         }
+    }
+    return Fail;
+}
+
+bool VerifierPass::verifySingleEntryMBB(MachineFunction &MF, std::string &Msg) const {
+    assert(Msg.empty());
+
+    bool Fail = false;
+    unsigned NumEntryMBBs = 0;
+    for (const MachineBB &MBB : MF) {
+        if (MBB.getPredecessors().empty()) {
+            NumEntryMBBs++;
+        }
+    }
+    if (NumEntryMBBs != 1) {
+        Msg += "Number of entry basic blocks is " + std::to_string(NumEntryMBBs) + ", expected 1\n";
+        Fail = true;
     }
     return Fail;
 }
