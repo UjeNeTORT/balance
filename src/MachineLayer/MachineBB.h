@@ -44,8 +44,8 @@ public:
     int getLabelIdx() const;
     void setLabelIdx(int LabelIdxNew);
 
-    const std::unordered_set<Register> &getLiveIns();
-    const std::unordered_set<Register> &getLiveOuts();
+    const std::unordered_set<Register> &getLiveIns() const;
+    const std::unordered_set<Register> &getLiveOuts() const;
 
     void setLiveIns(const std::unordered_set<Register> &LiveInsNew);
     void setLiveOuts(const std::unordered_set<Register> &LiveOutsNew);

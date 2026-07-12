@@ -101,12 +101,12 @@ std::unordered_set<Register> ComputePhiUses(const MachineBB &B) {
 
 // dataflow equation:
 // LiveIns(B) = PhiDefs(B) U UpwardExposed(B) U (LiveOuts(B) \ Defs(B))
-std::unordered_set<Register> ComputeLiveIns(MachineBB &B) {
+std::unordered_set<Register> ComputeLiveIns(const MachineBB &B) {
     std::unordered_set<Register> LiveIns;
 
     const auto &PhiDefsVec = ComputePhiDefs(B);
     const auto &UpwardExposedVec = ComputeUpwardExposed(B);
-    const auto &LiveOutsVec = ComputeLiveOuts(B);
+    const auto &LiveOutsVec = B.getLiveOuts();
     const auto &DefsVec = ComputeDefs(B);
 
     auto InsertIfNotInDefsB = [&LiveIns, &DefsVec](Register R) {
@@ -119,23 +119,21 @@ std::unordered_set<Register> ComputeLiveIns(MachineBB &B) {
     LiveIns.insert(UpwardExposedVec.begin(), UpwardExposedVec.end());
     std::for_each(LiveOutsVec.begin(), LiveOutsVec.end(), InsertIfNotInDefsB);
 
-    B.setLiveIns(LiveIns);
-
     return LiveIns;
 }
 
 // dataflow equation:
 // LiveOuts = for each direct successor S of B,
 //  U [(LiveIns(S) \ PhiDefs(S)) U PhiUses(B)]
-std::unordered_set<Register> ComputeLiveOuts(MachineBB &B) {
+std::unordered_set<Register> ComputeLiveOuts(const MachineBB &B) {
     std::unordered_set<Register> LiveOuts;
 
     const auto &PhiUsesVec = ComputePhiUses(B);
     LiveOuts.insert(PhiUsesVec.begin(), PhiUsesVec.end());
 
     for (MachineBB *Succ : B.getSuccessors()) {
-        MachineBB &S = *Succ;
-        const auto &LiveInsVec = ComputeLiveIns(S);
+        const MachineBB &S = *Succ;
+        const auto &LiveInsVec = S.getLiveIns();
         const auto &PhiDefsVec = ComputePhiDefs(S);
 
         auto InsertIfNotInPhiDefsS = [&LiveOuts, &PhiDefsVec](Register R) {
@@ -145,8 +143,6 @@ std::unordered_set<Register> ComputeLiveOuts(MachineBB &B) {
         };
         std::for_each(LiveInsVec.begin(), LiveInsVec.end(), InsertIfNotInPhiDefsS);
     }
-
-    B.setLiveOuts(LiveOuts);
 
     return LiveOuts;
 }

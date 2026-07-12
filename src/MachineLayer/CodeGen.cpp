@@ -15,18 +15,16 @@
 
 using namespace Balance;
 
-// ai-generated
 MachineFunction createDiamondTestMF() {
     MachineFunction MFMain("main_diamond");
 
-    // Create BBs for a diamond shape CFG
     MachineBB *MBB0 = MFMain.createMBB("entry");
     MachineBB *MBB1 = MFMain.createMBB("if.true");
     MachineBB *MBB2 = MFMain.createMBB("if.false");
     MachineBB *MBB3 = MFMain.createMBB("if.end");
 
-    // Setup CFG:
-    // MBB0 -> MBB1 (fallthrough), MBB2 (taken)
+    // CFG:
+    // MBB0 -> MBB1
     // MBB1 -> MBB3
     // MBB2 -> MBB3
     MBB0->addSuccessor(MBB1);
@@ -34,7 +32,6 @@ MachineFunction createDiamondTestMF() {
     MBB1->addSuccessor(MBB3);
     MBB2->addSuccessor(MBB3);
 
-    // Define some registers
     Register Reg0 = 0;
     Register Reg1 = 1;
     Register Reg2 = 2;
@@ -60,10 +57,7 @@ MachineFunction createDiamondTestMF() {
     // Reg4 = PHI [Reg1, MBB1], [Reg2, MBB2]
     MBB3->createMI(RISCVOpcode::PHI).addReg(Reg4).addReg(Reg1).addMBB(MBB1).addReg(Reg2).addMBB(MBB2);
 
-    // Use the result of the PHI
     MBB3->createMI(RISCVOpcode::ADD).addReg(Reg5).addReg(Reg4).addReg(RZ);
-
-    MFMain.print(std::cout);
 
     return MFMain;
 }
@@ -99,8 +93,11 @@ int main() {
 
     PM.registerPass(std::make_unique<VerifierPass>());
     PM.registerPass(std::make_unique<LivenessAnalysis>());
+    PM.registerPass(std::make_unique<VerifierPass>());
 
     PM.run(TestMF);
+
+    TestMF.print(std::cout);
 
     return 0;
 }

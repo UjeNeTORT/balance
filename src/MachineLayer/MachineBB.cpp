@@ -42,11 +42,11 @@ void MachineBB::setLabelIdx(int LabelIdxNew) {
     ReferenceName = getReferenceName();
 }
 
-const std::unordered_set<Register> &MachineBB::getLiveIns() {
+const std::unordered_set<Register> &MachineBB::getLiveIns() const {
     return LiveIns;
 }
 
-const std::unordered_set<Register> &MachineBB::getLiveOuts() {
+const std::unordered_set<Register> &MachineBB::getLiveOuts() const {
     return LiveOuts;
 }
 

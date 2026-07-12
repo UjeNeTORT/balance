@@ -1,19 +1,36 @@
 #include "LivenessAnalysis.h"
 #include "LiveRanges.h"
 
-#include <algorithm>
-
 using namespace Balance;
 
 bool LivenessAnalysis::run(MachineFunction &MF) {
-    bool Changed = false;
 
-    MachineBB &Entry = *std::find_if(MF.begin(), MF.end(), [](MachineBB &B) -> bool {
-        return B.getPredecessors().empty();
-    });
+    // reset
+    for (auto &BB : MF) {
+        BB.setLiveIns({});
+        BB.setLiveOuts({});
+    }
 
-    ComputeLiveIns(Entry);
-    ComputeLiveOuts(Entry);
+    bool Converged = false;
+    while (!Converged) {
+        Converged = true;
+        for (auto &BB : MF) {
+            auto OldLiveIns = BB.getLiveIns();
+            auto OldLiveOuts = BB.getLiveOuts();
 
-    return Changed;
+            auto NewLiveOuts = ComputeLiveOuts(BB);
+            BB.setLiveOuts(NewLiveOuts);
+
+            auto NewLiveIns = ComputeLiveIns(BB);
+            BB.setLiveIns(NewLiveIns);
+
+            if (OldLiveIns != NewLiveIns || OldLiveOuts != NewLiveOuts) {
+                Converged = false;
+            }
+        }
+    }
+
+    // overall nothing has changed, despite BBs
+    // now know their LiveIns and LiveOuts
+    return false;
 }

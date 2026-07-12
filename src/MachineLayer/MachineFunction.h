@@ -1,7 +1,6 @@
 #ifndef MACHINE_FUNCTION_H
 #define MACHINE_FUNCTION_H
 
-#include <memory>
 #include <string>
 #include <string_view>
 
