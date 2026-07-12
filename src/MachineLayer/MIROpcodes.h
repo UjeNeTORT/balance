@@ -8,15 +8,8 @@ namespace Balance {
 // ai-generated
 enum RISCVOpcode {
     //===------------------------------------------------------------------===//
-    // 0. Target-Independent Generic MIR Opcodes (Crucial for GlobalISel-style design)
-    //===------------------------------------------------------------------===//
-    G_ADD, G_SUB, G_MUL, G_AND, G_OR, G_XOR, G_SHL, G_LSHR, G_ASHR,
-    G_LOAD, G_STORE, G_CONSTANT, G_FRAME_INDEX, G_BR, G_BRCOND,
-
-    //===------------------------------------------------------------------===//
     // 1. RV64I Base Integer Extension (64-bit Base)
     //===------------------------------------------------------------------===//
-    // Computational Instructions (32-bit & 64-bit Word variants)
     LUI, AUIPC,
     ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI,
     ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND,

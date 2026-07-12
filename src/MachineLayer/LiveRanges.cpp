@@ -81,17 +81,17 @@ std::unordered_set<Register> ComputePhiUses(const MachineBB &MBB) {
             const std::vector<MachineOperand> &MOs = MI.getOperands();
 
             for (auto It = ++MOs.begin(); It != MOs.end(); ++It) {
+                if (It->isMBB()) continue; // skip MBB
                 assert(std::next(It) != MOs.end() && "PHI should have an even number of non-def operands");
                 const auto &MOReg = *It;
                 const auto &MOMBB = *std::next(It);
 
-                assert(MOReg.isVReg() || MOReg.isPhysReg());
-                assert(MOMBB.isMBB());
+                assert(MOReg.isReg() && MOMBB.isMBB() && "Wrong Reg:MBB pair in PHI");
 
                 // if none of MOs come from this MBB, skip such PHI,
                 // otherwise Register corresponding to this MBB will be added to PhiUses
                 if (MOMBB.getMBB() != &MBB) continue;
-                PhiUses.insert(Register(MOReg.getVReg()));
+                PhiUses.insert(MOReg.getReg());
             }
         }
     }

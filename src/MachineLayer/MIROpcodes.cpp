@@ -21,21 +21,6 @@ struct MIRInstrInfo {
 static const MIRInstrInfo MIRInstructionDB[] = {
     // cti - control transfer instruction (bb terminator)
     // asm-string, is-cti, num-defs, num-uses, num-operands
-    { "G_ADD",         false, 1, 2, 3 },
-    { "G_SUB",         false, 1, 2, 3 },
-    { "G_MUL",         false, 1, 2, 3 },
-    { "G_AND",         false, 1, 2, 3 },
-    { "G_OR",          false, 1, 2, 3 },
-    { "G_XOR",         false, 1, 2, 3 },
-    { "G_SHL",         false, 1, 2, 3 },
-    { "G_LSHR",        false, 1, 2, 3 },
-    { "G_ASHR",        false, 1, 2, 3 },
-    { "G_LOAD",        false, 1, 1, 2 },
-    { "G_STORE",       false, 0, 2, 2 },
-    { "G_CONSTANT",    false, 1, 0, 1 },
-    { "G_FRAME_INDEX", false, 1, 0, 1 },
-    { "G_BR",          true,  0, 0, 1 },
-    { "G_BRCOND",      true,  0, 1, 2 },
     { "LUI",           false, 1, 0, 2 },
     { "AUIPC",         false, 1, 0, 2 },
     { "ADDI",          false, 1, 1, 3 },
@@ -238,7 +223,7 @@ bool isControlTransferInst(const MachineInst &MI) {
 }
 
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {
-    if (Opcode >= G_ADD && Opcode <= C_SDSP) {
+    if (Opcode >= LUI && Opcode <= PHI) {
         return MIRInstructionDB[Opcode].asmstring;
     }
     unreachable("Unknown RISCVOpcode");
@@ -246,7 +231,7 @@ std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {
 }
 
 unsigned getNumDefs(RISCVOpcode Opcode) {
-    if (Opcode >= G_ADD && Opcode <= C_SDSP) {
+    if (Opcode >= LUI && Opcode <= PHI) {
         return MIRInstructionDB[Opcode].numDefs;
     }
     unreachable("Unknown RISCVOpcode");

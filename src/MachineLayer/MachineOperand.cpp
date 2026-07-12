@@ -6,64 +6,35 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <variant>
 
 namespace Balance {
 
-MachineOperand MachineOperand::createVReg(unsigned int RegId) {
-    MachineOperand MO;
-    MO.Type = MOType::VirtReg;
-    MO.RegId = RegId;
-    return MO;
-}
-
-MachineOperand MachineOperand::createImm(uint64_t Imm) {
-    MachineOperand MO;
-    MO.Type = MOType::Imm;
-    MO.Imm = Imm;
-    return MO;
-}
-
-MachineOperand MachineOperand::createMBB(MachineBB *MBB) {
-    MachineOperand MO;
-    MO.Type = MOType::MachineBB;
-    MO.MBB = MBB;
-    return MO;
-}
-
-bool MachineOperand::isVReg() const {
-    return Type == MOType::VirtReg;
-}
-
-bool MachineOperand::isPhysReg() const {
-    return Type == MOType::PhysReg;
+bool MachineOperand::isReg() const {
+    return std::holds_alternative<Register>(Value);
 }
 
 bool MachineOperand::isImm() const {
-    return Type == MOType::Imm;
+    return std::holds_alternative<uint64_t>(Value);
 }
 
 bool MachineOperand::isMBB() const {
-    return Type == MOType::MachineBB;
+    return std::holds_alternative<MachineBB *>(Value);
 }
 
-unsigned MachineOperand::getVReg() const {
-    assert(isVReg() && "Wrong type for accessor");
-    return RegId;
-}
-
-unsigned MachineOperand::getPhysReg() const {
-    assert(isPhysReg() && "Wrong type for accessor");
-    return RegId;
+Register MachineOperand::getReg() const {
+    assert(isReg() && "Wrong type for accessor");
+    return *std::get_if<Register>(&Value);
 }
 
 uint64_t MachineOperand::getImm() const {
     assert(isImm() && "Wrong type for accessor");
-    return Imm;
+    return *std::get_if<uint64_t>(&Value);
 }
 
 MachineBB *MachineOperand::getMBB() const {
     assert(isMBB() && "Wrong type for accessor");
-    return MBB;
+    return *std::get_if<MachineBB *>(&Value);
 }
 
 MachineInst *MachineOperand::getMI() const {
@@ -77,21 +48,18 @@ void MachineOperand::setMI(MachineInst *NewMI) {
 std::string MachineOperand::getAsmString() const {
     std::string AsmString;
 
-    switch (Type) {
-    case MOType::VirtReg:
-        AsmString += "%VReg" + std::to_string(RegId);
+    switch (Value.index()) {
+    case 0: // Register
+        AsmString += std::get<0>(Value).getAsmString();
         break;
-    case MOType::PhysReg:
-        AsmString += "PhysReg" + std::to_string(RegId); // TODO: getRegName(RegId) for physical
+    case 1: // Imm
+        AsmString += std::to_string(std::get<1>(Value));
         break;
-    case MOType::Imm:
-        AsmString += std::to_string(Imm);
-        break;
-    case MOType::MachineBB:
-        AsmString += MBB->getReferenceName();
+    case 2: // MachineBB *
+        AsmString += std::get<2>(Value)->getReferenceName();
         break;
     default:
-        unreachable("Unexpected MOType");
+        unreachable("Unexpected variant index");
         break;
     }
 
@@ -103,48 +71,29 @@ void MachineOperand::print(std::ostream &OS) const {
 }
 
 bool MachineOperand::isDef() const {
-    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
-        && "Checking isDef() on a non register operand makes no sense");
+    assert(isReg() && "Checking isDef() on a non register operand makes no sense");
     return IsDef;
 }
 
 bool MachineOperand::isUse() const {
-    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
-        && "Checking isUse() on a non register operand makes no sense");
+    assert(isReg() && "Checking isUse() on a non register operand makes no sense");
     return IsUse;
 }
 
 void MachineOperand::setIsDef(bool NewIsDef) {
-    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
-        && "Setting setIsDef() on a non register operand makes no sense");
+    assert(isReg() && "Setting setIsDef() on a non register operand makes no sense");
     IsDef = NewIsDef;
 }
 
 void MachineOperand::setIsUse(bool NewIsUse) {
-    assert((Type == MOType::VirtReg || Type == MOType::PhysReg)
-        && "Setting setIsUse() on a non register operand makes no sense");
+    assert(isReg() && "Setting setIsUse() on a non register operand makes no sense");
     IsUse = NewIsUse;
 }
 
 bool MachineOperand::operator==(const MachineOperand &MO2) const {
-    if (Type != MO2.Type) return false;
-    switch(Type) {
-        case MOType::VirtReg:
-            return RegId == MO2.RegId;
-            break;
-        case MOType::PhysReg:
-            return RegId == MO2.RegId;
-            break;
-        case MOType::Imm:
-            return Imm == MO2.Imm;
-            break;
-        case MOType::MachineBB:
-            return MBB == MO2.MBB;
-            break;
-        default:
-            unreachable("Unexpected MOType");
-            break;
-    };
+    if (Value != MO2.Value) return false;
+    if (MI != MO2.MI) return false;
+    return true;
 }
 
 bool MachineOperand::operator!=(const MachineOperand &MO2) const {

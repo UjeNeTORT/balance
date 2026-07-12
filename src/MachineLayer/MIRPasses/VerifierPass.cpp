@@ -104,7 +104,7 @@ bool VerifierPass::verifyMIDefsUses(MachineFunction &MF, std::string &Msg) const
         for (const MachineInst &MI : MBB) {
             unsigned NumDefs = 0;
             for (const auto &MO : MI.getOperands()) {
-                if (!(MO.isVReg() || MO.isPhysReg())) continue;
+                if (!MO.isReg()) continue;
                 if (MO.isDef()) {
                     NumDefs++;
                     if (MO.isUse()) {
