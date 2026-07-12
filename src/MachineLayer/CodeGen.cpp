@@ -91,9 +91,9 @@ int main() {
 
     PassManager PM;
 
-    PM.registerPass(std::make_unique<VerifierPass>());
-    PM.registerPass(std::make_unique<LivenessAnalysis>());
-    PM.registerPass(std::make_unique<VerifierPass>());
+    PM.registerPass<VerifierPass>();
+    PM.registerPass<LivenessAnalysis>();
+    PM.registerPass<VerifierPass>();
 
     PM.run(TestMF);
 

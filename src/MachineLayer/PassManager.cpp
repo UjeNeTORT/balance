@@ -1,4 +1,5 @@
 #include "PassManager.h"
+#include <memory>
 
 using namespace Balance;
 
