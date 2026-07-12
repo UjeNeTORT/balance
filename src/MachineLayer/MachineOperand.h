@@ -2,27 +2,65 @@
 #define MACHINE_OPERAND_H
 
 #include "RISCV/RISCVRegisters.h"
+#include "Utils/Utils.h"
 
 #include <cstdint>
 #include <iostream>
+#include <variant>
 
 namespace Balance {
 
 class MachineBB;
 class MachineInst;
 
-class MachineOperand {
-    enum class MOType {
-        VirtReg, // TODO: make reg type distinction inside Register struct?
-        PhysReg,
-        Imm,
-        MachineBB
-    } Type;
-    union {
-        unsigned RegId;
-        uint64_t Imm;
-        MachineBB *MBB;
+// general register class
+class Register {
+
+public:
+    enum class Type {
+        Virtual,
+        Physical
     };
+
+private:
+    unsigned RegId;
+    Type RegType = Type::Virtual;
+    enum State { Define, Used, LastUsed } State;
+
+public:
+    Register(unsigned RegId) : RegId(RegId) {}
+    Register(RISCV::RISCVRegister Reg) : RegId(static_cast<unsigned>(Reg)), RegType(Type::Physical) {}
+    Type getType() const { return RegType; }
+    void setType(Type NewT) { RegType = NewT; }
+    unsigned getId() const { return RegId; }
+    std::string getAsmString() const {
+        std::string S;
+        switch (RegType) {
+        case Type::Virtual:
+            S += std::string("%VReg") + std::to_string(RegId);
+            break;
+        case Type::Physical:
+            S += std::string(RISCV::getRegAsmString(RegId));
+            break;
+        default:
+            unreachable("Unexpected register type");
+            break;
+        }
+
+        return S;
+    }
+    void print(std::ostream &OS) const {
+        OS << getAsmString();
+    }
+
+    bool operator==(const Register &Reg2) const { return RegId == Reg2.RegId; }
+    bool operator!=(const Register &Reg2) const { return !(*this == Reg2); }
+};
+
+bool isReservedRegister(Register Reg);
+
+class MachineOperand {
+    std::variant<Register, uint64_t, MachineBB *> Value;
 
     MachineInst *MI;
 
@@ -32,20 +70,16 @@ class MachineOperand {
     std::string AsmString;
 
 public:
-    MachineOperand(MachineInst *MI = nullptr) : MI(MI) {}
+    MachineOperand(MachineInst *MI = nullptr) : Value(Register(0)), MI(MI) {}
+    MachineOperand(Register R, MachineInst *MI = nullptr) : Value(R), MI(MI) {}
+    MachineOperand(uint64_t Imm, MachineInst *MI = nullptr) : Value(Imm), MI(MI) {}
+    MachineOperand(MachineBB *MBB, MachineInst *MI = nullptr) : Value(MBB), MI(MI) {}
 
-    static MachineOperand createVReg(unsigned RegId);
-    static MachineOperand createPhysReg(RISCV::RegistersX Reg);
-    static MachineOperand createImm(uint64_t Imm);
-    static MachineOperand createMBB(MachineBB *MBB);
-
-    bool isVReg() const;
-    bool isPhysReg() const;
+    bool isReg() const;
     bool isImm() const;
     bool isMBB() const;
 
-    unsigned getVReg() const;
-    unsigned getPhysReg() const;
+    Register getReg() const;
     uint64_t getImm() const;
     MachineBB *getMBB() const;
 
@@ -65,23 +99,20 @@ public:
     bool operator!=(const MachineOperand &MO2) const;
 };
 
-// general register class
-class Register {
-    unsigned RegId;
-    enum State { Define, Used, LastUsed } State;
-
-public:
-    Register(unsigned RegId) : RegId(RegId) {}
-    unsigned getId() const { return RegId; }
-    void print(std::ostream &OS) const { OS << "%VReg" << RegId; }
-
-    bool operator==(const Register &Reg2) const { return RegId == Reg2.RegId; }
-    bool operator!=(const Register &Reg2) const { return !(*this == Reg2); }
-};
 
 std::ostream &operator<<(std::ostream &OS, const MachineOperand &MO);
 std::ostream &operator<<(std::ostream &OS, const Register &Reg);
 
 } // namespace Balance
+namespace std {
+template<> struct hash<Balance::Register> {
+    size_t operator()(const Balance::Register &R) const noexcept {
+        size_t h1 = hash<unsigned>{}(R.getId());
+        size_t h2 = hash<unsigned>{}(static_cast<unsigned>(R.getType()));
+        return h1 ^ (h2 << 1);
+    }
+};
+} // namespace std
+
 
 #endif // MACHINE_OPERAND_H

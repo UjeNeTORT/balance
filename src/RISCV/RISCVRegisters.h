@@ -1,9 +1,17 @@
 #ifndef RISCV_REGISTERS_H
 #define RISCV_REGISTERS_H
 
+#include "Utils/Utils.h"
+
+#include <string_view>
+
+using namespace Balance;
 namespace RISCV {
 
-enum RegistersX {
+// ai-generated
+// This enum combines all RISC-V hardware registers, including integer (X) and floating-point (F) registers,
+// into a single enumeration for unified access.
+enum class RISCVRegister {
     // Hardware Name    ABI Name / Alias
     X0 = 0,             ZERO = 0,   // Hard-wired zero
     X1 = 1,             RA = 1,     // Return address
@@ -37,44 +45,138 @@ enum RegistersX {
     X28 = 28,           T3 = 28,    // Temporary 3
     X29 = 29,           T4 = 29,    // Temporary 4
     X30 = 30,           T5 = 30,    // Temporary 5
-    X31 = 31,           T6 = 31     // Temporary 6
+    X31 = 31,           T6 = 31,    // Temporary 6
+
+    // Floating Point Registers
+    F0 = 32,            FT0 = 32,   // FP Temporary 0
+    F1 = 33,            FT1 = 33,   // FP Temporary 1
+    F2 = 34,            FT2 = 34,   // FP Temporary 2
+    F3 = 35,            FT3 = 35,   // FP Temporary 3
+    F4 = 36,            FT4 = 36,   // FP Temporary 4
+    F5 = 37,            FT5 = 37,   // FP Temporary 5
+    F6 = 38,            FT6 = 38,   // FP Temporary 6
+    F7 = 39,            FT7 = 39,   // FP Temporary 7
+    F8 = 40,            FS0 = 40,   // FP Saved register 0
+    F9 = 41,            FS1 = 41,   // FP Saved register 1
+    F10 = 42,           FA0 = 42,   // FP Argument 0 / Return value 0
+    F11 = 43,           FA1 = 43,   // FP Argument 1 / Return value 1
+    F12 = 44,           FA2 = 44,   // FP Argument 2
+    F13 = 45,           FA3 = 45,   // FP Argument 3
+    F14 = 46,           FA4 = 46,   // FP Argument 4
+    F15 = 47,           FA5 = 47,   // FP Argument 5
+    F16 = 48,           FA6 = 48,   // FP Argument 6
+    F17 = 49,           FA7 = 49,   // FP Argument 7
+    F18 = 50,           FS2 = 50,   // FP Saved register 2
+    F19 = 51,           FS3 = 51,   // FP Saved register 3
+    F20 = 52,           FS4 = 52,   // FP Saved register 4
+    F21 = 53,           FS5 = 53,   // FP Saved register 5
+    F22 = 54,           FS6 = 54,   // FP Saved register 6
+    F23 = 55,           FS7 = 55,   // FP Saved register 7
+    F24 = 56,           FS8 = 56,   // FP Saved register 8
+    F25 = 57,           FS9 = 57,   // FP Saved register 9
+    F26 = 58,           FS10 = 58,  // FP Saved register 10
+    F27 = 59,           FS11 = 59,  // FP Saved register 11
+    F28 = 60,           FT8 = 60,   // FP Temporary 8
+    F29 = 61,           FT9 = 61,   // FP Temporary 9
+    F30 = 62,           FT10 = 62,  // FP Temporary 10
+    F31 = 63,           FT11 = 63   // FP Temporary 11
 };
 
-enum RegistersF {
-    // Hardware Name    ABI Name / Alias
-    F0 = 0,             FT0 = 0,    // FP Temporary 0
-    F1 = 1,             FT1 = 1,    // FP Temporary 1
-    F2 = 2,             FT2 = 2,    // FP Temporary 2
-    F3 = 3,             FT3 = 3,    // FP Temporary 3
-    F4 = 4,             FT4 = 4,    // FP Temporary 4
-    F5 = 5,             FT5 = 5,    // FP Temporary 5
-    F6 = 6,             FT6 = 6,    // FP Temporary 6
-    F7 = 7,             FT7 = 7,    // FP Temporary 7
-    F8 = 8,             FS0 = 8,    // FP Saved register 0
-    F9 = 9,             FS1 = 9,    // FP Saved register 1
-    F10 = 10,           FA0 = 10,   // FP Argument 0 / Return value 0
-    F11 = 11,           FA1 = 11,   // FP Argument 1 / Return value 1
-    F12 = 12,           FA2 = 12,   // FP Argument 2
-    F13 = 13,           FA3 = 13,   // FP Argument 3
-    F14 = 14,           FA4 = 14,   // FP Argument 4
-    F15 = 15,           FA5 = 15,   // FP Argument 5
-    F16 = 16,           FA6 = 16,   // FP Argument 6
-    F17 = 17,           FA7 = 17,   // FP Argument 7
-    F18 = 18,           FS2 = 18,   // FP Saved register 2
-    F19 = 19,           FS3 = 19,   // FP Saved register 3
-    F20 = 20,           FS4 = 20,   // FP Saved register 4
-    F21 = 21,           FS5 = 21,   // FP Saved register 5
-    F22 = 22,           FS6 = 22,   // FP Saved register 6
-    F23 = 23,           FS7 = 23,   // FP Saved register 7
-    F24 = 24,           FS8 = 24,   // FP Saved register 8
-    F25 = 25,           FS9 = 25,   // FP Saved register 9
-    F26 = 26,           FS10 = 26,  // FP Saved register 10
-    F27 = 27,           FS11 = 27,  // FP Saved register 11
-    F28 = 28,           FT8 = 28,   // FP Temporary 8
-    F29 = 29,           FT9 = 29,   // FP Temporary 9
-    F30 = 30,           FT10 = 30,  // FP Temporary 10
-    F31 = 31,           FT11 = 31   // FP Temporary 11
+// ai-generated
+namespace {
+struct RegisterInfo {
+    const char *AsmName;
 };
+
+static const RegisterInfo RegisterDB[] = {
+    // Integer Registers (ABI Names)
+    {"zero"}, // X0
+    {"ra"},   // X1
+    {"sp"},   // X2
+    {"gp"},   // X3
+    {"tp"},   // X4
+    {"t0"},   // X5
+    {"t1"},   // X6
+    {"t2"},   // X7
+    {"s0"},   // X8
+    {"s1"},   // X9
+    {"a0"},   // X10
+    {"a1"},   // X11
+    {"a2"},   // X12
+    {"a3"},   // X13
+    {"a4"},   // X14
+    {"a5"},   // X15
+    {"a6"},   // X16
+    {"a7"},   // X17
+    {"s2"},   // X18
+    {"s3"},   // X19
+    {"s4"},   // X20
+    {"s5"},   // X21
+    {"s6"},   // X22
+    {"s7"},   // X23
+    {"s8"},   // X24
+    {"s9"},   // X25
+    {"s10"},  // X26
+    {"s11"},  // X27
+    {"t3"},   // X28
+    {"t4"},   // X29
+    {"t5"},   // X30
+    {"t6"},   // X31
+
+    // Floating-Point Registers (ABI Names)
+    {"ft0"},  // F0
+    {"ft1"},  // F1
+    {"ft2"},  // F2
+    {"ft3"},  // F3
+    {"ft4"},  // F4
+    {"ft5"},  // F5
+    {"ft6"},  // F6
+    {"ft7"},  // F7
+    {"fs0"},  // F8
+    {"fs1"},  // F9
+    {"fa0"},  // F10
+    {"fa1"},  // F11
+    {"fa2"},  // F12
+    {"fa3"},  // F13
+    {"fa4"},  // F14
+    {"fa5"},  // F15
+    {"fa6"},  // F16
+    {"fa7"},  // F17
+    {"fs2"},  // F18
+    {"fs3"},  // F19
+    {"fs4"},  // F20
+    {"fs5"},  // F21
+    {"fs6"},  // F22
+    {"fs7"},  // F23
+    {"fs8"},  // F24
+    {"fs9"},  // F25
+    {"fs10"}, // F26
+    {"fs11"}, // F27
+    {"ft8"},  // F28
+    {"ft9"},  // F29
+    {"ft10"}, // F30
+    {"ft11"}  // F31
+};
+} // anonymous namespace
+
+inline std::string_view getRegAsmString(unsigned RegId) {
+    if (RegId >= (sizeof(RegisterDB) / sizeof(RegisterDB[0]))) {
+        unreachable("Invalid register ID");
+    }
+    return RegisterDB[RegId].AsmName;
+}
+
+inline bool isReservedRegister(RISCVRegister Reg) {
+    switch (Reg) {
+        case RISCVRegister::ZERO:
+        case RISCVRegister::SP:
+        case RISCVRegister::GP:
+        case RISCVRegister::TP:
+            return true;
+        default:
+            return false;
+    }
+}
 
 } // namespace RISCV
 

@@ -16,6 +16,7 @@ public:
     bool verifyCFG(MachineFunction &MF, std::string &Msg) const;
     bool verifyMBB(MachineFunction &MF, std::string &Msg) const;
     bool verifyMIDefsUses(MachineFunction &MF, std::string &Msg) const;
+    bool verifySingleEntryMBB(MachineFunction &MF, std::string &Msg) const;
 
     void reportSuccess(std::ostream &OS = std::cerr, const std::string &Msg = "");
     void reportFail(std::ostream &OS = std::cerr, const std::string &Msg = "");

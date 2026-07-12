@@ -8,15 +8,8 @@ namespace Balance {
 // ai-generated
 enum RISCVOpcode {
     //===------------------------------------------------------------------===//
-    // 0. Target-Independent Generic MIR Opcodes (Crucial for GlobalISel-style design)
-    //===------------------------------------------------------------------===//
-    G_ADD, G_SUB, G_MUL, G_AND, G_OR, G_XOR, G_SHL, G_LSHR, G_ASHR,
-    G_LOAD, G_STORE, G_CONSTANT, G_FRAME_INDEX, G_BR, G_BRCOND,
-
-    //===------------------------------------------------------------------===//
     // 1. RV64I Base Integer Extension (64-bit Base)
     //===------------------------------------------------------------------===//
-    // Computational Instructions (32-bit & 64-bit Word variants)
     LUI, AUIPC,
     ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI,
     ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND,
@@ -84,7 +77,12 @@ enum RISCVOpcode {
     C_NOP, C_ADDI, C_ADDIW, C_LI, C_ADDI16SP, C_LUI,
     C_SRLI, C_SRAI, C_ANDI, C_SUB, C_XOR, C_OR, C_AND, C_SUBW, C_ADDW,
     C_J, C_BEQZ, C_BNEZ, C_SLLI, C_FLDSP, C_LWSP, C_LDSP,
-    C_JR, C_MV, C_EBREAK, C_JALR, C_ADD, C_FSDSP, C_SWSP, C_SDSP
+    C_JR, C_MV, C_EBREAK, C_JALR, C_ADD, C_FSDSP, C_SWSP, C_SDSP,
+
+    //===------------------------------------------------------------------===//
+    // MIR-specific pseudo-insts
+    //===------------------------------------------------------------------===//
+    PHI,
 };
 
 class MachineInst;

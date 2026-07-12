@@ -11,7 +11,7 @@ namespace Balance {
 class Register;
 
 MachineInst &MachineInst::addReg(Register Reg) {
-    MachineOperand MO = MachineOperand::createVReg(Reg.getId());
+    MachineOperand MO = MachineOperand(Reg);
     MO.setMI(this);
 
     // by default first operand is always a def
@@ -32,11 +32,11 @@ MachineInst &MachineInst::addReg(Register Reg) {
 }
 
 MachineInst &MachineInst::addImm(uint64_t Imm) {
-    return addMO(MachineOperand::createImm(Imm));
+    return addMO(MachineOperand(Imm));
 }
 
 MachineInst &MachineInst::addMBB(MachineBB *MBB) {
-    return addMO(MachineOperand::createMBB(MBB));
+    return addMO(MachineOperand(MBB));
 }
 
 MachineInst &MachineInst::addMO(MachineOperand MO) {
@@ -48,8 +48,8 @@ MachineInst &MachineInst::addMO(MachineOperand MO) {
 std::vector<Register> MachineInst::getDefs() const {
     std::vector<Register> Defs;
     for (const auto &MO : Operands) {
-        if ((MO.isVReg() || MO.isPhysReg()) && MO.isDef()) {
-            Defs.push_back(Register(MO.getVReg()));
+        if (MO.isReg() && MO.isDef() && !isReservedRegister(MO.getReg())) {
+            Defs.push_back(MO.getReg());
         }
     }
     return Defs;
@@ -58,8 +58,8 @@ std::vector<Register> MachineInst::getDefs() const {
 std::vector<Register> MachineInst::getUses() const {
     std::vector<Register> Uses;
     for (const auto &MO : Operands) {
-        if ((MO.isVReg() || MO.isPhysReg()) && MO.isUse()) {
-            Uses.push_back(Register(MO.getVReg()));
+        if (MO.isReg() && MO.isUse() && !isReservedRegister(MO.getReg())) {
+            Uses.push_back(MO.getReg());
         }
     }
     return Uses;

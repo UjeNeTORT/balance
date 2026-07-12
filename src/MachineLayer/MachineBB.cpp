@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <unordered_set>
 
 namespace Balance {
 
@@ -39,6 +40,22 @@ int MachineBB::getLabelIdx() const {
 void MachineBB::setLabelIdx(int LabelIdxNew) {
     LabelIdx = LabelIdxNew;
     ReferenceName = getReferenceName();
+}
+
+const std::unordered_set<Register> &MachineBB::getLiveIns() const {
+    return LiveIns;
+}
+
+const std::unordered_set<Register> &MachineBB::getLiveOuts() const {
+    return LiveOuts;
+}
+
+void MachineBB::setLiveIns(const std::unordered_set<Register> &LiveInsNew) {
+    LiveIns = LiveInsNew;
+}
+
+void MachineBB::setLiveOuts(const std::unordered_set<Register> &LiveOutsNew) {
+    LiveOuts = LiveOutsNew;
 }
 
 void MachineBB::addSuccessor(MachineBB *Succ) {
@@ -105,8 +122,8 @@ std::string_view MachineBB::getReferenceName() const {
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
-    auto &&DefsVec = Defs(*this);
-    auto &&UsesVec = Uses(*this);
+    auto &&DefsVec = ComputeDefs(*this);
+    auto &&UsesVec = ComputeUses(*this);
 
     bool First = true;
     auto PrintNext = [&OS, &First](const auto &Reg) {
@@ -119,7 +136,7 @@ void MachineBB::print(std::ostream &OS) const {
     std::for_each(DefsVec.begin(), DefsVec.end(), PrintNext);
     OS << "\n";
     First = true;
-    OS << "Uses: ";
+    OS << "Uses (PHI excluded): ";
     std::for_each(UsesVec.begin(), UsesVec.end(), PrintNext);
     OS << "\n";
 
@@ -139,6 +156,17 @@ void MachineBB::print(std::ostream &OS) const {
     std::for_each(pred_begin(), pred_end(), PrintNextMBB);
     OS << "\n";
 
+    First = true;
+    OS << "LiveIns: ";
+    // const auto &LiveInsVec = ComputeLiveIns(*this);
+    std::for_each(LiveIns.begin(), LiveIns.end(), PrintNext);
+    OS << "\n";
+
+    First = true;
+    OS << "LiveOuts: ";
+    // const auto &LiveOutsVec = ComputeLiveOuts(*this);
+    std::for_each(LiveOuts.begin(), LiveOuts.end(), PrintNext);
+    OS << "\n";
 
     OS << getReferenceName();
     OS << ":\n";
