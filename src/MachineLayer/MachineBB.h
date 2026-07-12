@@ -4,8 +4,9 @@
 #include "MachineInst.h"
 #include "MachineFunction.h"
 
-#include <list>
 #include <iostream>
+#include <list>
+#include <set>
 
 namespace Balance {
 
@@ -16,6 +17,9 @@ class MachineBB {
 
     std::string Name = ""; // mostly for comments & debug
     std::string ReferenceName = ""; // for asm printing
+
+    std::set<Register> LiveIns;
+    std::set<Register> LiveOuts;
 
     std::list<MachineInst> Instructions;
     using iterator = std::list<MachineInst>::iterator;
@@ -39,6 +43,9 @@ public:
 
     int getLabelIdx() const;
     void setLabelIdx(int LabelIdxNew);
+
+    std::set<Register> &getLiveIns();
+    std::set<Register> &getLiveOuts();
 
     void addSuccessor(MachineBB *Succ);
     void addPredecessor(MachineBB *Pred);

@@ -41,6 +41,14 @@ void MachineBB::setLabelIdx(int LabelIdxNew) {
     ReferenceName = getReferenceName();
 }
 
+std::set<Register> &MachineBB::getLiveIns() {
+    return LiveIns;
+}
+
+std::set<Register> &MachineBB::getLiveOuts() {
+    return LiveOuts;
+}
+
 void MachineBB::addSuccessor(MachineBB *Succ) {
     assert(Succ);
     if (this == Succ) return;
@@ -105,8 +113,8 @@ std::string_view MachineBB::getReferenceName() const {
 void MachineBB::print(std::ostream &OS) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
-    auto &&DefsVec = Defs(*this);
-    auto &&UsesVec = Uses(*this);
+    auto &&DefsVec = ComputeDefs(*this, false);
+    auto &&UsesVec = ComputeUses(*this);
 
     bool First = true;
     auto PrintNext = [&OS, &First](const auto &Reg) {
@@ -119,7 +127,7 @@ void MachineBB::print(std::ostream &OS) const {
     std::for_each(DefsVec.begin(), DefsVec.end(), PrintNext);
     OS << "\n";
     First = true;
-    OS << "Uses: ";
+    OS << "Uses (PHI excluded): ";
     std::for_each(UsesVec.begin(), UsesVec.end(), PrintNext);
     OS << "\n";
 
@@ -139,6 +147,17 @@ void MachineBB::print(std::ostream &OS) const {
     std::for_each(pred_begin(), pred_end(), PrintNextMBB);
     OS << "\n";
 
+    First = true;
+    OS << "LiveIns: ";
+    const auto &LiveInsVec = ComputeLiveIns(*this);
+    std::for_each(LiveInsVec.begin(), LiveInsVec.end(), PrintNext);
+    OS << "\n";
+
+    First = true;
+    OS << "LiveOuts: ";
+    const auto &LiveOutsVec = ComputeLiveOuts(*this);
+    std::for_each(LiveOutsVec.begin(), LiveOutsVec.end(), PrintNext);
+    OS << "\n";
 
     OS << getReferenceName();
     OS << ":\n";

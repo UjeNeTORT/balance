@@ -8,8 +8,13 @@
 
 namespace Balance {
 
-std::unordered_set<Register> Defs(const MachineBB &MBB);
-std::unordered_set<Register> Uses(const MachineBB &MBB);
+std::unordered_set<Register> ComputeDefs(const MachineBB &MBB, bool ExcludePhi = true);
+std::unordered_set<Register> ComputeUses(const MachineBB &MBB, bool ExcludePhi = true);
+std::unordered_set<Register> ComputeUpwardExposed(const MachineBB &MBB, bool ExcludePhi = true);
+std::unordered_set<Register> ComputePhiDefs(const MachineBB &MBB);
+std::unordered_set<Register> ComputePhiUses(const MachineBB &MBB);
+std::unordered_set<Register> ComputeLiveIns(const MachineBB &MBB);
+std::unordered_set<Register> ComputeLiveOuts(const MachineBB &MBB);
 
 class LiveRanges;
 

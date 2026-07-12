@@ -84,7 +84,12 @@ enum RISCVOpcode {
     C_NOP, C_ADDI, C_ADDIW, C_LI, C_ADDI16SP, C_LUI,
     C_SRLI, C_SRAI, C_ANDI, C_SUB, C_XOR, C_OR, C_AND, C_SUBW, C_ADDW,
     C_J, C_BEQZ, C_BNEZ, C_SLLI, C_FLDSP, C_LWSP, C_LDSP,
-    C_JR, C_MV, C_EBREAK, C_JALR, C_ADD, C_FSDSP, C_SWSP, C_SDSP
+    C_JR, C_MV, C_EBREAK, C_JALR, C_ADD, C_FSDSP, C_SWSP, C_SDSP,
+
+    //===------------------------------------------------------------------===//
+    // MIR-specific pseudo-insts
+    //===------------------------------------------------------------------===//
+    PHI,
 };
 
 class MachineInst;
