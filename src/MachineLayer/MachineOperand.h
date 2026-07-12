@@ -28,8 +28,11 @@ private:
     enum State { Define, Used, LastUsed } State;
 
 public:
-    Register(unsigned RegId) : RegId(RegId) {}
-    Register(RISCV::RISCVRegister Reg) : RegId(static_cast<unsigned>(Reg)), RegType(Type::Physical) {}
+    Register(unsigned RegId) : RegId(RegId),
+                               RegType(Type::Virtual) {}
+    Register(RISCV::RISCVRegister Reg) : RegId(static_cast<unsigned>(Reg)),
+                                         RegType(Type::Physical) {}
+
     Type getType() const { return RegType; }
     void setType(Type NewT) { RegType = NewT; }
     unsigned getId() const { return RegId; }
@@ -82,6 +85,10 @@ public:
     Register getReg() const;
     uint64_t getImm() const;
     MachineBB *getMBB() const;
+
+    Register setReg(Register NewReg);
+    uint64_t setImm(uint64_t NewImm);
+    MachineBB *setMBB(MachineBB *NewMBB);
 
     MachineInst *getMI() const;
     void setMI(MachineInst *NewMI);

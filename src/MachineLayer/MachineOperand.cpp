@@ -42,6 +42,27 @@ MachineBB *MachineOperand::getMBB() const {
     return *std::get_if<MachineBB *>(&Value);
 }
 
+Register MachineOperand::setReg(Register NewReg) {
+    assert(isReg() && "Wrong type for setter");
+    Register OldReg = *std::get_if<Register>(&Value);
+    *std::get_if<Register>(&Value) = NewReg;
+    return OldReg;
+}
+
+uint64_t MachineOperand::setImm(uint64_t NewImm) {
+    assert(isImm() && "Wrong type for setter");
+    uint64_t OldImm = *std::get_if<uint64_t>(&Value);
+    *std::get_if<uint64_t>(&Value) = NewImm;
+    return OldImm;
+}
+
+MachineBB *MachineOperand::setMBB(MachineBB *NewMBB) {
+    assert(isMBB() && "Wrong type for setter");
+    MachineBB *OldMBB = *std::get_if<MachineBB *>(&Value);
+    *std::get_if<MachineBB *>(&Value) = NewMBB;
+    return OldMBB;
+}
+
 MachineInst *MachineOperand::getMI() const {
     return MI;
 }

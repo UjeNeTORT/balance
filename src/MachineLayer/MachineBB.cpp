@@ -23,15 +23,19 @@ MachineInst &MachineBB::createMI(RISCVOpcode Opcode) {
     return createMI(end(), Opcode);
 };
 
-MachineInst *MachineBB::insertMI(MachineBB::iterator I, MachineInst MI) {
+MachineInst &MachineBB::insertMI(MachineBB::iterator I, MachineInst MI) {
     MI.setMBB(this);
     I = Instructions.insert(I, MI);
-    return &*--I;
+    return *I;
 };
 
-MachineInst *MachineBB::insertMI(MachineInst MI) {
+MachineInst &MachineBB::insertMI(MachineInst MI) {
     return insertMI(end(), MI);
 };
+
+MachineBB::iterator MachineBB::eraseMI(MachineBB::iterator I) {
+    return Instructions.erase(I);
+}
 
 int MachineBB::getLabelIdx() const {
     return LabelIdx;
@@ -85,6 +89,28 @@ void MachineBB::addPredecessorOneWay(MachineBB *Pred) {
     assert(Pred);
     if (this == Pred) return;
     Predecessors.push_back(Pred);
+}
+
+void MachineBB::removeSuccessor(MachineBB *Succ) {
+    if (this == Succ) return;
+    removeSuccessorOneWay(Succ);
+    Succ->removePredecessorOneWay(this);
+}
+
+void MachineBB::removePredecessor(MachineBB *Pred) {
+    if (this == Pred) return;
+    removePredecessorOneWay(Pred);
+    Pred->removeSuccessorOneWay(this);
+}
+
+void MachineBB::removeSuccessorOneWay(MachineBB *Succ) {
+    if (this == Succ) return;
+    Successors.remove(Succ);
+}
+
+void MachineBB::removePredecessorOneWay(MachineBB *Pred) {
+    if (this == Pred) return;
+    Predecessors.remove(Pred);
 }
 
 bool MachineBB::verify() const {
@@ -175,8 +201,8 @@ void MachineBB::print(std::ostream &OS) const {
     }
 }
 
-std::vector<MachineBB *> MachineBB::getSuccessors() const { return Successors; }
-std::vector<MachineBB *> MachineBB::getPredecessors() const { return Predecessors; }
+std::list<MachineBB *> MachineBB::getSuccessors() const { return Successors; }
+std::list<MachineBB *> MachineBB::getPredecessors() const { return Predecessors; }
 
 MachineBB::iterator MachineBB::begin() { return Instructions.begin(); }
 MachineBB::iterator MachineBB::end()   { return Instructions.end(); }
@@ -195,5 +221,47 @@ MachineBB::pred_iterator MachineBB::pred_end()   { return Predecessors.end(); }
 
 MachineBB::const_pred_iterator MachineBB::pred_begin() const { return Predecessors.begin(); }
 MachineBB::const_pred_iterator MachineBB::pred_end()   const { return Predecessors.end(); }
+
+bool isCriticalEdge(const MachineBB &From, const MachineBB &To) {
+    assert(From.getMF() == To.getMF());
+
+    // if no edge at all - it is not critical
+    if (std::find(From.getSuccessors().begin(), From.getSuccessors().end(), &To) == From.getSuccessors().end()) return false;
+
+    if (From.getSuccessors().size() > 1 && To.getPredecessors().size() > 1) return true;
+    return false;
+}
+
+MachineBB *splitEdge(MachineBB &From, MachineBB &To) {
+    assert(From.getMF() == To.getMF());
+
+    MachineFunction *MF = From.getMF();
+    MachineBB *SplitMBB = MF->createMBB(
+        std::string("split mbb at ")
+        + std::string(From.getReferenceName())
+        + " -> "
+        + std::string(To.getReferenceName()));
+
+    // note: add/remove is done both ways
+    From.addSuccessor(SplitMBB);
+    From.removeSuccessor(&To);
+    To.addPredecessor(SplitMBB);
+
+    SplitMBB->createMI(RISCVOpcode::JAL).addReg(RISCV::RISCVRegister::ZERO).addMBB(&To);
+
+    for (auto &MI : From) {
+        // find terminator...
+        if (!isControlTransferInst(MI.getOpcode())) continue;
+        // in terminator replace current MBB -> SplitMBB
+        for (auto &MO : MI.getOperands()) {
+            if (!MO.isMBB()) continue;
+            if (MO.getMBB() == &To) {
+                MO.setMBB(SplitMBB);
+            }
+        }
+    }
+
+    return SplitMBB;
+}
 
 } // namespace Balance
