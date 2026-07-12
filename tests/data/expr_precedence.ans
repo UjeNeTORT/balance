@@ -1,0 +1,55 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Init
+            BinaryOp +
+              IntLiteral 1
+              BinaryOp *
+                IntLiteral 2
+                IntLiteral 3
+      VarDecl int
+        VarDef b
+          Init
+            BinaryOp *
+              BinaryOp +
+                IntLiteral 1
+                IntLiteral 2
+              IntLiteral 3
+      VarDecl int
+        VarDef c
+          Init
+            BinaryOp -
+              BinaryOp -
+                IntLiteral 10
+                IntLiteral 4
+              IntLiteral 3
+      VarDecl int
+        VarDef d
+          Init
+            BinaryOp %
+              BinaryOp /
+                IntLiteral 10
+                IntLiteral 2
+              IntLiteral 3
+      VarDecl int
+        VarDef e
+          Init
+            BinaryOp ==
+              BinaryOp <
+                BinaryOp +
+                  IntLiteral 1
+                  IntLiteral 2
+                IntLiteral 4
+              IntLiteral 1
+      Return
+        BinaryOp +
+          BinaryOp +
+            BinaryOp +
+              BinaryOp +
+                LVal a
+                LVal b
+              LVal c
+            LVal d
+          LVal e

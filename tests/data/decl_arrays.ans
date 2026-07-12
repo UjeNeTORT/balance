@@ -1,0 +1,31 @@
+CompUnit
+  ConstDecl int
+    VarDef N
+      Init
+        IntLiteral 4
+  VarDecl int
+    VarDef a
+      Dim
+        IntLiteral 10
+  VarDecl int
+    VarDef b
+      Dim
+        LVal N
+      Dim
+        BinaryOp +
+          LVal N
+          IntLiteral 1
+  VarDecl float
+    VarDef m
+      Dim
+        IntLiteral 2
+      Dim
+        IntLiteral 3
+      Dim
+        IntLiteral 4
+  FuncDef int main
+    Block
+      Return
+        LVal a
+          Index
+            IntLiteral 0

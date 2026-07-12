@@ -1,0 +1,10 @@
+void doNothing()
+{
+    return;
+}
+
+int main()
+{
+    doNothing();
+    return 0;
+}

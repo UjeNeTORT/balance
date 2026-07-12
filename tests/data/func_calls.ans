@@ -1,0 +1,22 @@
+CompUnit
+  FuncDef int f
+    Block
+      Return
+        IntLiteral 1
+  FuncDef int g
+    Param int x
+    Block
+      Return
+        LVal x
+  FuncDef int main
+    Block
+      Return
+        Call g
+          BinaryOp +
+            Call f
+            BinaryOp *
+              Call g
+                IntLiteral 2
+              Call g
+                Call g
+                  IntLiteral 3

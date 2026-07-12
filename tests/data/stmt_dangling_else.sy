@@ -1,0 +1,13 @@
+int main()
+{
+    int a = 1;
+
+    // else must bind to the inner if
+    if (a > 0)
+        if (a > 1)
+            a = 2;
+        else
+            a = 3;
+
+    return a;
+}

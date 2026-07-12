@@ -1,0 +1,67 @@
+CompUnit
+  VarDecl int
+    VarDef a
+      Dim
+        IntLiteral 4
+      InitList
+        Init
+          IntLiteral 1
+        Init
+          IntLiteral 2
+        Init
+          IntLiteral 3
+        Init
+          IntLiteral 4
+  VarDecl int
+    VarDef b
+      Dim
+        IntLiteral 2
+      Dim
+        IntLiteral 2
+      InitList
+        InitList
+          Init
+            IntLiteral 1
+          Init
+            IntLiteral 2
+        InitList
+          Init
+            IntLiteral 3
+          Init
+            IntLiteral 4
+  VarDecl int
+    VarDef c
+      Dim
+        IntLiteral 3
+      InitList
+  VarDecl int
+    VarDef d
+      Dim
+        IntLiteral 2
+      Dim
+        IntLiteral 2
+      InitList
+        Init
+          IntLiteral 1
+        InitList
+          Init
+            IntLiteral 2
+        Init
+          IntLiteral 3
+  ConstDecl int
+    VarDef e
+      Dim
+        IntLiteral 2
+      InitList
+        Init
+          IntLiteral 5
+        Init
+          IntLiteral 6
+  FuncDef int main
+    Block
+      Return
+        LVal b
+          Index
+            IntLiteral 1
+          Index
+            IntLiteral 0

@@ -1,0 +1,16 @@
+CompUnit
+  ConstDecl int
+    VarDef N
+      Init
+        IntLiteral 10
+  ConstDecl float
+    VarDef Pi
+      Init
+        FloatLiteral 3.14
+    VarDef E
+      Init
+        FloatLiteral 2.71
+  FuncDef int main
+    Block
+      Return
+        LVal N

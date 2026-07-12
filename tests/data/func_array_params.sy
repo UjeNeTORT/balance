@@ -1,0 +1,15 @@
+int sum(int a[], int n)
+{
+    return a[n - 1];
+}
+
+int sumMatrix(int m[][3], int rows)
+{
+    return m[rows][0];
+}
+
+int main()
+{
+    int a[3] = {1, 2, 3};
+    return sum(a, 3);
+}

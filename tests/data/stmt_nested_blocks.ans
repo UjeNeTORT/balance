@@ -1,0 +1,20 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Init
+            IntLiteral 1
+      Block
+        VarDecl int
+          VarDef a
+            Init
+              IntLiteral 2
+        Block
+          Assign
+            LVal a
+            IntLiteral 3
+        Block
+      EmptyStmt
+      Return
+        LVal a

@@ -1,0 +1,15 @@
+// line comment at the top
+int a = 1; // trailing comment
+
+/* block comment */
+int b /* inline */ = 2;
+
+/*
+ * multi-line
+ * block comment with // inside
+ */
+int main()
+{
+    // return early?
+    return a + b; /* done */
+}

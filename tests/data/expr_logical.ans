@@ -1,0 +1,43 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Init
+            IntLiteral 1
+      VarDecl int
+        VarDef b
+          Init
+            IntLiteral 0
+      If
+        Cond
+          BinaryOp ||
+            BinaryOp &&
+              LVal a
+              LVal b
+            BinaryOp &&
+              UnaryOp !
+                LVal a
+              UnaryOp !
+                LVal b
+        Then
+          Return
+            IntLiteral 1
+      If
+        Cond
+          BinaryOp ||
+            BinaryOp &&
+              BinaryOp >
+                LVal a
+                IntLiteral 0
+              BinaryOp <
+                LVal b
+                IntLiteral 1
+            BinaryOp ==
+              LVal a
+              LVal b
+        Then
+          Return
+            IntLiteral 2
+      Return
+        IntLiteral 0
