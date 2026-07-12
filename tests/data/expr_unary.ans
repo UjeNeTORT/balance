@@ -1,0 +1,41 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Init
+            UnaryOp -
+              IntLiteral 5
+      VarDecl int
+        VarDef b
+          Init
+            UnaryOp +
+              LVal a
+      VarDecl int
+        VarDef c
+          Init
+            UnaryOp !
+              LVal a
+      VarDecl int
+        VarDef d
+          Init
+            UnaryOp -
+              UnaryOp -
+                LVal a
+      VarDecl int
+        VarDef e
+          Init
+            BinaryOp *
+              UnaryOp -
+                LVal a
+              IntLiteral 2
+      Return
+        BinaryOp +
+          BinaryOp +
+            BinaryOp +
+              BinaryOp +
+                LVal a
+                LVal b
+              LVal c
+            LVal d
+          LVal e

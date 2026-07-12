@@ -1,0 +1,52 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Dim
+            IntLiteral 2
+          Dim
+            IntLiteral 3
+      VarDecl int
+        VarDef i
+          Init
+            IntLiteral 1
+      Assign
+        LVal a
+          Index
+            IntLiteral 0
+          Index
+            IntLiteral 0
+        IntLiteral 5
+      Assign
+        LVal a
+          Index
+            LVal i
+          Index
+            BinaryOp +
+              LVal i
+              IntLiteral 1
+        BinaryOp *
+          LVal a
+            Index
+              IntLiteral 0
+            Index
+              IntLiteral 0
+          IntLiteral 2
+      Assign
+        LVal a
+          Index
+            LVal a
+              Index
+                IntLiteral 0
+              Index
+                IntLiteral 0
+          Index
+            IntLiteral 0
+        IntLiteral 1
+      Return
+        LVal a
+          Index
+            LVal i
+          Index
+            IntLiteral 2

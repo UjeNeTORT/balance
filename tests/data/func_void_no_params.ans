@@ -1,0 +1,10 @@
+CompUnit
+  FuncDef void doNothing
+    Block
+      Return
+  FuncDef int main
+    Block
+      ExprStmt
+        Call doNothing
+      Return
+        IntLiteral 0
