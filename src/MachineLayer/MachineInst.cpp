@@ -48,7 +48,7 @@ MachineInst &MachineInst::addMO(MachineOperand MO) {
 std::vector<Register> MachineInst::getDefs() const {
     std::vector<Register> Defs;
     for (const auto &MO : Operands) {
-        if (MO.isReg() && MO.isDef()) {
+        if (MO.isReg() && MO.isDef() && !isReservedRegister(MO.getReg())) {
             Defs.push_back(MO.getReg());
         }
     }
@@ -58,7 +58,7 @@ std::vector<Register> MachineInst::getDefs() const {
 std::vector<Register> MachineInst::getUses() const {
     std::vector<Register> Uses;
     for (const auto &MO : Operands) {
-        if (MO.isReg() && MO.isUse()) {
+        if (MO.isReg() && MO.isUse() && !isReservedRegister(MO.getReg())) {
             Uses.push_back(MO.getReg());
         }
     }

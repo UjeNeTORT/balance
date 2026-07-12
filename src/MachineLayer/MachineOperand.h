@@ -28,7 +28,6 @@ private:
     enum State { Define, Used, LastUsed } State;
 
 public:
-    using Type = enum Type;
     Register(unsigned RegId) : RegId(RegId) {}
     Register(RISCV::RISCVRegister Reg) : RegId(static_cast<unsigned>(Reg)), RegType(Type::Physical) {}
     Type getType() const { return RegType; }
@@ -57,6 +56,8 @@ public:
     bool operator==(const Register &Reg2) const { return RegId == Reg2.RegId; }
     bool operator!=(const Register &Reg2) const { return !(*this == Reg2); }
 };
+
+bool isReservedRegister(Register Reg);
 
 class MachineOperand {
     std::variant<Register, uint64_t, MachineBB *> Value;

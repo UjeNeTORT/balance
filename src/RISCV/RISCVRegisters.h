@@ -166,6 +166,18 @@ inline std::string_view getRegAsmString(unsigned RegId) {
     return RegisterDB[RegId].AsmName;
 }
 
+inline bool isReservedRegister(RISCVRegister Reg) {
+    switch (Reg) {
+        case RISCVRegister::ZERO:
+        case RISCVRegister::SP:
+        case RISCVRegister::GP:
+        case RISCVRegister::TP:
+            return true;
+        default:
+            return false;
+    }
+}
+
 } // namespace RISCV
 
 #endif // RISCV_REGISTERS_H

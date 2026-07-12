@@ -10,6 +10,11 @@
 
 namespace Balance {
 
+bool isReservedRegister(Register R) {
+    if (R.getType() != Register::Type::Physical) return false;
+    return isReservedRegister(static_cast<RISCV::RISCVRegister>(R.getId()));
+}
+
 bool MachineOperand::isReg() const {
     return std::holds_alternative<Register>(Value);
 }
