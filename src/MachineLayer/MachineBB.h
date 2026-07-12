@@ -22,24 +22,26 @@ class MachineBB {
     std::unordered_set<Register> LiveOuts;
 
     std::list<MachineInst> Instructions;
+
+    std::list<MachineBB *> Successors;
+    std::list<MachineBB *> Predecessors;
+public:
     using iterator = std::list<MachineInst>::iterator;
     using const_iterator = std::list<MachineInst>::const_iterator;
+    using succ_iterator = std::list<MachineBB *>::iterator;
+    using const_succ_iterator = std::list<MachineBB *>::const_iterator;
+    using pred_iterator = std::list<MachineBB *>::iterator;
+    using const_pred_iterator = std::list<MachineBB *>::const_iterator;
 
-    std::vector<MachineBB *> Successors;
-    using succ_iterator = std::vector<MachineBB *>::iterator;
-    using const_succ_iterator = std::vector<MachineBB *>::const_iterator;
-
-    std::vector<MachineBB *> Predecessors;
-    using pred_iterator = std::vector<MachineBB *>::iterator;
-    using const_pred_iterator = std::vector<MachineBB *>::const_iterator;
-public:
     MachineBB(MachineFunction *MF, std::string Name = "");
 
     MachineInst &createMI(MachineBB::iterator I, RISCVOpcode Opcode);
     MachineInst &createMI(RISCVOpcode Opcode);
 
-    MachineInst *insertMI(MachineBB::iterator I, MachineInst MI);
-    MachineInst *insertMI(MachineInst MI);
+    MachineInst &insertMI(MachineBB::iterator I, MachineInst MI);
+    MachineInst &insertMI(MachineInst MI);
+
+    iterator eraseMI(MachineBB::iterator I);
 
     int getLabelIdx() const;
     void setLabelIdx(int LabelIdxNew);
@@ -55,6 +57,11 @@ public:
     void addSuccessorOneWay(MachineBB *Succ);
     void addPredecessorOneWay(MachineBB *Pred);
 
+    void removeSuccessor(MachineBB *Succ);
+    void removePredecessor(MachineBB *Pred);
+    void removeSuccessorOneWay(MachineBB *Succ);
+    void removePredecessorOneWay(MachineBB *Pred);
+
     MachineFunction *getMF() const;
     void setMF(MachineFunction *NewMF);
 
@@ -64,8 +71,8 @@ public:
     void updateReferenceName();
     void print(std::ostream &OS) const;
 
-    std::vector<MachineBB *> getSuccessors() const;
-    std::vector<MachineBB *> getPredecessors() const;
+    std::list<MachineBB *> getSuccessors() const;
+    std::list<MachineBB *> getPredecessors() const;
 
     iterator begin();
     iterator end();
@@ -85,6 +92,9 @@ public:
     const_pred_iterator pred_begin() const;
     const_pred_iterator pred_end() const;
 };
+
+bool isCriticalEdge(const MachineBB &From, const MachineBB &To);
+MachineBB *splitEdge(MachineBB &From, MachineBB &To);
 
 } // namespace Balance
 

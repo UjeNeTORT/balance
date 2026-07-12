@@ -21,6 +21,10 @@ MachineBB *MachineFunction::createMBB(MachineFunction::iterator Pos, const std::
     return &*MBB;
 }
 
+Register MachineFunction::getNewVreg() {
+    return Register(FreeVRegId++);
+}
+
 MachineFunction::iterator MachineFunction::begin() { return BasicBlocks.begin(); }
 MachineFunction::iterator MachineFunction::end()   { return BasicBlocks.end(); }
 

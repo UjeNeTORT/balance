@@ -2,6 +2,7 @@ add_library(MIRPasses STATIC
     Pass.cpp
     VerifierPass.cpp
     LivenessAnalysis.cpp
+    PhiElimination.cpp
 )
 
 target_include_directories(MIRPasses PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
