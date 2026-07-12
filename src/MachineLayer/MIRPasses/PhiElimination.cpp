@@ -24,14 +24,18 @@ bool PhiElimination::run(MachineFunction &MF) {
 
     for (auto *MBBPtr : OriginalMBBs) {
         auto &MBB = *MBBPtr;
-        auto InstPHI = std::find_if(MBB.begin(), MBB.end(), [](const MachineInst &MI) {
-            return MI.getOpcode() == RISCVOpcode::PHI;
-        });
 
-        if (InstPHI == MBB.end()) continue;
+        MachineBB::iterator InstPHI;
+        do {
+            InstPHI = std::find_if(MBB.begin(), MBB.end(), [](const MachineInst &MI) {
+                return MI.getOpcode() == RISCVOpcode::PHI;
+            });
 
-        prepareEliminatePHI(MBB, *InstPHI, CopyCandidates);
-        MBB.eraseMI(InstPHI);
+            if (InstPHI == MBB.end()) continue;
+
+            prepareEliminatePHI(MBB, *InstPHI, CopyCandidates);
+            MBB.eraseMI(InstPHI);
+        } while (InstPHI != MBB.end());
     }
 
     // avoid situation when two PHIs swap two regs:
