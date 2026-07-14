@@ -14,6 +14,9 @@ namespace Balance {
 
 void unreachable_internal(const std::string &File, int Line, const std::string &Msg = "");
 
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
 } // namespace Balance
 
 #endif // UTILS_H
