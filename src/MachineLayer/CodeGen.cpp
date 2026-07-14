@@ -188,8 +188,6 @@ int main() {
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<LinearScanRAL>();
 
-    PM.run(TestMF);
-
     TestMF.print(std::cout);
 
     PMPhi.run(TestMF);

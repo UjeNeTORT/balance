@@ -19,7 +19,10 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         });
     }
 
-    std::for_each(LinearInstructions.begin(), LinearInstructions.end(), [](const MachineInst *MI) { std::cerr << *MI << ' '; });
+    std::for_each(LinearInstructions.begin(), LinearInstructions.end(), [](const MachineInst *MI) {
+        if (MI == nullptr) return;
+        std::cerr << "[lsra]: "<< *MI << "           " << MI->getMBB()->getReferenceName() << '\n';
+    });
     std::cerr << '\n';
 
     return false;

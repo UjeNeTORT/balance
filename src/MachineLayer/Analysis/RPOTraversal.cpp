@@ -3,6 +3,7 @@
 
 #include "MachineFunction.h"
 
+#include <algorithm>
 #include <list>
 #include <unordered_set>
 
@@ -17,8 +18,6 @@ void RPOTraversal::dfs(MachineBB *MBB, std::unordered_set<MachineBB *> &Visited)
         }
     }
     PO.push_back(MBB);
-
-    RPO.insert(RPO.end(), PO.rbegin(), PO.rend());
 }
 
 RPOTraversal::RPOTraversal(MachineFunction &MF) {
@@ -31,8 +30,15 @@ void RPOTraversal::compute(MachineFunction &MF) {
     std::unordered_set<MachineBB *> Visited;
 
     if (MF.begin() != MF.end()) {
-        dfs(&*MF.begin(), Visited);
+
+        MachineBB &EntryBB = *std::find_if(MF.begin(), MF.end(), [](const MachineBB &MBB) {
+            return MBB.getPredecessors().empty();
+        });
+
+        dfs(&EntryBB, Visited);
     }
+
+    RPO.insert(RPO.end(), PO.rbegin(), PO.rend());
 }
 
 std::list<MachineBB *> RPOTraversal::getRPO() && { return std::move(RPO); }
