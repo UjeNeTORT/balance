@@ -10,6 +10,7 @@ add_library(MachineLayer STATIC
     PassManager.cpp
     LiveRanges.cpp
     Register.cpp
+    RPOTraversal.cpp
 )
 
 add_library(MIRInfo STATIC
