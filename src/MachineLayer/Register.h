@@ -18,12 +18,12 @@ public:
     };
 
 private:
-    unsigned RegId;
+    int RegId;
     Type RegType = Type::Virtual;
     enum State { Define, Used, LastUsed } State;
 
 public:
-    Register(unsigned RegId) : RegId(RegId),
+    Register(int RegId = -1) : RegId(RegId),
                                RegType(Type::Virtual) {}
     Register(RISCV::RISCVRegister Reg) : RegId(static_cast<unsigned>(Reg)),
                                          RegType(Type::Physical) {}

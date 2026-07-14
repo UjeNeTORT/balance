@@ -212,6 +212,12 @@ MachineBB::iterator MachineBB::end()   { return Instructions.end(); }
 MachineBB::const_iterator MachineBB::begin() const { return Instructions.begin(); }
 MachineBB::const_iterator MachineBB::end()   const { return Instructions.end(); }
 
+MachineBB::reverse_iterator MachineBB::rbegin() { return Instructions.rbegin(); }
+MachineBB::reverse_iterator MachineBB::rend()   { return Instructions.rend(); }
+
+MachineBB::const_reverse_iterator MachineBB::rbegin() const { return Instructions.rbegin(); }
+MachineBB::const_reverse_iterator MachineBB::rend()   const { return Instructions.rend(); }
+
 MachineBB::succ_iterator MachineBB::succ_begin() { return Successors.begin(); }
 MachineBB::succ_iterator MachineBB::succ_end()   { return Successors.end(); }
 

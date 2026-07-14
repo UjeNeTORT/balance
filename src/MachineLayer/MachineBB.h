@@ -30,7 +30,9 @@ class MachineBB {
     std::list<MachineBB *> Predecessors;
 public:
     using iterator = std::list<MachineInst>::iterator;
+    using reverse_iterator = std::list<MachineInst>::reverse_iterator;
     using const_iterator = std::list<MachineInst>::const_iterator;
+    using const_reverse_iterator = std::list<MachineInst>::const_reverse_iterator;
     using succ_iterator = std::list<MachineBB *>::iterator;
     using const_succ_iterator = std::list<MachineBB *>::const_iterator;
     using pred_iterator = std::list<MachineBB *>::iterator;
@@ -79,9 +81,13 @@ public:
 
     iterator begin();
     iterator end();
-
     const_iterator begin() const;
     const_iterator end() const;
+
+    reverse_iterator rbegin();
+    reverse_iterator rend();
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
 
     succ_iterator succ_begin();
     succ_iterator succ_end();

@@ -186,13 +186,15 @@ int main() {
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<PhiElimination>();
     PMPhi.registerPass<VerifierPass>();
+    PMPhi.registerPass<LivenessAnalysis>();
+    PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<LinearScanRAL>();
 
     TestMF.print(std::cout);
 
     PMPhi.run(TestMF);
 
-    TestMF.print(std::cout);
+    // TestMF.print(std::cout);
 
     return 0;
 }
