@@ -30,3 +30,13 @@ void Register::print(std::ostream &OS) const {
 
 bool Register::operator==(const Register &Reg2) const { return RegId == Reg2.RegId; }
 bool Register::operator!=(const Register &Reg2) const { return !(*this == Reg2); }
+
+bool Register::operator<(const Balance::Register &R2) const {
+    if (getType() < R2.getType()) return true;
+    if (getId() < R2.getId()) return true;
+    return false;
+}
+
+bool Register::operator>(const Balance::Register &R2) const {
+    return R2 < *this;
+}

@@ -35,6 +35,8 @@ public:
     void print(std::ostream &OS) const;
     bool operator==(const Register &Reg2) const;
     bool operator!=(const Register &Reg2) const;
+    bool operator<(const Register &Reg2) const;
+    bool operator>(const Register &Reg2) const;
 };
 
 bool isReservedRegister(Register Reg);
@@ -49,6 +51,7 @@ template<> struct hash<Balance::Register> {
         return h1 ^ (h2 << 1);
     }
 };
+
 } // namespace std
 
 
