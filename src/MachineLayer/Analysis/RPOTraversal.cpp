@@ -6,7 +6,7 @@
 #include <list>
 #include <unordered_set>
 
-using namespace Balance;
+namespace Balance {
 
 void RPOTraversal::dfs(MachineBB *MBB, std::unordered_set<MachineBB *> &Visited) {
     Visited.insert(MBB);
@@ -43,3 +43,5 @@ RPOTraversal::iterator RPOTraversal::end()   { return RPO.end(); }
 
 RPOTraversal::const_iterator RPOTraversal::begin() const { return RPO.begin(); }
 RPOTraversal::const_iterator RPOTraversal::end()   const { return RPO.end(); }
+
+} // namespace Balance

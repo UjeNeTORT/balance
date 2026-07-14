@@ -1,3 +1,6 @@
+#ifndef RPO_TRAVERSAL_H
+#define RPO_TRAVERSAL_H
+
 #include "MachineFunction.h"
 #include "MachineBB.h"
 
@@ -33,3 +36,5 @@ public:
 };
 
 } // namespace Balance
+
+#endif // RPO_TRAVERSAL_H
