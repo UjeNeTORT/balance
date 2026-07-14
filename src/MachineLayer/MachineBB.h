@@ -1,14 +1,17 @@
 #ifndef MACHINE_BB_H
 #define MACHINE_BB_H
 
+#include "MIROpcodes.h"
+#include "Register.h"
 #include "MachineInst.h"
-#include "MachineFunction.h"
 
 #include <iostream>
 #include <list>
 #include <unordered_set>
 
 namespace Balance {
+
+class MachineFunction;
 
 class MachineBB {
     MachineFunction *MF;

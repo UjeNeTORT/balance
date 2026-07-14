@@ -1,9 +1,11 @@
-#include "MachineBB.h"
 #include "LiveRanges.h"
+#include "MachineBB.h"
+#include "MachineFunction.h"
+#include "MachineInst.h"
+#include "Register.h"
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 #include <unordered_set>
 
 namespace Balance {

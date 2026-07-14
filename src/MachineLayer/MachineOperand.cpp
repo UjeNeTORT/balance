@@ -1,3 +1,4 @@
+#include "MachineInst.h"
 #include "MachineOperand.h"
 #include "MachineBB.h"
 
