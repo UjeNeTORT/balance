@@ -1,5 +1,5 @@
 #include "LivenessAnalysis.h"
-#include "LiveRanges.h"
+#include "Liveness.h"
 
 using namespace Balance;
 

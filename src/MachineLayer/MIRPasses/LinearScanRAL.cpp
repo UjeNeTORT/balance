@@ -15,7 +15,6 @@ static unsigned getSpillSlotIdx(unsigned MIIdx) {
 }
 
 void LinearScanRAL::updateRanges(const MachineBB *MBB, int LinBeginIdx) {
-    // const auto &LiveIns = MBB->getLiveIns();
     const auto &LiveOuts = MBB->getLiveOuts();
 
     unsigned NInst = std::distance(MBB->begin(), MBB->end());

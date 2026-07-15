@@ -1,6 +1,6 @@
 add_library(Analysis STATIC
     RPOTraversal.cpp
-    LiveRanges.cpp
+    Liveness.cpp
 )
 
 target_include_directories(Analysis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
