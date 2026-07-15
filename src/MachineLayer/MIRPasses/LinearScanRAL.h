@@ -49,8 +49,8 @@ public:
     bool run(MachineFunction &MF) override;
 private:
     void updateRanges(const MachineBB *MBB, int LinBeginIdx);
-    void ExpireOldIntervals(const LiveInterval &LI, std::set<LiveInterval> &Active,
-            std::map<LiveInterval, Register> &RegMapping, std::unordered_set<Register> &Pool) const;
+    void ExpireOldIntervals(const LiveInterval &LI, std::set<LiveInterval *> &Active,
+            std::map<LiveInterval *, Register> &RegMapping, std::unordered_set<Register> &Pool) const;
 };
 
 } // namespace Balance

@@ -3,10 +3,26 @@
 
 #include "MachineBB.h"
 #include "MachineOperand.h"
+#include "Register.h"
 
+#include <vector>
 #include <unordered_set>
 
 namespace Balance {
+
+class LiveRange {
+    struct Segment {
+        unsigned StartIdx;
+        unsigned EndIdx;
+    };
+
+    Register Reg;
+    std::vector<Segment> Segments;
+public:
+    Register getReg() const { return Reg; }
+    void setReg(Register NewReg) { Reg = NewReg; }
+    bool isAssignedPhysical() { return Reg.getType() == Register::Type::Physical; }
+};
 
 std::unordered_set<Register> ComputeDefs(const MachineBB &MBB);
 std::unordered_set<Register> ComputeUses(const MachineBB &MBB);
