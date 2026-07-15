@@ -30,6 +30,8 @@ public:
 
     Type getType() const;
     void setType(Type NewT);
+    bool isVirtual() const;
+    bool isPhysical() const;
     unsigned getId() const;
     std::string getAsmString() const;
     void print(std::ostream &OS) const;

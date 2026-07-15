@@ -6,6 +6,8 @@ using Type = Register::Type;
 
 Type Register::getType() const { return RegType; }
 void Register::setType(Type NewT) { RegType = NewT; }
+bool Register::isVirtual() const { return RegType == Type::Virtual; }
+bool Register::isPhysical() const { return RegType == Type::Physical; }
 unsigned Register::getId() const { return RegId; }
 std::string Register::getAsmString() const {
     std::string S;
