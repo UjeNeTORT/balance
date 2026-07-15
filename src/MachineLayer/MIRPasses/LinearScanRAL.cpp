@@ -80,11 +80,13 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         });
     }
 
+    #if 0
     std::for_each(LinearInstructions.begin(), LinearInstructions.end(), [](const MachineInst *MI) {
         if (MI == nullptr) return;
-        std::cerr << "[lsra]: "<< *MI << "           (" << MI->getMBB()->getReferenceName() << ')' << '\n';
+        std::cerr << "[lsra]: " << '(' << MI->getMBB()->getReferenceName() << ") " << *MI << '\n';
     });
     std::cerr << '\n';
+    #endif
 
     unsigned LinearBeginIdx = LinearInstructions.size();
 
