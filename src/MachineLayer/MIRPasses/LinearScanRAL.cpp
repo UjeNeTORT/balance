@@ -1,10 +1,12 @@
 #include "LinearScanRAL.h"
 #include "RPOTraversal.h"
+#include "Register.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <map>
+#include <set>
 
 using namespace Balance;
 
@@ -70,8 +72,8 @@ void LinearScanRAL::updateRanges(const MachineBB *MBB, int LinBeginIdx) {
 bool LinearScanRAL::run(MachineFunction &MF) {
     std::list<MachineBB *> RPO = RPOTraversal(MF).getRPO();
 
-    for (const MachineBB *MBB : RPO) {
-        std::for_each(MBB->begin(), MBB->end(), [this](const MachineInst &MI) {
+    for (MachineBB *MBB : RPO) {
+        std::for_each(MBB->begin(), MBB->end(), [this](MachineInst &MI) {
             LinearInstructions.push_back(&MI);
             for (unsigned i = 0; i < LinearPeriod - 1; i++) {
                 // spill, fill, extra
@@ -97,5 +99,68 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         updateRanges(MBB, LinearBeginIdx);
     }
 
+    // CORE ALGORITHM
+
+    using namespace RISCV;
+
+    std::set<LiveInterval> Active;
+    std::unordered_set<Register> Pool {
+        RISCVRegister::X0,
+        RISCVRegister::X1,
+        RISCVRegister::X2,
+        RISCVRegister::X3,
+        RISCVRegister::X4,
+        RISCVRegister::X5,
+        RISCVRegister::X5,
+        RISCVRegister::X6,
+        RISCVRegister::X7,
+        RISCVRegister::X8,
+        RISCVRegister::X9,
+        RISCVRegister::X10,
+        RISCVRegister::X11
+    };
+
+    std::map<LiveInterval, Register> RegMapping;
+
+    unsigned PoolSize = Pool.size();
+
+    // TODO: LiveIntervals should be sorted in order of increasing start point,
+    // now it is not true
+    for (const auto &P : LiveIntervals) {
+        Register R = P.first;
+        const LiveInterval &LI = P.second;
+        ExpireOldIntervals(LI, Active, RegMapping, Pool);
+
+        // TODO: handle physical regs
+        if (R.getType() == Register::Type::Physical) continue;
+
+        if (Active.size() == PoolSize) {
+            unreachable("should insert spill here");
+        }
+
+        Active.insert(LiveIntervals[R]);
+        RegMapping[LI] = *Pool.begin();
+        Pool.erase(Pool.begin());
+    }
+
+    for (unsigned MIIdx = 0; MIIdx < LinearInstructions.size(); MIIdx += LinearPeriod) {
+        for (MachineOperand &MO : *LinearInstructions[MIIdx]) {
+            if (!MO.isReg()) continue;
+            if (MO.getReg().getType() == Register::Type::Physical) continue;
+
+            MO = RegMapping[LiveIntervals[MO.getReg()]];
+        }
+    }
+
     return false;
+}
+
+void LinearScanRAL::ExpireOldIntervals(const LiveInterval &LI, std::set<LiveInterval> &Active,
+                std::map<LiveInterval, Register> &RegMapping, std::unordered_set<Register> &Pool) const {
+    for (auto It = Active.begin(); It != Active.end(); ) {
+        if (It->EndIdx >= LI.StartIdx) return;
+        Pool.insert(RegMapping.at(*It));
+        RegMapping.erase(*It);
+        It = Active.erase(It);
+    }
 }

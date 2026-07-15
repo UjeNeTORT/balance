@@ -194,7 +194,7 @@ int main() {
 
     PMPhi.run(TestMF);
 
-    // TestMF.print(std::cout);
+    TestMF.print(std::cout);
 
     return 0;
 }

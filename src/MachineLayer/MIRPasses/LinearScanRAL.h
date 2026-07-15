@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <map>
+#include <unordered_set>
+#include <set>
 #include <string>
 #include <vector>
 #include <limits>
@@ -26,10 +28,18 @@ class LinearScanRAL final : public Pass {
             StartIdx = std::min(S, StartIdx);
             EndIdx = std::max(E, EndIdx);
         }
+
+        bool operator<(const LiveInterval &Other) const {
+            return EndIdx < Other.EndIdx;
+        }
+
+        bool operator>(const LiveInterval &Other) const {
+            return Other < *this;
+        }
     };
 
 
-    std::vector<const MachineInst *> LinearInstructions;
+    std::vector<MachineInst *> LinearInstructions;
     std::map<Register, LiveInterval> LiveIntervals;
 
     const unsigned LinearPeriod = 4;
@@ -39,6 +49,8 @@ public:
     bool run(MachineFunction &MF) override;
 private:
     void updateRanges(const MachineBB *MBB, int LinBeginIdx);
+    void ExpireOldIntervals(const LiveInterval &LI, std::set<LiveInterval> &Active,
+            std::map<LiveInterval, Register> &RegMapping, std::unordered_set<Register> &Pool) const;
 };
 
 } // namespace Balance
