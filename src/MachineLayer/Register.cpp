@@ -4,7 +4,6 @@ using namespace Balance;
 
 using Type = Register::Type;
 
-
 Type Register::getType() const { return RegType; }
 void Register::setType(Type NewT) { RegType = NewT; }
 unsigned Register::getId() const { return RegId; }
@@ -28,13 +27,12 @@ void Register::print(std::ostream &OS) const {
     OS << getAsmString();
 }
 
-bool Register::operator==(const Register &Reg2) const { return RegId == Reg2.RegId; }
+bool Register::operator==(const Register &Reg2) const { return RegType == Reg2.RegType && RegId == Reg2.RegId; }
 bool Register::operator!=(const Register &Reg2) const { return !(*this == Reg2); }
 
 bool Register::operator<(const Balance::Register &R2) const {
-    if (getType() < R2.getType()) return true;
-    if (getId() < R2.getId()) return true;
-    return false;
+    if (RegType != R2.RegType) return RegType < R2.RegType;
+    return RegId < R2.RegId;
 }
 
 bool Register::operator>(const Balance::Register &R2) const {
