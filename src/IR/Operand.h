@@ -7,14 +7,12 @@ namespace Balance {
 
 class Instruction;
 
-using VirtRegister = size_t;
-
-struct IntVirtRegister {
-    VirtRegister Id;
-};
-
-struct FloatVirtRegister {
-    VirtRegister Id;
+struct VirtRegister {
+    enum RegType {
+        Int, Float
+    };
+    RegType Type;
+    size_t Id;
 };
 
 } // Balance

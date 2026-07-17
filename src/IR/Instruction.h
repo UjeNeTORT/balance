@@ -2,44 +2,37 @@
 #define IR_INSTRUCTION_H_
 
 #include "Operand.h"
-#include "Utils.h"
 
-#include <array>
+#include <cassert>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
 
 namespace Balance {
 
-namespace Opcodes {
-enum Opcodes {
+enum class Opcodes {
     // Base
     NOP,
     // Unary
     CONVERT, BITCAST, COPY, NEG,
     // Binary
     ADD, SUB, MUL, DIV, REM, SHL, SHR, AND, OR, XOR, CMP,
-    // Ret
+
     RET,
-    // Br
     BR,
-    // Load
-    LOAD,
-    // Store
-    STORE,
-    // Call
+    LOAD,  // Src[0] - address
+    STORE, // Src[0] - address, Src[1] - value
     CALL,
-    // Phi
     PHI,
+    FUNC_DEF,
+    ALLOCA,
 };
-}
 
 enum class CmpTypes {
     EQ, NE, GT, GE, LT, LE,
 };
-
-// TODO: function arguments retrieval
 
 struct SourceInfo {
     size_t line;
@@ -47,20 +40,39 @@ struct SourceInfo {
 };
 
 class BasicBlock;
+class Function;
 
 class Instruction {
 public:
-    virtual void verify() const;
+    Instruction(Opcodes Op, BasicBlock* Parent)
+        : Opcode(Op)
+        , ParentBB(Parent)
+    {}
 
-    virtual bool isInt()      const { return false; }
-    virtual bool isFloat()    const { return false; }
-    virtual bool isTerminal() const { return false; }
+    Instruction(Opcodes Op, BasicBlock* Parent, SourceInfo SrcInf)
+        : Opcode(Op)
+        , ParentBB(Parent)
+        , SrcInfo(SrcInf)
+    {}
 
+    void addSrc(VirtRegister Reg) { Src.push_back(Reg); }
+    void addDst(VirtRegister Reg) { Dst.push_back(Reg); }
+    void setImmediate(std::variant<int, float> Imm) { Immediate = Imm; }
+    void setCmpType(CmpTypes Type) { CmpType = Type; }
+    void setBrDst(BasicBlock* Dst) { BrDstBB = Dst; }
+    void setFunc(Function* Funct) { CallFunc = Funct; }
 
-    virtual std::vector<VirtRegister> getArguments() const { return {}; }
-    virtual std::optional<VirtRegister> getDestination() const { return std::nullopt; }
+    void verify() const;
+    void throwVerifyError(std::string error) const;
 
-    Opcodes::Opcodes getOpcode() const { return Opcode; }
+    bool isTerminal() const {
+        return (Opcode == Opcodes::BR || Opcode == Opcodes::RET);
+    }
+
+    const std::vector<VirtRegister>& getSrc() const { return Src; }
+    const std::vector<VirtRegister>& getDst() const { return Dst; }
+
+    Opcodes getOpcode() const { return Opcode; }
     BasicBlock* getParentBB() const { return ParentBB; }
     std::string getComment() const { return Comment; }
 
@@ -68,191 +80,37 @@ public:
         using std::runtime_error::runtime_error;
     };
 
-protected:
-    Opcodes::Opcodes Opcode;
+private:
+    Opcodes Opcode;
     BasicBlock* ParentBB;
     std::string Comment;
-    std::optional<SourceInfo> SourceInfo;
-};
+    std::optional<SourceInfo> SrcInfo;
 
-class UnaryInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt() const override {
-        return std::holds_alternative<IntVirtRegister>(Dst);;
-    }
-    virtual bool isFloat() const override {
-        return std::holds_alternative<FloatVirtRegister>(Dst);
-    }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        return std::visit(overloaded {
-            [](IntVirtRegister&& arg)   { return std::vector<VirtRegister>{arg.Id}; },
-            [](FloatVirtRegister&& arg) { return std::vector<VirtRegister>{arg.Id}; },
-            [](auto&&)                  { return std::vector<VirtRegister>{}; }
-        }, Src);
-    }
-    virtual std::optional<VirtRegister> getDestination() const override {
-        return std::visit([](auto&& arg) { return arg.Id; }, Dst);
-    }
-
-private:
-    std::variant<IntVirtRegister, FloatVirtRegister, int, float> Src;
-    std::variant<IntVirtRegister, FloatVirtRegister> Dst;
-};
-
-class BinaryInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override { return std::holds_alternative<IntVirtRegister>(Dst); }
-    virtual bool isFloat() const override { return std::holds_alternative<FloatVirtRegister>(Dst); }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        return std::visit([](auto&& arg) { return std::vector<VirtRegister>{arg[0].Id, arg[1].Id}; }, Src);
-    }
-    virtual std::optional<VirtRegister> getDestination() const override {
-        return std::visit([](auto&& arg) { return arg.Id; }, Dst);
-    }
-
-private:
-    std::variant<std::array<IntVirtRegister, 2>, std::array<FloatVirtRegister, 2>> Src;
-    std::variant<IntVirtRegister, FloatVirtRegister> Dst;
+    std::optional<std::variant<int, float>> Immediate;
     std::optional<CmpTypes> CmpType;
-};
+    std::vector<VirtRegister> Src;
+    std::vector<VirtRegister> Dst;
+    std::optional<BasicBlock*> BrDstBB;
+    std::optional<Function*> CallFunc;
 
-class RetInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override {
-        return Src.has_value() && std::holds_alternative<IntVirtRegister>(*Src);
+    void verifyNoImmediate() const {
+        if (Immediate.has_value()) throwVerifyError("Immediate has value");
     }
-    virtual bool isFloat() const override {
-        return Src.has_value() && std::holds_alternative<FloatVirtRegister>(*Src);
+    void verifyNoCmpType() const {
+        if (CmpType.has_value()) throwVerifyError("CmpType has value");
     }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        if (Src.has_value())
-            return {std::visit([](auto&& arg) { return arg.Id; }, *Src)};
-        return {};
+    void verifyNoSrc() const {
+        if (Src.size() != 0) throwVerifyError("Src.size != 0");
     }
-
-private:
-    std::optional<std::variant<IntVirtRegister, FloatVirtRegister>> Src;
-};
-
-class BrInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt() const override { return true; }
-
-    bool isConditional() const { return Src.has_value(); }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        if (Src.has_value())
-            return { Src->Id };
-        return {};
+    void verifyNoDst() const {
+        if (Dst.size() != 0) throwVerifyError("Dst.size != 0");
     }
-
-private:
-    std::optional<IntVirtRegister> Src;
-    BasicBlock* DstBB;
-};
-
-class LoadInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override { return std::holds_alternative<IntVirtRegister>(Src); }
-    virtual bool isFloat() const override { return std::holds_alternative<FloatVirtRegister>(Src); }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        return {std::visit([](auto&& arg) { return arg.Id; }, Src), Address.Id};
+    void verifyNoBrDstBB() const {
+        if (BrDstBB.has_value()) throwVerifyError("BrDstBB hsa value");
     }
-
-private:
-    std::variant<IntVirtRegister, FloatVirtRegister> Src;
-    IntVirtRegister Address;
-};
-
-class StoreInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override { return std::holds_alternative<IntVirtRegister>(Dst); }
-    virtual bool isFloat() const override { return std::holds_alternative<FloatVirtRegister>(Dst); }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        return {Address.Id};
+    void verifyNoFunc() const {
+        if (CallFunc.has_value()) throwVerifyError("Func has value");
     }
-
-    virtual std::optional<VirtRegister> getDestination() const override {
-        return std::visit([](auto&& arg) { return arg.Id; }, Dst);
-    }
-
-private:
-    std::variant<IntVirtRegister, FloatVirtRegister> Dst;
-    IntVirtRegister Address;
-};
-
-class CallInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override {
-        return Dst.has_value() && std::holds_alternative<IntVirtRegister>(*Dst);
-    }
-    virtual bool isFloat() const override {
-        return Dst.has_value() && std::holds_alternative<FloatVirtRegister>(*Dst);
-    }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        std::vector<VirtRegister> v;
-        for (auto arg: Arguments)
-            v.push_back(std::visit([](auto&& a) { return a.Id; }, arg));
-        return v;
-    }
-
-    virtual std::optional<VirtRegister> getDestination() const override {
-        if (Dst.has_value())
-            return std::visit([](auto&& arg) { return arg.Id; }, *Dst);
-        return std::nullopt;
-    }
-
-private:
-    std::vector<std::variant<IntVirtRegister, FloatVirtRegister>> Arguments;
-    std::optional<std::variant<IntVirtRegister, FloatVirtRegister>> Dst;
-    BasicBlock* FunctionBB;
-};
-
-class PhiInstruction: public Instruction {
-public:
-    virtual void verify() const override;
-
-    virtual bool isInt()   const override {
-        return std::holds_alternative<IntVirtRegister>(Dst);
-    }
-    virtual bool isFloat() const override {
-        return std::holds_alternative<FloatVirtRegister>(Dst);
-    }
-
-    virtual std::vector<VirtRegister> getArguments() const override {
-        std::vector<VirtRegister> v;
-        for (auto arg: Arguments)
-            v.push_back(std::visit([](auto&& a) { return a.Id; }, arg));
-        return v;
-    }
-
-    virtual std::optional<VirtRegister> getDestination() const override {
-        return std::visit([](auto&& arg) { return arg.Id; }, Dst);
-    }
-
-private:
-    std::vector<std::variant<IntVirtRegister, FloatVirtRegister>> Arguments;
-    std::variant<IntVirtRegister, FloatVirtRegister> Dst;
 };
 
 } // Balance

@@ -1,102 +1,220 @@
 #include "Instruction.h"
 
+#include <cassert>
 #include <variant>
 
 using namespace Balance;
-using namespace Opcodes;
+
+void Instruction::throwVerifyError(std::string error) const {
+    // TODO: Print instruction info
+    throw verify_error(error);
+}
 
 void Instruction::verify() const {
-    if (Opcode != NOP)
-        throw verify_error("Basic Instruction must be NOP");
-}
+    if (ParentBB == nullptr)
+        throwVerifyError("Invalid ParentBB");
 
-void UnaryInstruction::verify() const {
-    if (Opcode == CONVERT) {
-        if ((std::holds_alternative<IntVirtRegister>(Dst) &&
-             !std::holds_alternative<float>(Src) && !std::holds_alternative<FloatVirtRegister>(Src)) ||
-            (!std::holds_alternative<int>(Src) && !std::holds_alternative<IntVirtRegister>(Src)))
-                throw verify_error("CONVERT instruction must have different type Dst and Src");
+    switch (Opcode) {
+        case Opcodes::NOP:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoSrc();
+            verifyNoDst();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            break;
+        case Opcodes::CONVERT:
+        case Opcodes::BITCAST:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 1 || Dst.size() != 1)
+                throwVerifyError("Unary operation must have 1 source and 1 destination");
 
-    } else if (Opcode == BITCAST) {
-        if (std::holds_alternative<int>(Src) || std::holds_alternative<float>(Src))
-            throw verify_error("BITCAST instruction mustn't hold constant value");
+            if (Src[0].Type == Dst[0].Type)
+                throwVerifyError("CONVERT/BITCAST operation must have different source and destination types");
+            break;
+        case Opcodes::COPY:
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Immediate.has_value()) {
+                if (Src.size() != 0 || Dst.size() != 1)
+                    throwVerifyError("COPY operation with immediate must have no source and 1 destination");
 
-        if (Src.index() == Dst.index())
-            throw verify_error("BITCAST instruction must have different type Dst and Src");
-    } else if (Opcode == COPY) {
-        if ((std::holds_alternative<IntVirtRegister>(Dst) &&
-             !std::holds_alternative<int>(Src) && !std::holds_alternative<IntVirtRegister>(Src)) ||
-            (!std::holds_alternative<float>(Src) && !std::holds_alternative<FloatVirtRegister>(Src)))
-                throw verify_error("COPY instruction must have same type Dst and Src");
+                if ((std::holds_alternative<int>(*Immediate) && Dst[0].Type != VirtRegister::Int) ||
+                    (std::holds_alternative<float>(*Immediate) && Dst[0].Type != VirtRegister::Float))
+                    throwVerifyError("COPY operation must have same source and destination types");
+            } else {
+                if (Src.size() != 1 || Dst.size() != 1)
+                    throwVerifyError("COPY operation without immediate must have 1 source and 1 destination");
 
-    } else if (Opcode == NEG) {
-        if (Src.index() != Dst.index())
-            throw verify_error("NEG instruction Src must be same type with Dst");
-    } else {
-        throw verify_error("Invalid Opcode for UnaryInstruction");
-    }
-}
+                if (Src[0].Type != Dst[0].Type)
+                    throwVerifyError("COPY operation must have same source and destination types");
+            }
+            break;
+        case Opcodes::NEG:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 1 || Dst.size() != 1)
+                throwVerifyError("Unary operation must have 1 source and 1 destination");
 
-void BinaryInstruction::verify() const {
-    if (Opcode == ADD || Opcode == SUB || Opcode == MUL || Opcode == DIV || Opcode == REM ||
-        Opcode == SHL || Opcode == SHR || Opcode == AND || Opcode == OR || Opcode == XOR) {
+            if (Src[0].Type != Dst[0].Type)
+                throwVerifyError("NEG operation must have same source and destination types");
+            break;
 
-        if (CmpType.has_value())
-            throw verify_error("CmpType is given for non CMP instruction");
-    } else if (Opcode == CMP) {
+        case Opcodes::ADD:
+        case Opcodes::SUB:
+        case Opcodes::MUL:
+        case Opcodes::DIV:
+        case Opcodes::REM:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 2 || Dst.size() != 1)
+                throwVerifyError("Binary operation must have 2 sources and 1 destination");
 
-        if (!CmpType.has_value())
-            throw verify_error("CmpType is not given for CMP instruction");
-    } else {
-        throw verify_error("Invalid Opcode for BinaryInstruction");
-    }
+            for (auto Source: Src)
+                if (Source.Type != Dst[0].Type)
+                    throwVerifyError("Binary operation sources types must be same with dst type");
+            break;
+        case Opcodes::SHL:
+        case Opcodes::SHR:
+        case Opcodes::AND:
+        case Opcodes::OR:
+        case Opcodes::XOR:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 2 || Dst.size() != 1)
+                throwVerifyError("Binary operation must have 2 sources and 1 destination");
 
-    if (Src.index() != Dst.index()) {
-        throw verify_error("BinaryInstruction Dst and Src must have same type");
-    }
-}
+            if (Dst[0].Type != VirtRegister::Int)
+                throwVerifyError("This operation is Int only");
 
-void RetInstruction::verify() const {
-    if (Opcode != RET)
-        throw verify_error("RetInstruction must have RET Opcode");
-}
+            for (auto Source: Src)
+                if (Source.Type != Dst[0].Type)
+                    throwVerifyError("Binary operation sources types must be same with dst type");
+            break;
+        case Opcodes::CMP:
+            verifyNoImmediate();
+            if (!CmpType.has_value())
+                throwVerifyError("CMP operation must have CmpType");
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 2 || Dst.size() != 1)
+                throwVerifyError("CMP operation must have 2 sources and 1 destination");
 
-void BrInstruction::verify() const {
-    if (Opcode != BR)
-        throw verify_error("BrInstruction must have BR Opcode");
+            if (Dst[0].Type != VirtRegister::Int)
+                throwVerifyError("CMP operation must have Int result");
 
-    if (DstBB == nullptr)
-        throw verify_error("BrInstruction must have destination basic block");
-}
+            if (Src[0].Type != Src[1].Type)
+                throwVerifyError("CMP operands must have same type");
+            break;
 
-void LoadInstruction::verify() const {
-    if (Opcode != LOAD)
-        throw verify_error("LoadInstruction must have LOAD Opcode");
-}
+        case Opcodes::RET:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoDst();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() >= 2)
+                throwVerifyError("RET operation must have no or 1 source");
+            break;
 
-void StoreInstruction::verify() const {
-    if (Opcode != STORE)
-        throw verify_error("StoreInstruction must have STORE Opcode");
-}
+        case Opcodes::BR:
+            verifyNoImmediate();
+            verifyNoDst();
+            verifyNoFunc();
+            if (Src.size() >= 2)
+                throwVerifyError("BR operation must have no or 1 source");
 
-void CallInstruction::verify() const {
-    if (Opcode != CALL)
-        throw verify_error("CallInstruction must have CALL Opcode");
+            if (Src.size() == 0)
+                verifyNoCmpType();
 
-    if (FunctionBB == nullptr)
-        throw verify_error("CallInstruction must point to function basic block");
-}
+            if (!BrDstBB.has_value())
+                throwVerifyError("BR operation must have BrDstBB");
+            break;
 
-void PhiInstruction::verify() const {
-    if (Opcode != PHI)
-        throw verify_error("PhiInstruction must have PHI Opcode");
+        case Opcodes::LOAD:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 1 || Dst.size() != 1)
+                throwVerifyError("LOAD operation must have 1 source and 1 destination");
 
-    if (Arguments.size() < 2)
-        throw verify_error("PhiInstruction must have at least 2 Arguments");
+            if (Src[0].Type != VirtRegister::Int)
+                throwVerifyError("LOAD operation Src[0] must be Int -- it's address");
+            break;
 
-    for (auto arg: Arguments) {
-        if (arg.index() != Dst.index())
-            throw verify_error("Arguments in PhiInstruction must have same type with Dst");
+        case Opcodes::STORE:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+            if (Src.size() != 2 || Dst.size() != 0)
+                throwVerifyError("STORE operation must have 2 sources and no destination");
+
+            if (Src[0].Type != VirtRegister::Int)
+                throwVerifyError("STORE operation Src[0] must be Int -- it's address");
+            break;
+
+        case Opcodes::CALL:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+
+            if (Dst.size() >= 2)
+                throwVerifyError("CALL operation must habe no or 1 destination");
+
+            if (!CallFunc.has_value())
+                throwVerifyError("CALL operation must have CallFunc");
+            break;
+
+        case Opcodes::PHI:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+
+            if (Dst.size() != 1 || Src.size() < 2)
+                throwVerifyError("PHI operation must have 1 destination and at least 2 sources");
+
+            for (auto Arg: Src) {
+                if (Arg.Type != Dst[0].Type)
+                    throwVerifyError("PHI operation's sources must have same type with destination");
+            }
+            break;
+
+        case Opcodes::FUNC_DEF:
+            verifyNoImmediate();
+            verifyNoCmpType();
+            verifyNoSrc();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+        break;
+
+        case Opcodes::ALLOCA:
+            verifyNoCmpType();
+            verifyNoSrc();
+            verifyNoBrDstBB();
+            verifyNoFunc();
+
+            if (!Immediate.has_value() || !std::holds_alternative<int>(*Immediate))
+                throwVerifyError("ALLOCA operation must have integer Immediate for size");
+
+            if (Dst.size() != 1 || Dst[0].Type != VirtRegister::Int)
+                throwVerifyError("ALLOCA operation must have 1 integer destination");
+            break;
+
+        default:
+            assert(0);
     }
 }
 
