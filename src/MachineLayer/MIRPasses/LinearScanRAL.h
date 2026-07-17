@@ -5,6 +5,7 @@
 #include "MachineFunction.h"
 
 #include <algorithm>
+#include <cassert>
 #include <map>
 #include <unordered_set>
 #include <set>
@@ -45,16 +46,20 @@ class LinearScanRAL final : public Pass {
             class Register PhysReg;
         };
 
-        UniqueStorage() : Type(Type::Stack), StackSlotId(0) {
-            unreachable("default ctor for UniqueStorage");
-        }
+        UniqueStorage() : Type(Type::Stack), StackSlotId(-1) {}
         UniqueStorage(class Register Reg) : Type(Type::Register), PhysReg{Reg} {}
         UniqueStorage(unsigned StackSlotId) : Type(Type::Stack), StackSlotId{StackSlotId} {}
 
         bool isStack() const { return Type == Type::Stack; }
         bool isReg() const { return Type == Type::Register; }
-        unsigned getStackId() const { return StackSlotId; }
-        class Register getReg() const { return PhysReg; }
+        unsigned getStackId() const {
+            assert(isStack() && "Wrong accessor");
+            return StackSlotId;
+        }
+        class Register getReg() const {
+            assert(isReg() && "Wrong accessor");
+            return PhysReg;
+        }
     };
 
     struct LiveIntervalCmpIncEnd {
@@ -72,16 +77,15 @@ class LinearScanRAL final : public Pass {
     const unsigned LinearPeriod = 4;
     mutable unsigned StackSlotCnt = 0;
 public:
-    LinearScanRAL(const std::string &Name = "LSRAL") : Pass(Name) {}
+    LinearScanRAL(const std::string &Name = "(l)SRAL") : Pass(Name) {}
 
     bool run(MachineFunction &MF) override;
 private:
     void updateRanges(const MachineBB *MBB, int LinBeginIdx);
     void linearizeInstructions(MachineFunction &MF);
-    void expireOldIntervals(const LiveInterval &LI, LiveIntervalsSet &Active,
-            RegMappingT &RegMapping, std::unordered_set<Register> &Pool) const;
-    void spillAtInterval(const LiveInterval &LI, LiveIntervalsSet &Active,
-            RegMappingT &RegMapping, std::unordered_set<Register> &Pool) const;
+    void expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool);
+    void spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool);
+    void applyRegMapping(MachineFunction &MF);
     UniqueStorage getStackSlot() const;
 };
 

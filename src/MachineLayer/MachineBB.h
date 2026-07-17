@@ -3,7 +3,6 @@
 
 #include "MIROpcodes.h"
 #include "Register.h"
-#include "MachineInst.h"
 
 #include <iostream>
 #include <list>
@@ -12,6 +11,7 @@
 namespace Balance {
 
 class MachineFunction;
+class MachineInst;
 
 class MachineBB {
     MachineFunction *MF;

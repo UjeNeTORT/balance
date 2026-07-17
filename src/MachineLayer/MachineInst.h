@@ -2,6 +2,7 @@
 #define MACHINE_INST_H
 
 #include "MIROpcodes.h"
+#include "MachineBB.h"
 #include "MachineOperand.h"
 
 #include <cstdint>
@@ -10,7 +11,6 @@
 namespace Balance {
 
 class Register;
-class MachineBB;
 
 class MachineInst {
     RISCVOpcode Opcode;
@@ -33,6 +33,8 @@ public:
     MachineBB *getMBB() const { return MBB; }
     void setMBB(MachineBB *NewMBB) { MBB = NewMBB; }
 
+    MachineBB::iterator getIterator();
+
     bool isTerminator() const { return IsTerminator; }
 
     std::vector<Register> getDefs() const;
@@ -49,6 +51,8 @@ public:
 
     const_iterator begin() const { return Operands.begin(); }
     const_iterator end()   const { return Operands.end(); }
+
+    friend bool operator==(const MachineInst &MI1, const MachineInst &MI2);
 };
 
 std::ostream &operator<<(std::ostream &OS, const Balance::MachineInst &MI);

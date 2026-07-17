@@ -1,4 +1,5 @@
 #include "MachineFunction.h"
+#include "MachineInst.h"
 #include "MachineBB.h"
 
 #include <iostream>

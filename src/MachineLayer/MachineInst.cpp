@@ -45,6 +45,10 @@ MachineInst &MachineInst::addMO(MachineOperand MO) {
     return *this;
 }
 
+MachineBB::iterator MachineInst::getIterator() {
+    return std::find(MBB->begin(), MBB->end(), *this);
+}
+
 std::vector<Register> MachineInst::getDefs() const {
     std::vector<Register> Defs;
     for (const auto &MO : Operands) {
@@ -86,6 +90,21 @@ void MachineInst::print(std::ostream &OS) const {
 std::ostream &operator<<(std::ostream &OS, const MachineInst &MI) {
     MI.print(OS);
     return OS;
+}
+
+bool operator==(const MachineInst &MI1, const MachineInst &MI2) {
+    if (MI1.Opcode != MI2.Opcode)
+        return false;
+
+    if (MI1.Operands.size() != MI2.Operands.size())
+        return false;
+
+    for (size_t i = 0; i < MI1.Operands.size(); ++i) {
+        if (!(MI1.Operands[i] == MI2.Operands[i]))
+            return false;
+    }
+
+    return true;
 }
 
 } // namespace Balance
