@@ -94,9 +94,9 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     // TODO: implement machine register info
     std::unordered_set<Register> Pool {
         RISCVRegister::T1, RISCVRegister::T2,
-        RISCVRegister::T3, RISCVRegister::T4, RISCVRegister::T5, RISCVRegister::T6,
-        RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
-        RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
+        // RISCVRegister::T3, RISCVRegister::T4, RISCVRegister::T5, RISCVRegister::T6,
+        // RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
+        // RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
 
     unsigned PoolSize = Pool.size();
@@ -170,7 +170,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                 MO.setReg(US.getReg());
             } else if (US.isStack()) {
                 // insert spill after MI
-                auto &Spill = MBB->insertMI(MI.getIterator(), RISCVOpcode::SW)
+                auto &Spill = MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
                     .addReg(RISCV::RISCVRegister::T0);
@@ -178,7 +178,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 
                 // insert fill before MI
                 if (MIIdx != 0) {
-                    auto &Fill = MBB->insertMI(std::prev(MI.getIterator()), RISCVOpcode::LW)
+                    auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
                         .addReg(RISCV::RISCVRegister::T0)
                         .addReg(RISCV::RISCVRegister::SP)
                         .addImm(US.getStackId() * 4);
