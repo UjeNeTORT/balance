@@ -13,7 +13,7 @@ std::string Register::getAsmString() const {
     std::string S;
     switch (RegType) {
     case Type::Virtual:
-        S += std::string("%VReg") + std::to_string(RegId);
+        S += std::string("%") + std::to_string(RegId);
         break;
     case Type::Physical:
         S += std::string(RISCV::getRegAsmString(RegId));
