@@ -127,6 +127,9 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         Pool.erase(Pool.begin());
     }
 
+    applyRegMapping(MF);
+
+    #if 0
     for (auto RM : RegMapping) {
         std::cerr << RM.first->Reg << *RM.first << " -> ";
         if (RM.second.isStack()) {
@@ -135,8 +138,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
             std::cerr << RM.second.getReg() << '\n';
         }
     }
-
-    applyRegMapping(MF);
+    #endif
 
     #if 0
     for (auto RM : RegMapping) {
@@ -164,7 +166,6 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
             if (CurrReg.isPhysical()) continue;
             assert(LiveIntervals.count(CurrReg) && "LiveIntervals must know about each virtual register");
 
-            std::cerr << "LiveIntervals[CurrReg] = " << LiveIntervals[CurrReg] <<  "   [" << &LiveIntervals[CurrReg] << "]" << "\n";
             UniqueStorage &US = RegMapping.at(&LiveIntervals[CurrReg]);
             if (US.isReg()) {
                 MO.setReg(US.getReg());

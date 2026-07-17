@@ -74,7 +74,7 @@ public:
 
     std::string_view getReferenceName() const;
     void updateReferenceName();
-    void print(std::ostream &OS) const;
+    void print(std::ostream &OS, bool DebugData = false) const;
 
     std::list<MachineBB *> getSuccessors() const;
     std::list<MachineBB *> getPredecessors() const;

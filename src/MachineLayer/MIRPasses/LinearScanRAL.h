@@ -53,14 +53,9 @@ private:
             class Register PhysReg;
         };
 
-        UniqueStorage() : Type(Type::Stack), StackSlotId(-1) {
-            std::cerr << "Created default storage with SSID: " << this->StackSlotId << '\n';
-        }
+        UniqueStorage() : Type(Type::Stack), StackSlotId(-1) {}
         UniqueStorage(class Register Reg) : Type(Type::Register), PhysReg{Reg} {}
-
-        explicit UniqueStorage(unsigned StackSlotId) : Type(Type::Stack), StackSlotId{StackSlotId} {
-            std::cerr << "Created storage with SSID: " << this->StackSlotId << '\n';
-        }
+        UniqueStorage(unsigned StackSlotId) : Type(Type::Stack), StackSlotId{StackSlotId} {}
 
         bool isStack() const { return Type == Type::Stack; }
         bool isReg() const { return Type == Type::Register; }
