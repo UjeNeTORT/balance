@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <ostream>
 #include <unordered_set>
 #include <set>
 #include <string>
@@ -16,6 +17,7 @@
 namespace Balance {
 
 class LinearScanRAL final : public Pass {
+public:
     struct LiveInterval {
         unsigned StartIdx = 0;
         unsigned EndIdx = std::numeric_limits<unsigned>::max();
@@ -37,8 +39,13 @@ class LinearScanRAL final : public Pass {
         bool operator>(const LiveInterval &Other) const {
             return Other < *this;
         }
+
+        void print(std::ostream &OS) const {
+            OS << "[" << StartIdx << ", " << EndIdx << ")" << " " << Reg;
+        }
     };
 
+private:
     struct UniqueStorage {
         enum Type { Stack, Register } Type;
         union {
@@ -46,9 +53,14 @@ class LinearScanRAL final : public Pass {
             class Register PhysReg;
         };
 
-        UniqueStorage() : Type(Type::Stack), StackSlotId(-1) {}
+        UniqueStorage() : Type(Type::Stack), StackSlotId(-1) {
+            std::cerr << "Created default storage with SSID: " << this->StackSlotId << '\n';
+        }
         UniqueStorage(class Register Reg) : Type(Type::Register), PhysReg{Reg} {}
-        UniqueStorage(unsigned StackSlotId) : Type(Type::Stack), StackSlotId{StackSlotId} {}
+
+        explicit UniqueStorage(unsigned StackSlotId) : Type(Type::Stack), StackSlotId{StackSlotId} {
+            std::cerr << "Created storage with SSID: " << this->StackSlotId << '\n';
+        }
 
         bool isStack() const { return Type == Type::Stack; }
         bool isReg() const { return Type == Type::Register; }
@@ -87,7 +99,13 @@ private:
     void spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool);
     void applyRegMapping(MachineFunction &MF);
     UniqueStorage getStackSlot() const;
+    void dumpLiveIntervals() const;
 };
+
+inline std::ostream &operator<<(std::ostream &OS, const LinearScanRAL::LiveInterval &LI) {
+    LI.print(OS);
+    return OS;
+}
 
 } // namespace Balance
 

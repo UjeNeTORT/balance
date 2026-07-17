@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <iomanip>
 #include <map>
 #include <set>
+#include <sstream>
 
 using namespace Balance;
 
@@ -79,26 +81,8 @@ void LinearScanRAL::linearizeInstructions(MachineFunction &MF) {
         updateRanges(MBB, LinearBeginIdx);
     }
 
-    #if 0
-    // debug output
-    std::for_each(LinearInstructions.begin(), LinearInstructions.end(), [](const MachineInst *MI) {
-        if (MI == nullptr) return;
-        std::cerr << "[lsra]: " << '(' << MI->getMBB()->getReferenceName() << ") " << *MI << '\n';
-    });
-    std::cerr << '\n';
-
-    std::cerr << "after LiveIntervals construction \n";
-    std::for_each(LiveIntervals.begin(), LiveIntervals.end(), [&, this](const std::pair<Register, LiveInterval> &PI) {
-        std::cerr << PI.first << ": ";
-        for (unsigned i = 0; i < LinearInstructions.size(); i += LinearPeriod) {
-            if (PI.second.StartIdx <= i && i < PI.second.EndIdx) {
-                std::cerr << "#";
-            } else {
-                std::cerr << "-";
-            }
-        }
-        std::cerr << "\n";
-        });
+    #if 1
+    dumpLiveIntervals();
     #endif
 }
 
@@ -139,13 +123,22 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         }
 
         Active.insert(LI);
-        RegMapping[LI] = *Pool.begin();
+        RegMapping.insert({LI, *Pool.begin()});
         Pool.erase(Pool.begin());
+    }
+
+    for (auto RM : RegMapping) {
+        std::cerr << RM.first->Reg << *RM.first << " -> ";
+        if (RM.second.isStack()) {
+            std::cerr << "Stack[" << RM.second.getStackId() << "]\n";
+        } else {
+            std::cerr << RM.second.getReg() << '\n';
+        }
     }
 
     applyRegMapping(MF);
 
-    #if 1
+    #if 0
     for (auto RM : RegMapping) {
         std::cerr << RM.first->Reg << " -> ";
         if (RM.second.isStack()) {
@@ -171,7 +164,8 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
             if (CurrReg.isPhysical()) continue;
             assert(LiveIntervals.count(CurrReg) && "LiveIntervals must know about each virtual register");
 
-            UniqueStorage &US = RegMapping[&LiveIntervals[CurrReg]];
+            std::cerr << "LiveIntervals[CurrReg] = " << LiveIntervals[CurrReg] <<  "   [" << &LiveIntervals[CurrReg] << "]" << "\n";
+            UniqueStorage &US = RegMapping.at(&LiveIntervals[CurrReg]);
             if (US.isReg()) {
                 MO.setReg(US.getReg());
             } else if (US.isStack()) {
@@ -200,28 +194,28 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 }
 
 void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
-    for (auto It = Active.begin(); It != Active.end(); ++It) {
-        if ((*It)->EndIdx >= LI.StartIdx) return;
+    for (auto It = Active.begin(); It != Active.end(); ) {
+        if ((*It)->EndIdx >= LI.StartIdx) {
+            return;
+        }
 
         assert(RegMapping.at(*It).isReg());
 
         Pool.insert(RegMapping.at(*It).getReg());
-        RegMapping.erase(*It);
         It = Active.erase(It);
     }
 }
 
 void LinearScanRAL::spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
-    const LiveInterval &LastActiveLI = **Active.rbegin();
-    if (LastActiveLI.EndIdx > LI.EndIdx) {
-        RegMapping[&LI] = RegMapping[&LastActiveLI];
-        RegMapping[&LastActiveLI] = getStackSlot();
-        Active.erase(&LastActiveLI);
+    const LiveInterval *lastActive = *Active.rbegin();
+    if (lastActive->EndIdx > LI.EndIdx) {
+        RegMapping.insert({&LI, RegMapping.at(lastActive)});
+        RegMapping.at(lastActive) = getStackSlot();
+        Active.erase(lastActive);
         Active.insert(&LI);
     } else {
-        RegMapping[&LI] = getStackSlot();
+        RegMapping.insert({&LI, getStackSlot()});
     }
-    return;
 }
 
 LinearScanRAL::UniqueStorage LinearScanRAL::getStackSlot() const {
@@ -231,4 +225,60 @@ LinearScanRAL::UniqueStorage LinearScanRAL::getStackSlot() const {
 bool LinearScanRAL::LiveIntervalCmpIncEnd::operator() (const LiveInterval *lhs, const LiveInterval *rhs) const {
     assert(lhs && rhs && "Passed nullptr to comparison");
     return lhs->EndIdx < rhs->EndIdx;
+}
+
+void LinearScanRAL::dumpLiveIntervals() const {
+    std::vector<Register> vregs;
+    for (const auto &p : LiveIntervals) {
+        vregs.push_back(p.first);
+    }
+    std::sort(vregs.begin(), vregs.end(), [](const Register &a, const Register &b) {
+        return a.getId() < b.getId();
+    });
+
+    std::vector<std::string> reg_names;
+    for (const auto &reg : vregs) {
+        std::stringstream ss;
+        ss << reg;
+        reg_names.push_back(ss.str());
+    }
+
+    size_t max_inst_width = 0;
+    for (const auto *MI : LinearInstructions) {
+        if (!MI) continue;
+        std::stringstream ss;
+        ss << "[lsra]: (" << MI->getMBB()->getReferenceName() << ") " << *MI;
+        if (ss.str().length() > max_inst_width) {
+            max_inst_width = ss.str().length();
+        }
+    }
+    const size_t padding = 4;
+    max_inst_width += padding;
+
+    // Print header
+    std::cerr << std::left << std::setw(max_inst_width) << "Instructions";
+    for (const auto &name : reg_names) {
+        std::cerr << " " << name;
+    }
+    std::cerr << "\n";
+
+    // Print instructions and liveness
+    for (unsigned i = 0; i < LinearInstructions.size(); i += LinearPeriod) {
+        const MachineInst *MI = LinearInstructions[i];
+        if (!MI) continue;
+
+        std::stringstream ss;
+        ss << "[lsra]: (" << MI->getMBB()->getReferenceName() << ") " << *MI;
+        std::string inst_str = ss.str();
+        std::cerr << std::left << std::setw(max_inst_width) << inst_str;
+
+        for (size_t j = 0; j < vregs.size(); ++j) {
+            const auto &li = LiveIntervals.at(vregs[j]);
+            char liveness_char = (li.StartIdx <= i && i < li.EndIdx) ? '#' : '.';
+
+            const std::string& name = reg_names[j];
+            std::cerr << " " << std::string(name.length() / 2, ' ') << liveness_char << std::string(name.length() - name.length() / 2 - 1, ' ');
+        }
+        std::cerr << "\n";
+    }
 }
