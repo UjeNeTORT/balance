@@ -166,7 +166,6 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                         .addReg(SpillTmp)
                         .addReg(RISCV::RISCVRegister::SP)
                         .addImm(US.getStackId() * 4);
-                    LinearInstructions[getFillSlotIdx(MIIdx)] = &Fill;
                 }
 
                 // insert spill after MI if register was not a use
@@ -180,7 +179,6 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
                     .addReg(SpillTmp);
-                LinearInstructions[getSpillSlotIdx(MIIdx)] = &Spill;
             } else {
                 unreachable("what are we even doing here?");
             }
