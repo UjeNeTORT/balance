@@ -31,10 +31,7 @@ void RPOTraversal::compute(MachineFunction &MF) {
 
     if (MF.begin() != MF.end()) {
 
-        MachineBB &EntryBB = *std::find_if(MF.begin(), MF.end(), [](const MachineBB &MBB) {
-            return MBB.getPredecessors().empty();
-        });
-
+        MachineBB &EntryBB = *MF.entryMBB();
         dfs(&EntryBB, Visited);
     }
 

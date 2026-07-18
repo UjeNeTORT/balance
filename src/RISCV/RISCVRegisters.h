@@ -172,7 +172,6 @@ inline bool isReservedRegister(RISCVRegister Reg) {
         case RISCVRegister::RA:
         case RISCVRegister::SP:
         case RISCVRegister::GP:
-        case RISCVRegister::TP:
             return true;
         default:
             return false;

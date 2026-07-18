@@ -40,8 +40,9 @@ void LinearScanRAL::updateRanges(const MachineBB *MBB, int LinBeginIdx) {
         assert(MI);
         for (const MachineOperand &MO : MI->getOperands()) {
             if (!MO.isReg()) continue;
-            // TODO: we might want to include physical register in analysis as well
-            if (MO.getReg().isPhysical()) continue;
+
+            // do not include reserved physical registers in analysis
+            if (isReservedRegister(MO.getReg())) continue;
             if (MO.isUse()) {
                 if (LiveIntervals.find(MO.getReg()) == LiveIntervals.end()) {
                     LiveIntervals.insert({MO.getReg(), LiveInterval(LinBeginIdx, MIIdx + LinearPeriod, MO.getReg())});
@@ -94,9 +95,9 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     // TODO: implement machine register info
     std::unordered_set<Register> Pool {
         RISCVRegister::T3, RISCVRegister::T4,
-        // RISCVRegister::T5, RISCVRegister::T6,
-        // RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
-        // RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
+        RISCVRegister::T5, RISCVRegister::T6,
+        RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
+        RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
 
     unsigned PoolSize = Pool.size();
@@ -104,6 +105,15 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     std::vector<LiveInterval *> SortedIntervals;
     for (auto &p : LiveIntervals) SortedIntervals.push_back(&p.second);
     std::sort(SortedIntervals.begin(), SortedIntervals.end(), [](const LiveInterval *a, const LiveInterval *b) {
+        assert(!isReservedRegister(a->Reg) && !isReservedRegister(b->Reg) && "Live Interval reg must not be reserved");
+
+        // we give physical registers priority in LIS
+        // in order to remove them from the pool of free regs ASAP
+        if (a->Reg.isPhysical() && b->Reg.isVirtual()) {
+            return true; // a < b
+        } else if (a->Reg.isVirtual() && b->Reg.isPhysical()) {
+            return false; // a > b
+        }
         return a->StartIdx < b->StartIdx;
     });
 
@@ -111,9 +121,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         expireOldIntervals(*LI, Pool);
 
         if (LI->Reg.isPhysical()) {
-            // TODO: if a register is physical, their LiveIntervals should
-            // be first in sorted intervals list
-            unreachable("Todo: remove from active pool");
+            Pool.erase(LI->Reg);
             continue;
         }
 
@@ -128,6 +136,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     }
 
     applyRegMapping(MF);
+    allocateSpillSpace(MF);
 
     #if 0
     for (auto RM : RegMapping) {
@@ -160,23 +169,25 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                 MO.setReg(US.getReg());
             } else if (US.isStack()) {
                 Register SpillTmp = getFreeSpillReservedReg();
-                // insert fill before MI
-                if (MIIdx != 0) {
+                // insert fill before MI if register is not a def
+                if (MIIdx != 0 && MO.isUse()) {
                     auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
                         .addReg(SpillTmp)
                         .addReg(RISCV::RISCVRegister::SP)
                         .addImm(US.getStackId() * 4);
-                    LinearInstructions[getFillSlotIdx(MIIdx)] = &Fill;
                 }
 
-                // insert spill after MI
+                // insert spill after MI if register was not a use
+                MO.setReg(SpillTmp);
+
+                // no need to store value of this register
+                // because it did not change
+                if (MO.isUse())
+                    continue;
                 auto &Spill = MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
                     .addReg(SpillTmp);
-                LinearInstructions[getSpillSlotIdx(MIIdx)] = &Spill;
-
-                MO.setReg(SpillTmp);
             } else {
                 unreachable("what are we even doing here?");
             }
@@ -186,13 +197,23 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
     }
 }
 
+void LinearScanRAL::allocateSpillSpace(MachineFunction &MF) {
+    MachineBB &Entry = *MF.entryMBB();
+    Entry.insertMI(Entry.begin(), RISCVOpcode::SUB)
+        .addReg(RISCV::RISCVRegister::SP)
+        .addReg(RISCV::RISCVRegister::SP)
+        .addImm(StackSlotCnt * 4);
+}
+
 void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
     for (auto It = Active.begin(); It != Active.end(); ) {
         if ((*It)->EndIdx >= LI.StartIdx) {
             return;
         }
 
-        assert(RegMapping.at(*It).isReg());
+        // probably in case of encountering StackSlot here we can just skip this LI,
+        // but i am not sure, let it be like that for some time
+        assert(RegMapping.at(*It).isReg() && "expireOldIntervals wants to return StackSlot to Active Pool");
 
         Pool.insert(RegMapping.at(*It).getReg());
         It = Active.erase(It);
@@ -200,11 +221,11 @@ void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_se
 }
 
 void LinearScanRAL::spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
-    const LiveInterval *lastActive = *Active.rbegin();
-    if (lastActive->EndIdx > LI.EndIdx) {
-        RegMapping.insert({&LI, RegMapping.at(lastActive)});
-        RegMapping.at(lastActive) = getStackSlot();
-        Active.erase(lastActive);
+    const LiveInterval *LastActive = *Active.rbegin();
+    if (LastActive->EndIdx > LI.EndIdx) {
+        RegMapping.insert({&LI, RegMapping.at(LastActive)});
+        RegMapping.at(LastActive) = getStackSlot();
+        Active.erase(LastActive);
         Active.insert(&LI);
     } else {
         RegMapping.insert({&LI, getStackSlot()});
