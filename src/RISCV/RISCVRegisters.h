@@ -169,10 +169,8 @@ inline std::string_view getRegAsmString(unsigned RegId) {
 inline bool isReservedRegister(RISCVRegister Reg) {
     switch (Reg) {
         case RISCVRegister::ZERO:
-        case RISCVRegister::RA:
         case RISCVRegister::SP:
         case RISCVRegister::GP:
-        case RISCVRegister::TP:
             return true;
         default:
             return false;
