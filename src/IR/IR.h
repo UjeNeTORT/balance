@@ -25,10 +25,22 @@ public:
                 std::optional<SourceInfo> SrcInfo = std::nullopt) {
         iterator LastBB = std::prev(BasicBlocks.end());
         if (!BasicBlocks.empty()) {
-            if (!LastBB->empty() && std::prev(LastBB->end())->get()->isTerminal())
+            if (!LastBB->empty() && std::prev(LastBB->end())->isTerminal())
                 LastBB = BasicBlocks.insert(BasicBlocks.end(), this);
         }
         return {LastBB, LastBB->addInstruction(Opcode, SrcInfo)};
+    }
+
+    void verify() const {
+        if (BasicBlocks.empty())
+            return;
+
+        if (BasicBlocks.cbegin()->empty() ||
+            BasicBlocks.cbegin()->cbegin()->getOpcode() != Opcodes::FUNC_DEF)
+            throw Instruction::verify_error("Function's first basic block must begin with FUNC_DEF");
+
+        for (const auto& BB: BasicBlocks)
+            BB.verify();
     }
 
     iterator       begin()       { return BasicBlocks.begin(); }
@@ -46,6 +58,11 @@ public:
     using iterator = FunctionStorage::iterator;
     using const_iterator = FunctionStorage::const_iterator;
 
+    void verify() const {
+        for (const auto& Func: Functions)
+            Func.verify();
+    }
+
     iterator       begin()       { return Functions.begin(); }
     iterator       end()         { return Functions.end(); }
     const_iterator begin() const { return Functions.cbegin(); }
@@ -53,8 +70,6 @@ public:
 private:
     FunctionStorage Functions;
 };
-
-
 
 } // Balance
 
