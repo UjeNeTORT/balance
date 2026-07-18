@@ -54,7 +54,7 @@ public:
     void addDst(VirtRegister Reg) { Dst.push_back(Reg); }
     void setImmediate(std::variant<int, float> Imm) { Immediate = Imm; }
     void setCmpType(CmpTypes Type) { CmpType = Type; }
-    void setBrDst(BasicBlock* Dst) { BrDstBB = Dst; }
+    void addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); }
     void setCallFunc(Function* Funct) { CallFunc = Funct; }
 
     void verify() const;
@@ -84,7 +84,7 @@ private:
     std::optional<CmpTypes> CmpType;
     std::vector<VirtRegister> Src;
     std::vector<VirtRegister> Dst;
-    std::optional<BasicBlock*> BrDstBB;
+    std::vector<BasicBlock*> BrDstBB;
     std::optional<Function*> CallFunc;
 
     void throwVerifyError(std::string error) const;
@@ -102,7 +102,7 @@ private:
         if (Dst.size() != 0) throwVerifyError("Dst.size != 0");
     }
     void verifyNoBrDstBB() const {
-        if (BrDstBB.has_value()) throwVerifyError("BrDstBB hsa value");
+        if (BrDstBB.size() != 0) throwVerifyError("BrDstBB hsa value");
     }
     void verifyNoFunc() const {
         if (CallFunc.has_value()) throwVerifyError("Func has value");

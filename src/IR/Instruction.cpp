@@ -137,8 +137,8 @@ void Instruction::verify() const {
             if (Src.size() == 0)
                 verifyNoCmpType();
 
-            if (!BrDstBB.has_value())
-                throwVerifyError("BR operation must have BrDstBB");
+            if (BrDstBB.size() != 1 || BrDstBB.size() != 2)
+                throwVerifyError("BR operation must have 1 or 2 BrDstBB");
             break;
 
         case Opcodes::LOAD:
@@ -189,6 +189,9 @@ void Instruction::verify() const {
             for (auto Arg: Src) {
                 if (Arg.Type != Dst[0].Type)
                     throwVerifyError("PHI operation's sources must have same type with destination");
+
+                if (!Arg.DefBlock.has_value())
+                    throwVerifyError("PHI operation's sources must have DefBlock defined");
             }
             break;
 

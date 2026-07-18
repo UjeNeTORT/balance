@@ -5,7 +5,6 @@
 
 #include <iterator>
 #include <list>
-#include <memory>
 #include <string>
 
 namespace Balance {
@@ -14,7 +13,7 @@ class Function;
 
 class BasicBlock {
 public:
-    using instructions_storage = std::list<std::unique_ptr<Instruction>>;
+    using instructions_storage = std::list<Instruction>;
     using iterator = instructions_storage::iterator;
     using const_iterator = instructions_storage::const_iterator;
 
@@ -33,19 +32,19 @@ public:
     void verify() const {
         bool IsTerminal = false;
         for (auto& Instr: Instructions) {
-            Instr->verify();
+            Instr.verify();
             if (IsTerminal)
                 throw Instruction::verify_error("Terminal instruction not in the end of basic block");
-            IsTerminal = Instr->isTerminal();
+            IsTerminal = Instr.isTerminal();
         }
         if (!IsTerminal)
             throw Instruction::verify_error("No terminal instruction in the end of basic block");
     }
 
     iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
-        auto Instr = std::make_unique<Instruction>(Opcode, this, SrcInf);
-        if (!Instructions.empty() && std::prev(Instructions.end())->get()->isTerminal() &&
-            Instr->isTerminal())
+        auto Instr = Instruction(Opcode, this, SrcInf);
+        if (!Instructions.empty() && std::prev(Instructions.end())->isTerminal() &&
+            Instr.isTerminal())
             throwVerifyError("Trying to add terminal instruction to basic block that already has it");
 
         return Instructions.insert(Instructions.end(), std::move(Instr));
