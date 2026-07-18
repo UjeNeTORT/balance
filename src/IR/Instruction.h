@@ -44,12 +44,7 @@ class Function;
 
 class Instruction {
 public:
-    Instruction(Opcodes Op, BasicBlock* Parent)
-        : Opcode(Op)
-        , ParentBB(Parent)
-    {}
-
-    Instruction(Opcodes Op, BasicBlock* Parent, SourceInfo SrcInf)
+    Instruction(Opcodes Op, BasicBlock* Parent, std::optional<SourceInfo> SrcInf = std::nullopt)
         : Opcode(Op)
         , ParentBB(Parent)
         , SrcInfo(SrcInf)
@@ -60,10 +55,9 @@ public:
     void setImmediate(std::variant<int, float> Imm) { Immediate = Imm; }
     void setCmpType(CmpTypes Type) { CmpType = Type; }
     void setBrDst(BasicBlock* Dst) { BrDstBB = Dst; }
-    void setFunc(Function* Funct) { CallFunc = Funct; }
+    void setCallFunc(Function* Funct) { CallFunc = Funct; }
 
     void verify() const;
-    void throwVerifyError(std::string error) const;
 
     bool isTerminal() const {
         return (Opcode == Opcodes::BR || Opcode == Opcodes::RET);
@@ -92,6 +86,8 @@ private:
     std::vector<VirtRegister> Dst;
     std::optional<BasicBlock*> BrDstBB;
     std::optional<Function*> CallFunc;
+
+    void throwVerifyError(std::string error) const;
 
     void verifyNoImmediate() const {
         if (Immediate.has_value()) throwVerifyError("Immediate has value");
