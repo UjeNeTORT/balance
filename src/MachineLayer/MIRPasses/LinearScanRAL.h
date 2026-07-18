@@ -3,16 +3,17 @@
 
 #include "Pass.h"
 #include "MachineFunction.h"
+#include "RISCV/RISCVRegisters.h"
 
 #include <algorithm>
 #include <cassert>
 #include <map>
 #include <ostream>
-#include <unordered_set>
 #include <set>
 #include <string>
 #include <vector>
 #include <limits>
+#include <unordered_set>
 
 namespace Balance {
 
@@ -80,11 +81,14 @@ private:
     std::vector<MachineInst *> LinearInstructions;
     std::map<Register, LiveInterval> LiveIntervals;
     RegMappingT RegMapping;
+    std::unordered_set<Register> SpillReservedRegs;
 
     const unsigned LinearPeriod = 4;
     mutable unsigned StackSlotCnt = 0;
 public:
-    LinearScanRAL(const std::string &Name = "(l)SRAL") : Pass(Name) {}
+    LinearScanRAL(const std::string &Name = "(l)SRAL") : Pass(Name) {
+        resetSpillReservedRegs();
+    }
 
     bool run(MachineFunction &MF) override;
 private:
@@ -93,6 +97,8 @@ private:
     void expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool);
     void spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool);
     void applyRegMapping(MachineFunction &MF);
+    Register getFreeSpillReservedReg();
+    void resetSpillReservedRegs();
     UniqueStorage getStackSlot() const;
     void dumpLiveIntervals() const;
 };

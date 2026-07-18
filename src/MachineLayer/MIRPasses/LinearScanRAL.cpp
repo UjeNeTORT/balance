@@ -93,8 +93,8 @@ bool LinearScanRAL::run(MachineFunction &MF) {
 
     // TODO: implement machine register info
     std::unordered_set<Register> Pool {
-        RISCVRegister::T1, RISCVRegister::T2,
-        // RISCVRegister::T3, RISCVRegister::T4, RISCVRegister::T5, RISCVRegister::T6,
+        RISCVRegister::T3, RISCVRegister::T4,
+        // RISCVRegister::T5, RISCVRegister::T6,
         // RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
         // RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
@@ -131,22 +131,11 @@ bool LinearScanRAL::run(MachineFunction &MF) {
 
     #if 0
     for (auto RM : RegMapping) {
-        std::cerr << RM.first->Reg << *RM.first << " -> ";
+        dbg() << RM.first->Reg << " -> ";
         if (RM.second.isStack()) {
-            std::cerr << "Stack[" << RM.second.getStackId() << "]\n";
+            dbg() << "Stack[" << RM.second.getStackId() << "]\n";
         } else {
-            std::cerr << RM.second.getReg() << '\n';
-        }
-    }
-    #endif
-
-    #if 0
-    for (auto RM : RegMapping) {
-        std::cerr << RM.first->Reg << " -> ";
-        if (RM.second.isStack()) {
-            std::cerr << "Stack[" << RM.second.getStackId() << "]\n";
-        } else {
-            std::cerr << RM.second.getReg() << '\n';
+            dbg() << RM.second.getReg() << '\n';
         }
     }
     #endif
@@ -170,27 +159,30 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
             if (US.isReg()) {
                 MO.setReg(US.getReg());
             } else if (US.isStack()) {
+                Register SpillTmp = getFreeSpillReservedReg();
+                // insert fill before MI
+                if (MIIdx != 0) {
+                    auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
+                        .addReg(SpillTmp)
+                        .addReg(RISCV::RISCVRegister::SP)
+                        .addImm(US.getStackId() * 4);
+                    LinearInstructions[getFillSlotIdx(MIIdx)] = &Fill;
+                }
+
                 // insert spill after MI
                 auto &Spill = MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
-                    .addReg(RISCV::RISCVRegister::T0);
+                    .addReg(SpillTmp);
                 LinearInstructions[getSpillSlotIdx(MIIdx)] = &Spill;
 
-                // insert fill before MI
-                if (MIIdx != 0) {
-                    auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
-                        .addReg(RISCV::RISCVRegister::T0)
-                        .addReg(RISCV::RISCVRegister::SP)
-                        .addImm(US.getStackId() * 4);
-
-                    LinearInstructions[getFillSlotIdx(MIIdx)] = &Fill;
-                }
-                MO.setReg(RISCV::RISCVRegister::T0);
+                MO.setReg(SpillTmp);
             } else {
                 unreachable("what are we even doing here?");
             }
         }
+
+        resetSpillReservedRegs();
     }
 }
 
@@ -217,6 +209,21 @@ void LinearScanRAL::spillAtInterval(const LiveInterval &LI, std::unordered_set<R
     } else {
         RegMapping.insert({&LI, getStackSlot()});
     }
+}
+
+Register LinearScanRAL::getFreeSpillReservedReg() {
+    assert(!SpillReservedRegs.empty() && "No more spill registers left");
+    auto VictimIt = SpillReservedRegs.begin();
+    Register Victim = *VictimIt;
+    SpillReservedRegs.erase(Victim);
+    return Victim;
+}
+
+void LinearScanRAL::resetSpillReservedRegs() {
+    using namespace RISCV;
+    SpillReservedRegs.emplace(RISCVRegister::T0);
+    SpillReservedRegs.emplace(RISCVRegister::T1);
+    SpillReservedRegs.emplace(RISCVRegister::T2);
 }
 
 LinearScanRAL::UniqueStorage LinearScanRAL::getStackSlot() const {
