@@ -2,6 +2,8 @@
 #include "MachineInst.h"
 #include "MachineBB.h"
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 
 namespace Balance {
@@ -11,6 +13,23 @@ int MachineFunction::getNewMBBIdx() { return MBBIdx++; }
 MachineFunction::MachineFunction(const std::string &Name) : Name(Name) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
+
+MachineBB *MachineFunction::entryMBB() {
+    auto FindNextWithZeroPreds = [this](iterator SearchSince) -> iterator {
+        return std::find_if(SearchSince, end(), [](const MachineBB &MBB) {
+            return MBB.getPredecessors().empty();
+        });
+    };
+
+    iterator EntryBBIt = FindNextWithZeroPreds(begin());
+    assert(EntryBBIt != end() && "Found MF without entry MBB");
+
+    if (EntryBBIt != end()) {
+        assert(FindNextWithZeroPreds(std::next(EntryBBIt)) == end() && "Found MF with multiple entries");
+    }
+
+    return &*EntryBBIt;
+}
 
 MachineBB *MachineFunction::createMBB(const std::string &Name) {
     BasicBlocks.emplace_back(this, Name);

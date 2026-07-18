@@ -95,9 +95,9 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     // TODO: implement machine register info
     std::unordered_set<Register> Pool {
         RISCVRegister::T3, RISCVRegister::T4,
-        // RISCVRegister::T5, RISCVRegister::T6,
-        // RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
-        // RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
+        RISCVRegister::T5, RISCVRegister::T6,
+        RISCVRegister::A2, RISCVRegister::A3, RISCVRegister::A4,
+        RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
 
     unsigned PoolSize = Pool.size();
@@ -136,6 +136,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     }
 
     applyRegMapping(MF);
+    allocateSpillSpace(MF);
 
     #if 0
     for (auto RM : RegMapping) {
@@ -194,6 +195,14 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 
         resetSpillReservedRegs();
     }
+}
+
+void LinearScanRAL::allocateSpillSpace(MachineFunction &MF) {
+    MachineBB &Entry = *MF.entryMBB();
+    Entry.insertMI(Entry.begin(), RISCVOpcode::SUB)
+        .addReg(RISCV::RISCVRegister::SP)
+        .addReg(RISCV::RISCVRegister::SP)
+        .addImm(StackSlotCnt * 4);
 }
 
 void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
