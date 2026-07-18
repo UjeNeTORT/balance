@@ -160,8 +160,8 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                 MO.setReg(US.getReg());
             } else if (US.isStack()) {
                 Register SpillTmp = getFreeSpillReservedReg();
-                // insert fill before MI
-                if (MIIdx != 0) {
+                // insert fill before MI if register is not a def
+                if (MIIdx != 0 && MO.isUse()) {
                     auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
                         .addReg(SpillTmp)
                         .addReg(RISCV::RISCVRegister::SP)
@@ -169,14 +169,18 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                     LinearInstructions[getFillSlotIdx(MIIdx)] = &Fill;
                 }
 
-                // insert spill after MI
+                // insert spill after MI if register was not a use
+                MO.setReg(SpillTmp);
+
+                // no need to store value of this register
+                // because it did not change
+                if (MO.isUse())
+                    continue;
                 auto &Spill = MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
                     .addReg(SpillTmp);
                 LinearInstructions[getSpillSlotIdx(MIIdx)] = &Spill;
-
-                MO.setReg(SpillTmp);
             } else {
                 unreachable("what are we even doing here?");
             }
