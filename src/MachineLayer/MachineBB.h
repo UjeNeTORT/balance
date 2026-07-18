@@ -1,14 +1,17 @@
 #ifndef MACHINE_BB_H
 #define MACHINE_BB_H
 
-#include "MachineInst.h"
-#include "MachineFunction.h"
+#include "MIROpcodes.h"
+#include "Register.h"
 
 #include <iostream>
 #include <list>
 #include <unordered_set>
 
 namespace Balance {
+
+class MachineFunction;
+class MachineInst;
 
 class MachineBB {
     MachineFunction *MF;
@@ -27,7 +30,9 @@ class MachineBB {
     std::list<MachineBB *> Predecessors;
 public:
     using iterator = std::list<MachineInst>::iterator;
+    using reverse_iterator = std::list<MachineInst>::reverse_iterator;
     using const_iterator = std::list<MachineInst>::const_iterator;
+    using const_reverse_iterator = std::list<MachineInst>::const_reverse_iterator;
     using succ_iterator = std::list<MachineBB *>::iterator;
     using const_succ_iterator = std::list<MachineBB *>::const_iterator;
     using pred_iterator = std::list<MachineBB *>::iterator;
@@ -69,16 +74,20 @@ public:
 
     std::string_view getReferenceName() const;
     void updateReferenceName();
-    void print(std::ostream &OS) const;
+    void print(std::ostream &OS, bool DebugData = false) const;
 
     std::list<MachineBB *> getSuccessors() const;
     std::list<MachineBB *> getPredecessors() const;
 
     iterator begin();
     iterator end();
-
     const_iterator begin() const;
     const_iterator end() const;
+
+    reverse_iterator rbegin();
+    reverse_iterator rend();
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
 
     succ_iterator succ_begin();
     succ_iterator succ_end();

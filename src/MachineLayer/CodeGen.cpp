@@ -8,6 +8,7 @@
 #include "MIRPasses/VerifierPass.h"
 #include "MIRPasses/LivenessAnalysis.h"
 #include "MIRPasses/PhiElimination.h"
+#include "MIRPasses/LinearScanRAL.h"
 
 #include "RISCV/RISCVRegisters.h"
 
@@ -185,8 +186,9 @@ int main() {
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<PhiElimination>();
     PMPhi.registerPass<VerifierPass>();
-
-    PM.run(TestMF);
+    PMPhi.registerPass<LivenessAnalysis>();
+    PMPhi.registerPass<VerifierPass>();
+    PMPhi.registerPass<LinearScanRAL>();
 
     TestMF.print(std::cout);
 

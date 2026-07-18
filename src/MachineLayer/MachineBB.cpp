@@ -1,9 +1,11 @@
+#include "Liveness.h"
 #include "MachineBB.h"
-#include "LiveRanges.h"
+#include "MachineFunction.h"
+#include "MachineInst.h"
+#include "Register.h"
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 #include <unordered_set>
 
 namespace Balance {
@@ -145,54 +147,56 @@ std::string_view MachineBB::getReferenceName() const {
     return ReferenceName;
 }
 
-void MachineBB::print(std::ostream &OS) const {
+void MachineBB::print(std::ostream &OS, bool DebugData) const {
     if (!Name.empty()) OS << "\"" << Name << "\"\n";
 
-    auto &&DefsVec = ComputeDefs(*this);
-    auto &&UsesVec = ComputeUses(*this);
+    if (DebugData) {
+        auto &&DefsVec = ComputeDefs(*this);
+        auto &&UsesVec = ComputeUses(*this);
 
-    bool First = true;
-    auto PrintNext = [&OS, &First](const auto &Reg) {
-        if (First) First = false;
-        else OS << ", ";
-        OS << Reg;
-    };
+        bool First = true;
+        auto PrintNext = [&OS, &First](const auto &Reg) {
+            if (First) First = false;
+            else OS << ", ";
+            OS << Reg;
+        };
 
-    OS << "Defs: ";
-    std::for_each(DefsVec.begin(), DefsVec.end(), PrintNext);
-    OS << "\n";
-    First = true;
-    OS << "Uses (PHI excluded): ";
-    std::for_each(UsesVec.begin(), UsesVec.end(), PrintNext);
-    OS << "\n";
+        OS << "Defs: ";
+        std::for_each(DefsVec.begin(), DefsVec.end(), PrintNext);
+        OS << "\n";
+        First = true;
+        OS << "Uses (PHI excluded): ";
+        std::for_each(UsesVec.begin(), UsesVec.end(), PrintNext);
+        OS << "\n";
 
-    auto PrintNextMBB = [&OS, &First](const MachineBB *MBB) {
-        if (First) First = false;
-        else OS << ", ";
-        OS << MBB->getReferenceName();
-    };
+        auto PrintNextMBB = [&OS, &First](const MachineBB *MBB) {
+            if (First) First = false;
+            else OS << ", ";
+            OS << MBB->getReferenceName();
+        };
 
-    First = true;
-    OS << "Successors: ";
-    std::for_each(succ_begin(), succ_end(), PrintNextMBB);
-    OS << "\n";
+        First = true;
+        OS << "Successors: ";
+        std::for_each(succ_begin(), succ_end(), PrintNextMBB);
+        OS << "\n";
 
-    First = true;
-    OS << "Predecessors: ";
-    std::for_each(pred_begin(), pred_end(), PrintNextMBB);
-    OS << "\n";
+        First = true;
+        OS << "Predecessors: ";
+        std::for_each(pred_begin(), pred_end(), PrintNextMBB);
+        OS << "\n";
 
-    First = true;
-    OS << "LiveIns: ";
-    // const auto &LiveInsVec = ComputeLiveIns(*this);
-    std::for_each(LiveIns.begin(), LiveIns.end(), PrintNext);
-    OS << "\n";
+        First = true;
+        OS << "LiveIns: ";
+        // const auto &LiveInsVec = ComputeLiveIns(*this);
+        std::for_each(LiveIns.begin(), LiveIns.end(), PrintNext);
+        OS << "\n";
 
-    First = true;
-    OS << "LiveOuts: ";
-    // const auto &LiveOutsVec = ComputeLiveOuts(*this);
-    std::for_each(LiveOuts.begin(), LiveOuts.end(), PrintNext);
-    OS << "\n";
+        First = true;
+        OS << "LiveOuts: ";
+        // const auto &LiveOutsVec = ComputeLiveOuts(*this);
+        std::for_each(LiveOuts.begin(), LiveOuts.end(), PrintNext);
+        OS << "\n";
+    }
 
     OS << getReferenceName();
     OS << ":\n";
@@ -209,6 +213,12 @@ MachineBB::iterator MachineBB::end()   { return Instructions.end(); }
 
 MachineBB::const_iterator MachineBB::begin() const { return Instructions.begin(); }
 MachineBB::const_iterator MachineBB::end()   const { return Instructions.end(); }
+
+MachineBB::reverse_iterator MachineBB::rbegin() { return Instructions.rbegin(); }
+MachineBB::reverse_iterator MachineBB::rend()   { return Instructions.rend(); }
+
+MachineBB::const_reverse_iterator MachineBB::rbegin() const { return Instructions.rbegin(); }
+MachineBB::const_reverse_iterator MachineBB::rend()   const { return Instructions.rend(); }
 
 MachineBB::succ_iterator MachineBB::succ_begin() { return Successors.begin(); }
 MachineBB::succ_iterator MachineBB::succ_end()   { return Successors.end(); }

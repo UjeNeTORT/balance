@@ -14,6 +14,10 @@ public:
 
     virtual bool run(MachineFunction &MF) = 0;
     const std::string &getName() const { return Name; }
+    std::ostream &dbg(std::ostream &OS = std::cerr) {
+        OS << '[' << getName() << "] ";
+        return OS;
+    }
 
     virtual ~Pass() = default;
 };

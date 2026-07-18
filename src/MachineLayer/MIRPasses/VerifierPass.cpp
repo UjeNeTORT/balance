@@ -4,6 +4,8 @@
 #include "MachineBB.h"
 #include "MachineFunction.h"
 #include "MachineOperand.h"
+#include "MachineInst.h"
+#include "Register.h"
 
 #include <algorithm>
 #include <cassert>
