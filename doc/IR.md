@@ -29,7 +29,7 @@
 | CALL                            | 0 \|\| 1 | >= 0     |          |     |          |      |
 | PHI                             | 1        | >= 2     |          |     |          |      | Source VirtRegister's must have DefBlock
 | FUNC_DEF                        | >= 0     |          |          |     |          |      | Dst contains VReg's for function arguments
-| ALLOCA                          | 1 Int    |          | 1 Int    |     |          |      | Dst contains address, Immediate contains size in **bytes**
+| ALLOCA                          | 1        | 0 \|\| 1 | 1        |     |          |      | Dst contains address, Source or Immediate contains size in **bytes**. Src and Dst must be Int
 
 ## Notes
 
@@ -59,3 +59,6 @@ This is conventional for loop invariant code motion optimizations. They will mov
 
 Function's first BasicBlock must start with `FUNC_DEF`, because it introduces virual registers for arguments
 
+### Alloca
+
+MIR builder can only parse `ALLOCA` with Immediate argument. VReg must be folded earlier
