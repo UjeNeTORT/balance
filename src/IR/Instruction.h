@@ -70,6 +70,8 @@ public:
     std::optional<std::variant<int, float>> getImm() const { return Immediate; }
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
+    const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
+
     Opcodes getOpcode() const { return Opcode; }
     BasicBlock* getParentBB() const { return ParentBB; }
     std::string getComment() const { return Comment; }
