@@ -2,8 +2,8 @@
 #include "MIROpcodes.h"
 #include "MachineInst.h"
 #include "RISCV/RISCVRegisters.h"
-#include "RPOTraversal.h"
 #include "Register.h"
+#include "Traversals/RPOTraversal.h"
 
 #include <algorithm>
 #include <cassert>
@@ -62,7 +62,7 @@ void LinearScanRAL::updateRanges(const MachineBB *MBB, int LinBeginIdx) {
 }
 
 void LinearScanRAL::linearizeInstructions(MachineFunction &MF) {
-    std::list<MachineBB *> RPO = RPOTraversal(MF).getRPO();
+    std::list<MachineBB *> RPO = RPOTraversal<MachineBB, MachineFunction>(MF).getRPO();
 
     for (MachineBB *MBB : RPO) {
         for (MachineInst &MI : *MBB) {
@@ -198,7 +198,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 }
 
 void LinearScanRAL::allocateSpillSpace(MachineFunction &MF) {
-    MachineBB &Entry = *MF.entryMBB();
+    MachineBB &Entry = *MF.entryBB();
     Entry.insertMI(Entry.begin(), RISCVOpcode::SUB)
         .addReg(RISCV::RISCVRegister::SP)
         .addReg(RISCV::RISCVRegister::SP)

@@ -64,6 +64,16 @@ public:
     bb_const_iterator predecessorsCBegin() const { return Predecessors.cbegin(); }
     bb_const_iterator predecessorsCEnd()   const { return Predecessors.cend(); }
 
+    std::list<BasicBlock*> getSuccessors() const {
+        std::list<BasicBlock*> Successors;
+        if (Instructions.empty())
+            return Successors;
+
+        for (auto& Succ: std::prev(Instructions.end())->getBrDstBB())
+            Successors.push_back(Succ);
+        return Successors;
+    }
+
 private:
     instructions_storage Instructions;
     bb_storage Predecessors;

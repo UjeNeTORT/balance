@@ -66,6 +66,8 @@ public:
     const std::vector<VirtRegister>& getSrc() const { return Src; }
     const std::vector<VirtRegister>& getDst() const { return Dst; }
 
+    const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
+
     Opcodes getOpcode() const { return Opcode; }
     BasicBlock* getParentBB() const { return ParentBB; }
     std::string getComment() const { return Comment; }
