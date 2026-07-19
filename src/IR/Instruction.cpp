@@ -208,8 +208,15 @@ void Instruction::verify() const {
             verifyNoBrDstBB();
             verifyNoFunc();
 
-            if (!Immediate.has_value() || !std::holds_alternative<int>(*Immediate))
-                throwVerifyError("ALLOCA operation must have integer Immediate for size");
+            if (Immediate.has_value()) {
+                if (!std::holds_alternative<int>(*Immediate))
+                    throwVerifyError("ALLOCA operation must have integer Immediate for size");
+            } else if (Src.size() == 1) {
+                if (Src[1].Type != VirtRegister::Int)
+                    throwVerifyError("ALLOCA operation must have integer Src for size");
+            } else {
+                throwVerifyError("ALLOCA operation must have one Immediate or Src for size");
+            }
 
             if (Dst.size() != 1 || Dst[0].Type != VirtRegister::Int)
                 throwVerifyError("ALLOCA operation must have 1 integer destination");
