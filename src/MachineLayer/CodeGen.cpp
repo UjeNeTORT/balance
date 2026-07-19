@@ -50,12 +50,14 @@ MachineFunction createPhiSwapTestMF() {
     MBB2_loop_body->addSuccessor(MBB1_loop_header);
 
     Register RZ = RISCV::RISCVRegister::ZERO;
+    Register RA = RISCV::RISCVRegister::RA;
     Register a0 = MF.getNewVreg();
     Register b0 = MF.getNewVreg();
     Register i0 = MF.getNewVreg();
 
     // preheader
     MBB0_preheader->createMI(RISCVOpcode::ADDI).addReg(a0).addReg(RZ).addImm(10);
+    MBB0_preheader->createMI(RISCVOpcode::ADDI).addReg(Register(52)).addReg(RZ).addImm(10); // dead for dce test
     MBB0_preheader->createMI(RISCVOpcode::ADDI).addReg(b0).addReg(RZ).addImm(20);
     MBB0_preheader->createMI(RISCVOpcode::ADDI).addReg(i0).addReg(RZ).addImm(0);
     MBB0_preheader->createMI(RISCVOpcode::JAL).addReg(RZ).addMBB(MBB1_loop_header);
@@ -96,6 +98,9 @@ MachineFunction createPhiSwapTestMF() {
     // just use one of the results
     Register res = MF.getNewVreg();
     MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(res).addReg(a1).addReg(RZ);
+    MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(RZ).addReg(52).addReg(RZ);
+    MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(RZ).addReg(52).addReg(RZ);
+    MBB3_loop_exit->createMI(RISCVOpcode::JALR).addReg(RZ).addReg(RA).addImm(0);
 
     return MF;
 }
@@ -185,13 +190,13 @@ int main() {
 
     PassManager PMPhi;
     PMPhi.registerPass<VerifierPass>();
-    PMPhi.registerPass<PhiElimination>();
-    PMPhi.registerPass<VerifierPass>();
+    // PMPhi.registerPass<PhiElimination>();
+    // PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<LivenessAnalysis>();
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<DeadCodeElimination>();
     PMPhi.registerPass<VerifierPass>();
-    PMPhi.registerPass<LinearScanRAL>();
+    // PMPhi.registerPass<LinearScanRAL>();
 
     TestMF.print(std::cout);
 

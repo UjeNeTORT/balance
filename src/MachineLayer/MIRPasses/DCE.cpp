@@ -30,9 +30,7 @@ struct RegInfo {
     }
 };
 
-bool DeadCodeElimination::run(MachineFunction &MF) {
-    bool Changed = false;
-
+auto buildMRI(MachineFunction &MF) {
     std::map<Register, RegInfo> MRI; // TODO: implement real thing
 
     // just filling reginfo...
@@ -73,6 +71,14 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
         }
     }
 
+    return MRI;
+}
+
+bool DeadCodeElimination::run(MachineFunction &MF) {
+    bool Changed = false;
+
+    auto MRI = buildMRI(MF); // TODO: implement real thing
+
     std::map<Register, int> VCnt; // ssa value <-> use count
 
     // initialize the map
@@ -106,6 +112,7 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
 
             VCnt.erase(V);
             removeDef(MF, V);
+            MRI = buildMRI(MF);
             Changed = true;
         }
     }
@@ -115,23 +122,25 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
 
 void DeadCodeElimination::removeDef(MachineFunction &MF, Register Reg) {
     for (auto &MBB : MF) {
-        for (auto &MI : MBB) {
+        for (auto MIIt = MBB.begin(); MIIt != MBB.end(); /*nothing*/) {
+            auto &MI = *MIIt;
             const auto &Defs = MI.getDefs();
-            if (std::find(Defs.begin(), Defs.end(), Reg) != Defs.end()) continue;
-
-            if (MI.getDefs().size() == 1) {
-                dbg() << "erasing " << MI << "\n";
-                MBB.eraseMI(MI.getIterator());
-            } else if (MI.getDefs().size() > 1) {
-                auto It = std::find(MI.begin(), MI.end(), Reg);
-                dbg() << "marking def as ZERO " << MI << "\n";
-                *It = Register(RISCV::RISCVRegister::ZERO);
-            } else {
-                unreachable("Strange number of Defs for " + MI.getAsmString());
+            if (std::find(Defs.begin(), Defs.end(), Reg) != Defs.end()) {
+                if (Defs.size() == 1) {
+                    if (Defs[0] == Reg) {
+                        dbg() << "erasing " << MI << "\n";
+                        MIIt = MBB.eraseMI(MI.getIterator());
+                        continue;
+                    }
+                } else if (Defs.size() > 1) {
+                    auto It = std::find(MI.begin(), MI.end(), Reg);
+                    dbg() << "marking def as ZERO in " << MI << "\n";
+                    *It = Register(RISCV::RISCVRegister::ZERO);
+                }
             }
 
+            ++MIIt;
         }
-
     }
 }
 
