@@ -216,10 +216,15 @@ static const MIRInstrInfo MIRInstructionDB[] = {
     { "C_SDSP",        false, 0, 2, 2 },
     { "PHI",           false, 1, -1, -1, false },
 };
-}
+} // namespace
 
 bool isControlTransferInst(const MachineInst &MI) {
     return MIRInstructionDB[MI.getOpcode()].isControlTransfer;
+}
+
+bool hasSideEffects(RISCVOpcode Opcode) {
+    if (isControlTransferInst(Opcode)) return true;
+    return false; // todo: maybe other insts have side effects
 }
 
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode) {

@@ -49,10 +49,18 @@ MachineBB::iterator MachineInst::getIterator() {
     return std::find(MBB->begin(), MBB->end(), *this);
 }
 
+MachineBB::iterator MachineInst::eraseFromParent() {
+    return MBB->eraseMI(getIterator());
+}
+
+bool MachineInst::hasSideEffects() const {
+    return ::Balance::hasSideEffects(Opcode);
+}
+
 std::vector<Register> MachineInst::getDefs() const {
     std::vector<Register> Defs;
     for (const auto &MO : Operands) {
-        if (MO.isReg() && MO.isDef() && !isReservedRegister(MO.getReg())) {
+        if (MO.isReg() && MO.isDef()) {
             Defs.push_back(MO.getReg());
         }
     }

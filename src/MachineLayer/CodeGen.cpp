@@ -192,8 +192,8 @@ int main() {
     PMPhi.registerPass<VerifierPass>();
     // PMPhi.registerPass<PhiElimination>();
     // PMPhi.registerPass<VerifierPass>();
-    PMPhi.registerPass<LivenessAnalysis>();
-    PMPhi.registerPass<VerifierPass>();
+    // PMPhi.registerPass<LivenessAnalysis>();
+    // PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<DeadCodeElimination>();
     PMPhi.registerPass<VerifierPass>();
     // PMPhi.registerPass<LinearScanRAL>();

@@ -77,6 +77,24 @@ auto buildMRI(MachineFunction &MF) {
 bool DeadCodeElimination::run(MachineFunction &MF) {
     bool Changed = false;
 
+    for (auto &MBB : MF) {
+        for (auto MIIt = MBB.begin(); MIIt != MBB.end(); /*nothing*/) {
+            auto &MI = *MIIt;
+            dbg() << "do next: " << MI << "\n";
+            auto Defs = MI.getDefs();
+            // if instruction defines only zero registers and has no side effects,
+            // it is considered dead
+            if (Defs.size() == 1 && Defs[0] == RISCV::RISCVRegister::ZERO && !MI.hasSideEffects()) {
+                dbg() << "erasing (only def is RZ) " << MI << "\n";
+                MIIt = MI.eraseFromParent();
+                dbg() << "erased\n";
+                Changed = true;
+            } else {
+                ++MIIt;
+            }
+        }
+    }
+
     auto MRI = buildMRI(MF); // TODO: implement real thing
 
     std::map<Register, int> VCnt; // ssa value <-> use count
