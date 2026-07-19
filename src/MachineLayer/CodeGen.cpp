@@ -9,6 +9,7 @@
 #include "MIRPasses/LivenessAnalysis.h"
 #include "MIRPasses/PhiElimination.h"
 #include "MIRPasses/LinearScanRAL.h"
+#include "MIRPasses/DCE.h"
 
 #include "RISCV/RISCVRegisters.h"
 
@@ -187,6 +188,8 @@ int main() {
     PMPhi.registerPass<PhiElimination>();
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<LivenessAnalysis>();
+    PMPhi.registerPass<VerifierPass>();
+    PMPhi.registerPass<DeadCodeElimination>();
     PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<LinearScanRAL>();
 
