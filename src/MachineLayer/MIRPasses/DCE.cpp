@@ -13,25 +13,8 @@
 
 namespace Balance {
 
-// temporary measure until we have MachineRegisterInfo
-struct RegInfo {
-
-    Register Reg;
-    // instructions that are used by the instruction
-    // which defines this register
-    std::unordered_set<const MachineInst *> SSAUses;
-    // instructions that take this register as input
-    std::unordered_set<const MachineInst *> SSAUsers;
-
-    explicit RegInfo(Register Reg) : Reg(Reg) {}
-
-    bool operator==(const RegInfo &other) const {
-        return Reg == other.Reg;
-    }
-};
-
-auto buildMRI(MachineFunction &MF) {
-    std::map<Register, RegInfo> MRI; // TODO: implement real thing
+void DeadCodeElimination::rebuildMRI(MachineFunction &MF) {
+    MRI.clear();
 
     // just filling reginfo...
     for (const auto &MBB : MF) {
@@ -40,38 +23,38 @@ auto buildMRI(MachineFunction &MF) {
                 if (!MO.isReg()) continue;
                 const Register Reg = MO.getReg();
                 if (isReservedRegister(Reg)) continue;
-                if (MRI.find(Reg) == MRI.end()) {
+                if (MRI.find(Reg) == MRI.end())
                     MRI.emplace(Reg, RegInfo(Reg));
+
+                if (MO.isUse()) {
+                    assert(MRI.find(Reg) != MRI.end());
+                    MRI.find(Reg)->second.SSAUsers.insert(&MI);
                 } else {
-                    if (MO.isUse()) {
-                        assert(MRI.find(Reg) != MRI.end());
-                        MRI.find(Reg)->second.SSAUsers.insert(&MI); // ERROR LINE
-                    } else {
-                        // example:
-                        // Reg (def) = INSTRUCTION Use1, Use2
-                        // here we look for instructions which define Use1, Use2
-                        for (const auto &MO2 : MI) {
-                            if (MO2 == MO) continue;
-                            if (!MO2.isReg()) continue;
-                            if (MO2.isDef()) continue;
-                            const Register &UseN = MO2.getReg();
-                            for (const auto &MBB_ : MF) {
-                                for (const auto &UseMI : MBB_) {
-                                    const auto &Defs = UseMI.getDefs();
-                                    if (std::find(Defs.begin(), Defs.end(), UseN) != Defs.end()) {
-                                        MRI.find(Reg)->second.SSAUses.insert(&UseMI);
-                                    }
+                    // example:
+                    // Reg (def) = INSTRUCTION Use1, Use2
+                    // here we look for instructions which define Use1, Use2
+                    for (const auto &MO2 : MI) {
+                        if (MO2 == MO) continue;
+                        if (!MO2.isReg()) continue;
+                        if (MO2.isDef()) continue;
+                        const Register &UseN = MO2.getReg();
+                        if (isReservedRegister(UseN)) continue;
+
+                        for (const auto &MBB_ : MF) {
+                            for (const auto &UseMI : MBB_) {
+                                const auto &Defs = UseMI.getDefs();
+                                if (std::find(Defs.begin(), Defs.end(), UseN) != Defs.end()) {
+                                    MRI.find(Reg)->second.SSAUses.insert(&UseMI);
                                 }
                             }
-
                         }
+
                     }
                 }
+
             }
         }
     }
-
-    return MRI;
 }
 
 bool DeadCodeElimination::run(MachineFunction &MF) {
@@ -80,14 +63,12 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
     for (auto &MBB : MF) {
         for (auto MIIt = MBB.begin(); MIIt != MBB.end(); /*nothing*/) {
             auto &MI = *MIIt;
-            dbg() << "do next: " << MI << "\n";
             auto Defs = MI.getDefs();
             // if instruction defines only zero registers and has no side effects,
             // it is considered dead
             if (Defs.size() == 1 && Defs[0] == RISCV::RISCVRegister::ZERO && !MI.hasSideEffects()) {
                 dbg() << "erasing (only def is RZ) " << MI << "\n";
                 MIIt = MI.eraseFromParent();
-                dbg() << "erased\n";
                 Changed = true;
             } else {
                 ++MIIt;
@@ -95,7 +76,7 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
         }
     }
 
-    auto MRI = buildMRI(MF); // TODO: implement real thing
+    rebuildMRI(MF); // TODO: implement real thing
 
     std::map<Register, int> VCnt; // ssa value <-> use count
 
@@ -130,7 +111,7 @@ bool DeadCodeElimination::run(MachineFunction &MF) {
 
             VCnt.erase(V);
             removeDef(MF, V);
-            MRI = buildMRI(MF);
+            rebuildMRI(MF);
             Changed = true;
         }
     }
@@ -144,6 +125,7 @@ void DeadCodeElimination::removeDef(MachineFunction &MF, Register Reg) {
             auto &MI = *MIIt;
             const auto &Defs = MI.getDefs();
             if (std::find(Defs.begin(), Defs.end(), Reg) != Defs.end()) {
+                // at this point we decide to get rid of this Reg def and uses
                 if (Defs.size() == 1) {
                     if (Defs[0] == Reg) {
                         dbg() << "erasing " << MI << "\n";
