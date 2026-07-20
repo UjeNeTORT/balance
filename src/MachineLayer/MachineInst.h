@@ -34,7 +34,9 @@ public:
     void setMBB(MachineBB *NewMBB) { MBB = NewMBB; }
 
     MachineBB::iterator getIterator();
+    MachineBB::iterator eraseFromParent();
 
+    bool hasSideEffects() const;
     bool isTerminator() const { return IsTerminator; }
 
     std::vector<Register> getDefs() const;

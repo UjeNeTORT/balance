@@ -87,6 +87,7 @@ enum RISCVOpcode {
 
 class MachineInst;
 bool isControlTransferInst(const MachineInst &MI);
+bool hasSideEffects(RISCVOpcode Opcode);
 unsigned getNumDefs(RISCVOpcode Opcode);
 
 std::string_view getInstNameByOpcode(RISCVOpcode Opcode);

@@ -4,6 +4,7 @@ add_library(MIRPasses STATIC
     LivenessAnalysis.cpp
     PhiElimination.cpp
     LinearScanRAL.cpp
+    DCE.cpp
 )
 
 target_include_directories(MIRPasses PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
