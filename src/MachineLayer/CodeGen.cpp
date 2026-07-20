@@ -193,13 +193,13 @@ int main() {
 
     PassManager PMPhi;
     PMPhi.registerPass<VerifierPass>();
-    // PMPhi.registerPass<PhiElimination>();
-    // PMPhi.registerPass<VerifierPass>();
-    // PMPhi.registerPass<LivenessAnalysis>();
-    // PMPhi.registerPass<VerifierPass>();
     PMPhi.registerPass<DeadCodeElimination>();
     PMPhi.registerPass<VerifierPass>();
-    // PMPhi.registerPass<LinearScanRAL>();
+    PMPhi.registerPass<PhiElimination>();
+    PMPhi.registerPass<VerifierPass>();
+    PMPhi.registerPass<LivenessAnalysis>();
+    PMPhi.registerPass<VerifierPass>();
+    PMPhi.registerPass<LinearScanRAL>();
 
     TestMF.print(std::cout);
 
