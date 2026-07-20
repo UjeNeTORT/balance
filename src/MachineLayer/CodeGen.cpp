@@ -100,6 +100,9 @@ MachineFunction createPhiSwapTestMF() {
     MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(res).addReg(a1).addReg(RZ);
     MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(RZ).addReg(52).addReg(RZ);
     MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(53).addReg(52).addReg(RZ);
+    MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(54).addReg(52).addReg(RZ);
+    MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(55).addReg(53).addReg(54);
+    MBB3_loop_exit->createMI(RISCVOpcode::ADD).addReg(56).addReg(53).addReg(52);
     MBB3_loop_exit->createMI(RISCVOpcode::JALR).addReg(RZ).addReg(RA).addImm(0);
 
     return MF;
