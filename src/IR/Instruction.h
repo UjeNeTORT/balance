@@ -71,6 +71,9 @@ public:
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
+    std::optional<Function*> getCallFunc() const { return CallFunc; }
+    std::optional<std::variant<int, float>> getImm() const { return Immediate; }
+    std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
     BasicBlock* getParentBB() const { return ParentBB; }
