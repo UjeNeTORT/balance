@@ -5,11 +5,13 @@
 #include "Instruction.h"
 #include "Function.h"
 
+#include <list>
+
 namespace Balance {
 
 class IR {
 public:
-    using FunctionStorage = std::vector<Function>;
+    using FunctionStorage = std::list<Function>;
     using iterator = FunctionStorage::iterator;
     using const_iterator = FunctionStorage::const_iterator;
 

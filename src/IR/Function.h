@@ -20,12 +20,14 @@ public:
         : Name(Name)
     {}
 
+    std::string_view getName() const { return Name; }
+
     std::pair<iterator, BasicBlock::iterator> addInstruction(Opcodes Opcode,
                 std::optional<SourceInfo> SrcInfo = std::nullopt) {
         iterator LastBB = std::prev(BasicBlocks.end());
         if (!BasicBlocks.empty()) {
             if (!LastBB->empty() && std::prev(LastBB->end())->isTerminal())
-                LastBB = BasicBlocks.insert(BasicBlocks.end(), this);
+                LastBB = BasicBlocks.insert(BasicBlocks.end(), {this, ""}); // FIXME: unique names for basic blocks?
         }
         return {LastBB, LastBB->addInstruction(Opcode, SrcInfo)};
     }

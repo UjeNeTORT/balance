@@ -65,8 +65,10 @@ public:
 
     const std::vector<VirtRegister>& getSrc() const { return Src; }
     const std::vector<VirtRegister>& getDst() const { return Dst; }
-
     const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
+    std::optional<Function*> getCallFunc() const { return CallFunc; }
+    std::optional<std::variant<int, float>> getImm() const { return Immediate; }
+    std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
     BasicBlock* getParentBB() const { return ParentBB; }

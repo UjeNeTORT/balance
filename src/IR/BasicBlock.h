@@ -21,11 +21,13 @@ public:
     using bb_iterator = bb_storage::iterator;
     using bb_const_iterator = bb_storage::const_iterator;
 
-    BasicBlock(Function* Parent)
+    BasicBlock(Function* Parent, std::string Name)
         : ParentFunction(Parent)
+        , Name(Name)
     {}
-    BasicBlock(Function* Parent, SourceInfo SrcInf)
+    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf)
         : ParentFunction(Parent)
+        , Name(Name)
         , SrcInfo(SrcInf)
     {}
 
@@ -51,6 +53,7 @@ public:
     }
 
     Function* getParentFunction() const { return ParentFunction; }
+    std::string_view getName() const { return Name; }
     std::optional<SourceInfo> getSrcInfo() const { return SrcInfo; }
 
     iterator       begin()        { return Instructions.begin(); }
@@ -78,6 +81,7 @@ private:
     instructions_storage Instructions;
     bb_storage Predecessors;
     Function* ParentFunction;
+    std::string Name;
     std::optional<SourceInfo> SrcInfo;
 
     void throwVerifyError(std::string error) const {

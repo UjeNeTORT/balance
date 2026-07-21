@@ -70,7 +70,6 @@ void Instruction::verify() const {
         case Opcodes::SUB:
         case Opcodes::MUL:
         case Opcodes::DIV:
-        case Opcodes::REM:
             verifyNoImmediate();
             verifyNoCmpType();
             verifyNoBrDstBB();
@@ -82,6 +81,7 @@ void Instruction::verify() const {
                 if (Source.Type != Dst[0].Type)
                     throwVerifyError("Binary operation sources types must be same with dst type");
             break;
+        case Opcodes::REM:
         case Opcodes::SHL:
         case Opcodes::SHR:
         case Opcodes::AND:
