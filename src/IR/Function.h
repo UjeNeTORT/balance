@@ -27,7 +27,8 @@ public:
         iterator LastBB = std::prev(BasicBlocks.end());
         if (!BasicBlocks.empty()) {
             if (!LastBB->empty() && std::prev(LastBB->end())->isTerminal())
-                LastBB = BasicBlocks.insert(BasicBlocks.end(), {this, ""}); // FIXME: unique names for basic blocks?
+                LastBB = BasicBlocks.insert(BasicBlocks.end(), {this,
+                            Name + "_bb" + std::to_string(getNewBBId())});
         }
         return {LastBB, LastBB->addInstruction(Opcode, SrcInfo)};
     }
@@ -51,6 +52,8 @@ public:
         return &*BasicBlocks.begin();
     }
 
+    size_t getNewBBId() { return BBCounter++; }
+
     iterator       begin()       { return BasicBlocks.begin(); }
     iterator       end()         { return BasicBlocks.end(); }
     const_iterator begin() const { return BasicBlocks.cbegin(); }
@@ -58,6 +61,7 @@ public:
 private:
     std::string Name;
     std::list<BasicBlock> BasicBlocks;
+    size_t BBCounter = 0;
 };
 
 }
