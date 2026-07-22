@@ -2,8 +2,7 @@
 #define MIR_PASSES_LINEAR_SCAN_RAL_H
 
 #include "Pass.h"
-#include "MachineFunction.h"
-#include "RISCV/RISCVRegisters.h"
+#include "MachineLayer/MachineFunction.h"
 
 #include <algorithm>
 #include <cassert>

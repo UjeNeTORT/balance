@@ -7,7 +7,8 @@ add_library(MIRPasses STATIC
     DCE.cpp
 )
 
-target_include_directories(MIRPasses PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(MIRPasses PRIVATE UniversalAnalysis RISCV Utils)
+
 target_include_directories(MIRPasses PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(MIRPasses PUBLIC ${PROJECT_SOURCE_DIR}/src/MachineLayer)
-target_include_directories(MIRPasses PUBLIC ${PROJECT_SOURCE_DIR}/src/MachineLayer/Analysis)
+target_include_directories(MIRPasses PRIVATE ${PROJECT_SOURCE_DIR}/src/MachineLayer)
+target_include_directories(MIRPasses PRIVATE ${PROJECT_SOURCE_DIR}/src/MachineLayer/Analysis)

@@ -1,7 +1,6 @@
 #ifndef IR_OPERAND_H_
 #define IR_OPERAND_H_
 
-#include <cstddef>
 #include <optional>
 
 namespace Balance {
@@ -13,9 +12,11 @@ struct VirtRegister {
     enum RegType {
         Int, Float
     } Type;
-    size_t Id;
+    int Id;
 
     std::optional<BasicBlock*> DefBlock;
+
+    operator int() const { return Id; }
 };
 
 } // Balance

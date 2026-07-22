@@ -21,11 +21,13 @@ public:
     using bb_iterator = bb_storage::iterator;
     using bb_const_iterator = bb_storage::const_iterator;
 
-    BasicBlock(Function* Parent)
+    BasicBlock(Function* Parent, std::string Name)
         : ParentFunction(Parent)
+        , Name(Name)
     {}
-    BasicBlock(Function* Parent, SourceInfo SrcInf)
+    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf)
         : ParentFunction(Parent)
+        , Name(Name)
         , SrcInfo(SrcInf)
     {}
 
@@ -41,16 +43,21 @@ public:
             throw Instruction::verify_error("No terminal instruction in the end of basic block");
     }
 
-    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    iterator insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         auto Instr = Instruction(Opcode, this, SrcInf);
         if (!Instructions.empty() && std::prev(Instructions.end())->isTerminal() &&
             Instr.isTerminal())
             throwVerifyError("Trying to add terminal instruction to basic block that already has it");
 
-        return Instructions.insert(Instructions.end(), std::move(Instr));
+        return Instructions.insert(It, std::move(Instr));
+
+    }
+    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+        return insertInstruction(Instructions.end(), Opcode, SrcInf);
     }
 
     Function* getParentFunction() const { return ParentFunction; }
+    std::string_view getName() const { return Name; }
     std::optional<SourceInfo> getSrcInfo() const { return SrcInfo; }
 
     iterator       begin()        { return Instructions.begin(); }
@@ -64,10 +71,21 @@ public:
     bb_const_iterator predecessorsCBegin() const { return Predecessors.cbegin(); }
     bb_const_iterator predecessorsCEnd()   const { return Predecessors.cend(); }
 
+    std::list<BasicBlock*> getSuccessors() const {
+        std::list<BasicBlock*> Successors;
+        if (Instructions.empty())
+            return Successors;
+
+        for (auto& Succ: std::prev(Instructions.end())->getBrDstBB())
+            Successors.push_back(Succ);
+        return Successors;
+    }
+
 private:
     instructions_storage Instructions;
     bb_storage Predecessors;
     Function* ParentFunction;
+    std::string Name;
     std::optional<SourceInfo> SrcInfo;
 
     void throwVerifyError(std::string error) const {

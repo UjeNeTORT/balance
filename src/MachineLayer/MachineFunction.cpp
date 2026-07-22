@@ -14,7 +14,7 @@ MachineFunction::MachineFunction(const std::string &Name) : Name(Name) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
 
-MachineBB *MachineFunction::entryMBB() {
+MachineBB *MachineFunction::entryBB() {
     auto FindNextWithZeroPreds = [this](iterator SearchSince) -> iterator {
         return std::find_if(SearchSince, end(), [](const MachineBB &MBB) {
             return MBB.getPredecessors().empty();

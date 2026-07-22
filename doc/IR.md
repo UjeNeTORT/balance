@@ -8,16 +8,16 @@
 | Unary:                          |          |          |          |     |          |      |
 | &nbsp;&nbsp;&nbsp;&nbsp;CONVERT | 1        | 1        |          |     |          |      | Src and Dst must be different types
 | &nbsp;&nbsp;&nbsp;&nbsp;BITCAST | 1        | 1        |          |     |          |      | Src and Dst must be one type
-| &nbsp;&nbsp;&nbsp;&nbsp;COPY    | 1        | 0 \|\| 1 | optional |     |          |      | Source can be VReg or Immediate. Src and Dst must be one type
+| &nbsp;&nbsp;&nbsp;&nbsp;COPY    | 1        | 0 \|\| 1 | 1 \|\| 0 |     |          |      | Source can be VReg or Immediate. Src and Dst must be one type
 | &nbsp;&nbsp;&nbsp;&nbsp;NEG     | 1        | 1        |          |     |          |      | Src and Dst must be one type
 | Binary:                         |          |          |          |     |          |      | Src and Dst must be one type
 | &nbsp;&nbsp;&nbsp;&nbsp;ADD     | 1        | 2        |          |     |          |      |
 | &nbsp;&nbsp;&nbsp;&nbsp;SUB     | 1        | 2        |          |     |          |      |
 | &nbsp;&nbsp;&nbsp;&nbsp;MUL     | 1        | 2        |          |     |          |      |
 | &nbsp;&nbsp;&nbsp;&nbsp;DIV     | 1        | 2        |          |     |          |      |
-| &nbsp;&nbsp;&nbsp;&nbsp;REM     | 1        | 2        |          |     |          |      |
-| &nbsp;&nbsp;&nbsp;&nbsp;SHL     | 1        | 1        | int      |     |          |      | Int only
-| &nbsp;&nbsp;&nbsp;&nbsp;SHR     | 1        | 1        | int      |     |          |      | Int only
+| &nbsp;&nbsp;&nbsp;&nbsp;REM     | 1        | 2        |          |     |          |      | Int only
+| &nbsp;&nbsp;&nbsp;&nbsp;SHL     | 1        | 2        |          |     |          |      | Int only. Shift in Src[1]
+| &nbsp;&nbsp;&nbsp;&nbsp;SHR     | 1        | 2        |          |     |          |      | Int only. Shift in Src[1]
 | &nbsp;&nbsp;&nbsp;&nbsp;AND     | 1        | 2        |          |     |          |      | Int only
 | &nbsp;&nbsp;&nbsp;&nbsp;OR      | 1        | 2        |          |     |          |      | Int only
 | &nbsp;&nbsp;&nbsp;&nbsp;XOR     | 1        | 2        |          |     |          |      | Int only
@@ -29,7 +29,7 @@
 | CALL                            | 0 \|\| 1 | >= 0     |          |     |          |      |
 | PHI                             | 1        | >= 2     |          |     |          |      | Source VirtRegister's must have DefBlock
 | FUNC_DEF                        | >= 0     |          |          |     |          |      | Dst contains VReg's for function arguments
-| ALLOCA                          | 1 Int    |          | 1 Int    |     |          |      | Dst contains address, Immediate contains size in **bytes**
+| ALLOCA                          | 1        |          | 1        |     |          |      | Dst contains address, Immediate contains size in **bytes**. Imm and Dst must be Int
 
 ## Notes
 
@@ -37,7 +37,7 @@ Each BasicBlock must end with terminal instruction: `RET` or `BR`
 
 ### Loops
 
-`while` and `for` must be generated in `do while` style:
+`while` and `for` must be generated in `do while` manner:
 
 ```
     %0 = CMP...
@@ -58,4 +58,6 @@ This is conventional for loop invariant code motion optimizations. They will mov
 ### Functions
 
 Function's first BasicBlock must start with `FUNC_DEF`, because it introduces virual registers for arguments
+
+This requirement can be loosened in the future
 
