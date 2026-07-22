@@ -6,23 +6,23 @@
 
 namespace Balance {
 
-template<typename BB, typename F>
-class RPOTraversal {
-    std::list<BB *> RPO;
-    std::list<BB *> PO;
+template<typename BBTy, typename FuncTy>
+class RPOTraversal final {
+    std::list<BBTy *> RPO;
+    std::list<BBTy *> PO;
 
-    void dfs(BB *Block, std::unordered_set<BB *> &Visited);
+    void dfs(BBTy *Block, std::unordered_set<BBTy *> &Visited);
 
 public:
-    using iterator = typename std::list<BB *>::iterator;
-    using const_iterator = typename std::list<BB *>::const_iterator;
+    using iterator = typename std::list<BBTy *>::iterator;
+    using const_iterator = typename std::list<BBTy *>::const_iterator;
 
-    explicit RPOTraversal(F &Func);
+    explicit RPOTraversal(FuncTy &Func);
 
-    void compute(F &Func);
+    void compute(FuncTy &Func);
 
-    std::list<BB *> getRPO() && { return std::move(RPO); }
-    std::list<BB *> getPO() &&  { return std::move(PO); }
+    std::list<BBTy *> getRPO() && { return RPO; }
+    std::list<BBTy *> getPO() &&  { return PO; }
 
     iterator       begin()       { return RPO.begin(); }
     iterator       end()         { return RPO.end(); }
