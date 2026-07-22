@@ -1,5 +1,4 @@
 add_library(Analysis STATIC
-    DomTree.cpp
     Liveness.cpp
 )
 
