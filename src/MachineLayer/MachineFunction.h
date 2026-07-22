@@ -28,6 +28,7 @@ public:
     std::string_view getName() const;
 
     MachineBB *entryBB();
+    const MachineBB *entryBB() const;
     MachineBB *createMBB(const std::string &Name = "");
     MachineBB *createMBB(iterator Pos, const std::string &Name = "");
 

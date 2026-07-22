@@ -31,6 +31,10 @@ MachineBB *MachineFunction::entryBB() {
     return &*EntryBBIt;
 }
 
+const MachineBB *MachineFunction::entryBB() const {
+    return const_cast<const MachineBB *>(entryBB());
+}
+
 MachineBB *MachineFunction::createMBB(const std::string &Name) {
     BasicBlocks.emplace_back(this, Name);
     return &*--BasicBlocks.end();
