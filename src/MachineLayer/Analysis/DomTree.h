@@ -21,8 +21,11 @@ class DomTree final {
 public:
     explicit DomTree(const MachineFunction &MF);
 
-    bool dominates(const MachineBB *MBBA, const MachineBB *MBBB);
-    bool dominates(const MachineInst *MIA, const MachineInst *MIB);
+    bool dominates(const MachineBB *MBBA, const MachineBB *MBBB) const;
+    bool dominates(const MachineInst *MIA, const MachineInst *MIB) const;
+
+    bool properlyDominates(const MachineBB *MBBA, const MachineBB *MBBB) const;
+    bool properlyDominates(const MachineInst *MIA, const MachineInst *MIB) const;
 
     void print(std::ostream &OS) const;
 private:
