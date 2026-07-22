@@ -14,14 +14,14 @@ MachineFunction::MachineFunction(const std::string &Name) : Name(Name) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
 
-MachineBB *MachineFunction::entryBB() {
-    auto FindNextWithZeroPreds = [this](iterator SearchSince) -> iterator {
+const MachineBB *MachineFunction::entryBB() const {
+    auto FindNextWithZeroPreds = [this](const_iterator SearchSince) -> const_iterator {
         return std::find_if(SearchSince, end(), [](const MachineBB &MBB) {
             return MBB.getPredecessors().empty();
         });
     };
 
-    iterator EntryBBIt = FindNextWithZeroPreds(begin());
+    const_iterator EntryBBIt = FindNextWithZeroPreds(begin());
     assert(EntryBBIt != end() && "Found MF without entry MBB");
 
     if (EntryBBIt != end()) {
@@ -31,8 +31,10 @@ MachineBB *MachineFunction::entryBB() {
     return &*EntryBBIt;
 }
 
-const MachineBB *MachineFunction::entryBB() const {
-    return const_cast<const MachineBB *>(entryBB());
+MachineBB *MachineFunction::entryBB() {
+    return const_cast<MachineBB *>(
+        static_cast<const MachineFunction *>(this)->entryBB()
+    );
 }
 
 MachineBB *MachineFunction::createMBB(const std::string &Name) {
