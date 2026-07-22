@@ -1,5 +1,5 @@
-#ifndef ANALYSIS_DOMTREE_H
-#define ANALYSIS_DOMTREE_H
+#ifndef UNIVERSAL_ANALYSIS_DOMTREE_H
+#define UNIVERSAL_ANALYSIS_DOMTREE_H
 
 #include <list>
 #include <map>
@@ -18,22 +18,29 @@ class DomTree final {
     NodeSetTy NodeSet;
     NodeSetTy Worklist;
     std::map<const BBTy *, NodeSetTy> DomMap;
+    std::map<const BBTy *, const BBTy *> IDomMap;
 
 public:
-    explicit DomTree(const FuncTy &MF);
+    explicit DomTree(const FuncTy &F);
 
     // true if A dominates B
-    bool dom(const BBTy *MBBA, const BBTy *MBBB) const;
+    bool dom(const BBTy *BBA, const BBTy *BBB) const;
     // true if A dominates B
-    bool dom(const InstTy *MIA, const InstTy *MIB) const;
+    bool dom(const InstTy *IA, const InstTy *IB) const;
 
     // true if A dominates B and A != B
-    bool sdom(const BBTy *MBBA, const BBTy *MBBB) const;
+    bool sdom(const BBTy *BBA, const BBTy *BBB) const;
     // true if A dominates B and A != B
-    bool sdom(const InstTy *MIA, const InstTy *MIB) const;
+    bool sdom(const InstTy *IA, const InstTy *IB) const;
 
-    // true if A sdom B and A belongs to Preds(B)
-    bool idom(const BBTy *MBBA, const BBTy *MBBB) const;
+    // true if A dom B and A belongs to Preds(B) in Dom Tree
+    bool idom(const BBTy *BBA, const BBTy *BBB) const;
+
+    // return node Strict Dominators
+    NodeSetTy getSDoms(const BBTy *BB);
+
+    // return node immediate dominator
+    const BBTy *getIDom(const BBTy *BB);
 
     void print(std::ostream &OS) const;
 private:
@@ -44,4 +51,4 @@ private:
 
 } // namespace Balance
 
-#endif // ANALYSIS_DOMTREE_H
+#endif // UNIVERSAL_ANALYSIS_DOMTREE_H

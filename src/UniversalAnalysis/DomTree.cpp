@@ -1,5 +1,8 @@
 #include "DomTree.h"
 
+#include "IR/BasicBlock.h"
+#include "IR/Function.h"
+#include "IR/Instruction.h"
 #include "MachineBB.h"
 #include "MachineInst.h"
 #include "MachineFunction.h"
@@ -45,6 +48,31 @@ void DomTree<FuncTy, BBTy, InstTy>::compute(const FuncTy &MF) {
             DomMap[Curr] = New;
             for (const auto *Succ : Curr->getSuccessors()) {
                 Worklist.insert(Succ);
+            }
+        }
+    }
+
+    IDomMap.clear();
+    // compute immediate dominators
+    for (const auto &Pair : DomMap) {
+        const auto &MBB = *Pair.first;
+        const auto &DomSet = Pair.second;
+
+        unsigned DomSetSize = DomSet.size();
+
+        for (const auto &Dom : DomSet) {
+            // skip self, we need strict dominators
+            if (Dom == &MBB) continue;
+
+            // to determine that node Dom is an immediate dominator of node MBB
+            // we use the property of idom that the number of strict dominators of Dom
+            // must be less by 1 than number of strict dominators of MBB.
+            // Since only difference matters, we use sizes of dominators sets instead
+            // of strict dominators as they are always less by 1
+            if (DomMap.find(Dom)->second.size() + 1 == DomSetSize) {
+                assert(IDomMap.empty());
+                IDomMap.insert({&MBB, Dom});
+                break;
             }
         }
     }
@@ -129,8 +157,23 @@ bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTy *IA, const InstTy *IB) con
 
 template<typename FuncTy, typename BBTy, typename InstTy>
 bool DomTree<FuncTy, BBTy, InstTy>::idom(const BBTy *BBA, const BBTy *BBB) const {
-    const auto &Preds = BBB->getPredecessors();
-    return sdom(BBA, BBB) && std::find(Preds.begin(), Preds.end(), BBA) != Preds.end();
+    assert(IDomMap.find(BBB) != IDomMap.end() && "Unknown IDom[BBB]");
+    return IDomMap.find(BBB)->second == BBA;
+}
+
+template<typename FuncTy, typename BBTy, typename InstTy>
+typename DomTree<FuncTy, BBTy, InstTy>::NodeSetTy
+DomTree<FuncTy, BBTy, InstTy>::getSDoms(const BBTy *BB) {
+    assert(DomMap.find(BB) != DomMap.end() && "Unknown Dom[BB]");
+    NodeSetTy SDoms = DomMap.find(BB)->second;
+    SDoms.erase(BB);
+    return SDoms;
+}
+
+template<typename FuncTy, typename BBTy, typename InstTy>
+const BBTy *DomTree<FuncTy, BBTy, InstTy>::getIDom(const BBTy *BB) {
+    assert(IDomMap.find(BB) != IDomMap.end() && "Unknown IDom[BB]");
+    return IDomMap.find(BB)->second;
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
