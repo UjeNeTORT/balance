@@ -16,16 +16,23 @@ class DomTree final {
     using NodeSetTy = std::set<const MachineBB *>;
     NodeSetTy NodeSet;
     NodeSetTy Worklist;
-    std::map<const MachineBB *, NodeSetTy> Dom;
+    std::map<const MachineBB *, NodeSetTy> DomMap;
 
 public:
     explicit DomTree(const MachineFunction &MF);
 
-    bool dominates(const MachineBB *MBBA, const MachineBB *MBBB) const;
-    bool dominates(const MachineInst *MIA, const MachineInst *MIB) const;
+    // true if A dominates B
+    bool dom(const MachineBB *MBBA, const MachineBB *MBBB) const;
+    // true if A dominates B
+    bool dom(const MachineInst *MIA, const MachineInst *MIB) const;
 
-    bool properlyDominates(const MachineBB *MBBA, const MachineBB *MBBB) const;
-    bool properlyDominates(const MachineInst *MIA, const MachineInst *MIB) const;
+    // true if A dominates B and A != B
+    bool sdom(const MachineBB *MBBA, const MachineBB *MBBB) const;
+    // true if A dominates B and A != B
+    bool sdom(const MachineInst *MIA, const MachineInst *MIB) const;
+
+    // true if A sdom B and A belongs to Preds(B)
+    bool idom(const MachineBB *MBBA, const MachineBB *MBBB) const;
 
     void print(std::ostream &OS) const;
 private:
