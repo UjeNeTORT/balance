@@ -30,8 +30,8 @@ public:
     MachineInst &addMO(MachineOperand MO);
 
     RISCVOpcode getOpcode() const { return Opcode; }
-    MachineBB *getMBB() const { return MBB; }
-    void setMBB(MachineBB *NewMBB) { MBB = NewMBB; }
+    MachineBB *getParent() const { return MBB; }
+    void setParent(MachineBB *NewMBB) { MBB = NewMBB; }
 
     MachineBB::iterator getIterator();
     MachineBB::iterator eraseFromParent();

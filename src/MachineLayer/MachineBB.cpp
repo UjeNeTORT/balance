@@ -17,7 +17,7 @@ MachineBB::MachineBB(MachineFunction *MF, std::string Name) : MF(MF), LabelIdx(M
 
 MachineInst &MachineBB::createMI(MachineBB::iterator I, RISCVOpcode Opcode) {
     MachineInst *MI = &*Instructions.emplace(I, Opcode);
-    MI->setMBB(this);
+    MI->setParent(this);
     return *MI;
 };
 
@@ -26,7 +26,7 @@ MachineInst &MachineBB::createMI(RISCVOpcode Opcode) {
 };
 
 MachineInst &MachineBB::insertMI(MachineBB::iterator I, MachineInst MI) {
-    MI.setMBB(this);
+    MI.setParent(this);
     I = Instructions.insert(I, MI);
     return *I;
 };
@@ -129,7 +129,7 @@ bool MachineBB::verify() const {
 
     // check that each MI stored in this MBB knows its MBB
     Valid &= std::all_of(Instructions.begin(), Instructions.end(), [this](const MachineInst &MI) {
-        return MI.getMBB() == this;
+        return MI.getParent() == this;
     });
 
     return Valid;

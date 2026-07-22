@@ -90,11 +90,11 @@ bool DomTree<FuncTy, BBTy, InstTy>::dom(const BBTy *BBA, const BBTy *BBB) const 
 
 template<typename FuncTy, typename BBTy, typename InstTy>
 bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTy *IA, const InstTy *IB) const {
-    assert(DomMap.find(IA->getMBB()) != DomMap.end() && "Unknown Dom[IA->getParent()]");
-    assert(DomMap.find(IB->getMBB()) != DomMap.end() && "Unknown Dom[IB->getParent()]");
+    assert(DomMap.find(IA->getParent()) != DomMap.end() && "Unknown Dom[IA->getParent()]");
+    assert(DomMap.find(IB->getParent()) != DomMap.end() && "Unknown Dom[IB->getParent()]");
 
-    const MachineBB *ParentA = IA->getMBB();
-    const MachineBB *ParentB = IB->getMBB();
+    const MachineBB *ParentA = IA->getParent();
+    const MachineBB *ParentB = IB->getParent();
 
     if (sdom(ParentA, ParentB)) return true;
     if (ParentA == ParentB) {
@@ -121,8 +121,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::sdom(const BBTy *BBA, const BBTy *BBB) const
 
 template<typename FuncTy, typename BBTy, typename InstTy>
 bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTy *IA, const InstTy *IB) const {
-    const MachineBB *ParentA = IA->getMBB();
-    const MachineBB *ParentB = IB->getMBB();
+    const MachineBB *ParentA = IA->getParent();
+    const MachineBB *ParentB = IB->getParent();
 
     return dom(ParentA, ParentB) && IA != IB;
 }
