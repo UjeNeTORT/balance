@@ -6,7 +6,7 @@ add_library(MIRPasses STATIC
     LinearScanRAL.cpp
 )
 
-target_link_libraries(MIRPasses PRIVATE Traversals RISCV Utils)
+target_link_libraries(MIRPasses PRIVATE UniversalAnalysis RISCV Utils)
 
 target_include_directories(MIRPasses PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(MIRPasses PRIVATE ${PROJECT_SOURCE_DIR}/src/MachineLayer)

@@ -43,13 +43,17 @@ public:
             throw Instruction::verify_error("No terminal instruction in the end of basic block");
     }
 
-    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    iterator insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         auto Instr = Instruction(Opcode, this, SrcInf);
         if (!Instructions.empty() && std::prev(Instructions.end())->isTerminal() &&
             Instr.isTerminal())
             throwVerifyError("Trying to add terminal instruction to basic block that already has it");
 
-        return Instructions.insert(Instructions.end(), std::move(Instr));
+        return Instructions.insert(It, std::move(Instr));
+
+    }
+    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+        return insertInstruction(Instructions.end(), Opcode, SrcInf);
     }
 
     Function* getParentFunction() const { return ParentFunction; }

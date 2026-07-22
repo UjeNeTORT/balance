@@ -37,8 +37,8 @@ public:
         if (BasicBlocks.empty())
             return;
 
-        if (BasicBlocks.cbegin()->empty() ||
-            BasicBlocks.cbegin()->cbegin()->getOpcode() != Opcodes::FUNC_DEF)
+        if (entryBB() == nullptr ||
+            entryBB()->cbegin()->getOpcode() != Opcodes::FUNC_DEF)
             throw Instruction::verify_error("Function's first basic block must begin with FUNC_DEF");
 
         for (const auto& BB: BasicBlocks)
@@ -46,6 +46,12 @@ public:
     }
 
     BasicBlock* entryBB() {
+        if (BasicBlocks.empty())
+            return nullptr;
+
+        return &*BasicBlocks.begin();
+    }
+    const BasicBlock* entryBB() const {
         if (BasicBlocks.empty())
             return nullptr;
 

@@ -3,7 +3,7 @@
 #include "MachineInst.h"
 #include "RISCV/RISCVRegisters.h"
 #include "Register.h"
-#include "Traversals/RPOTraversal.h"
+#include "UniversalAnalysis/RPOTraversal.h"
 
 #include <algorithm>
 #include <cassert>
