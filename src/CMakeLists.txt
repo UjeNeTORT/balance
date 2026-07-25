@@ -9,3 +9,6 @@ add_subdirectory(IR)
 add_executable(balance main.cpp)
 
 target_link_libraries(balance Utils IR MachineLayer MIRPasses Analysis MIRInfo)
+add_subdirectory(AST)
+add_subdirectory(Frontend)
+add_subdirectory(Grammar)
