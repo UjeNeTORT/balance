@@ -38,7 +38,7 @@ public:
             return;
 
         if (entryBB() == nullptr ||
-            entryBB()->cbegin()->getOpcode() != Opcodes::FUNC_DEF)
+            entryBB()->begin()->getOpcode() != Opcodes::FUNC_DEF)
             throw Instruction::verify_error("Function's first basic block must begin with FUNC_DEF");
 
         for (const auto& BB: BasicBlocks)

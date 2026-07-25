@@ -3,6 +3,7 @@
 #include "IR/BasicBlock.h"
 #include "IR/Function.h"
 #include "IR/Instruction.h"
+
 #include "MachineBB.h"
 #include "MachineInst.h"
 #include "MachineFunction.h"
@@ -121,8 +122,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTy *IA, const InstTy *IB) cons
     assert(DomMap.find(IA->getParent()) != DomMap.end() && "Unknown Dom[IA->getParent()]");
     assert(DomMap.find(IB->getParent()) != DomMap.end() && "Unknown Dom[IB->getParent()]");
 
-    const MachineBB *ParentA = IA->getParent();
-    const MachineBB *ParentB = IB->getParent();
+    const BBTy *ParentA = IA->getParent();
+    const BBTy *ParentB = IB->getParent();
 
     if (sdom(ParentA, ParentB)) return true;
     if (ParentA == ParentB) {
@@ -130,8 +131,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTy *IA, const InstTy *IB) cons
             auto &MI = *It;
             // now look who is first in parent mbb
             // if A => then A dom B = true
-            if (MI == *IA) return true;
-            if (MI == *IB) return false;
+            if (&MI == IA) return true;
+            if (&MI == IB) return false;
         }
 
     }
@@ -149,8 +150,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::sdom(const BBTy *BBA, const BBTy *BBB) const
 
 template<typename FuncTy, typename BBTy, typename InstTy>
 bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTy *IA, const InstTy *IB) const {
-    const MachineBB *ParentA = IA->getParent();
-    const MachineBB *ParentB = IB->getParent();
+    const BBTy *ParentA = IA->getParent();
+    const BBTy *ParentB = IB->getParent();
 
     return dom(ParentA, ParentB) && IA != IB;
 }
@@ -183,5 +184,6 @@ void DomTree<FuncTy, BBTy, InstTy>::print(std::ostream &OS) const {
 }
 
 template class DomTree<MachineFunction, MachineBB, MachineInst>;
+template class DomTree<Function, BasicBlock, Instruction>;
 
 } // namespace Balance
