@@ -90,7 +90,7 @@ bool VerifierPass::verifyMBB(MachineFunction &MF, std::string &Msg) const {
     bool Fail = false;
     for (const MachineBB &MBB : MF) {
         for (const MachineInst &MI : MBB) {
-            if (MI.getMBB() != &MBB) {
+            if (MI.getParent() != &MBB) {
                 Msg += "\"" + MI.getAsmString() + "\" does not point to " + std::string(MBB.getReferenceName()) + "\n";
                 Fail = true;
             }

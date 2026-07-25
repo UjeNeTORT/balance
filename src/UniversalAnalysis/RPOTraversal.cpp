@@ -10,11 +10,11 @@
 
 namespace Balance {
 
-template <typename BB, typename F>
-void RPOTraversal<BB, F>::dfs(BB *Block, std::unordered_set<BB *> &Visited) {
+template <typename BBTy, typename FuncTy>
+void RPOTraversal<BBTy, FuncTy>::dfs(BBTy *Block, std::unordered_set<BBTy *> &Visited) {
     Visited.insert(Block);
 
-    for (BB *Succ : Block->getSuccessors()) {
+    for (BBTy *Succ : Block->getSuccessors()) {
         if (Visited.find(Succ) == Visited.end()) {
             dfs(Succ, Visited);
         }
@@ -22,20 +22,20 @@ void RPOTraversal<BB, F>::dfs(BB *Block, std::unordered_set<BB *> &Visited) {
     PO.push_back(Block);
 }
 
-template <typename BB, typename F>
-RPOTraversal<BB, F>::RPOTraversal(F &Func) {
+template <typename BBTy, typename FuncTy>
+RPOTraversal<BBTy, FuncTy>::RPOTraversal(FuncTy &Func) {
     compute(Func);
 }
 
-template <typename BB, typename F>
-void RPOTraversal<BB, F>::compute(F &Func) {
+template <typename BBTy, typename FuncTy>
+void RPOTraversal<BBTy, FuncTy>::compute(FuncTy &Func) {
     RPO.clear();
     PO.clear();
-    typename std::unordered_set<BB *> Visited;
+    typename std::unordered_set<BBTy *> Visited;
 
     if (Func.begin() != Func.end()) {
 
-        BB &EntryBB = *Func.entryBB();
+        BBTy &EntryBB = *Func.entryBB();
         dfs(&EntryBB, Visited);
     }
 

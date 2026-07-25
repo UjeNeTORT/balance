@@ -15,14 +15,6 @@
 
 using namespace Balance;
 
-static unsigned getSpillSlotIdx(unsigned MIIdx) {
-    return MIIdx + 1;
-}
-
-static unsigned getFillSlotIdx(unsigned MIIdx) {
-    return MIIdx - 1;
-}
-
 void LinearScanRAL::updateRanges(const MachineBB *MBB, int LinBeginIdx) {
     const auto &LiveOuts = MBB->getLiveOuts();
 
@@ -126,7 +118,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         }
 
         if (Active.size() == PoolSize) {
-            spillAtInterval(*LI, Pool);
+            spillAtInterval(*LI);
             continue;
         }
 
@@ -156,7 +148,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
     for (unsigned MIIdx = 0; MIIdx < LinearInstructions.size(); MIIdx += LinearPeriod) {
         assert(LinearInstructions[MIIdx]);
         MachineInst &MI = *LinearInstructions[MIIdx];
-        MachineBB *MBB = MI.getMBB();
+        MachineBB *MBB = MI.getParent();
 
         for (MachineOperand &MO : MI) {
             if (!MO.isReg()) continue;
@@ -171,7 +163,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                 Register SpillTmp = getFreeSpillReservedReg();
                 // insert fill before MI if register is not a def
                 if (MIIdx != 0 && MO.isUse()) {
-                    auto &Fill = MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
+                    MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
                         .addReg(SpillTmp)
                         .addReg(RISCV::RISCVRegister::SP)
                         .addImm(US.getStackId() * 4);
@@ -184,7 +176,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                 // because it did not change
                 if (MO.isUse())
                     continue;
-                auto &Spill = MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
+                MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
                     .addImm(US.getStackId() * 4)
                     .addReg(SpillTmp);
@@ -220,7 +212,7 @@ void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_se
     }
 }
 
-void LinearScanRAL::spillAtInterval(const LiveInterval &LI, std::unordered_set<Register> &Pool) {
+void LinearScanRAL::spillAtInterval(const LiveInterval &LI) {
     const LiveInterval *LastActive = *Active.rbegin();
     if (LastActive->EndIdx > LI.EndIdx) {
         RegMapping.insert({&LI, RegMapping.at(LastActive)});
@@ -276,7 +268,7 @@ void LinearScanRAL::dumpLiveIntervals() const {
     for (const auto *MI : LinearInstructions) {
         if (!MI) continue;
         std::stringstream ss;
-        ss << "[lsra]: (" << MI->getMBB()->getReferenceName() << ") " << *MI;
+        ss << "[lsra]: (" << MI->getParent()->getReferenceName() << ") " << *MI;
         if (ss.str().length() > max_inst_width) {
             max_inst_width = ss.str().length();
         }
@@ -297,7 +289,7 @@ void LinearScanRAL::dumpLiveIntervals() const {
         if (!MI) continue;
 
         std::stringstream ss;
-        ss << "[lsra]: (" << MI->getMBB()->getReferenceName() << ") " << *MI;
+        ss << "[lsra]: (" << MI->getParent()->getReferenceName() << ") " << *MI;
         std::string inst_str = ss.str();
         std::cerr << std::left << std::setw(max_inst_width) << inst_str;
 

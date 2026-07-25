@@ -62,9 +62,11 @@ public:
 
     iterator       begin()        { return Instructions.begin(); }
     iterator       end()          { return Instructions.end(); }
-    const_iterator cbegin() const { return Instructions.cbegin(); }
-    const_iterator cend()   const { return Instructions.cend(); }
+    const_iterator begin() const  { return Instructions.cbegin(); }
+    const_iterator end()   const  { return Instructions.cend(); }
     bool           empty()  const { return Instructions.empty(); }
+
+    bb_storage getPredecessors() const { return Predecessors; }
 
     bb_iterator       predecessorsBegin()        { return Predecessors.begin(); }
     bb_iterator       predecessorsEnd()          { return Predecessors.end(); }

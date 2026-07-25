@@ -71,7 +71,7 @@ public:
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
-    BasicBlock* getParentBB() const { return ParentBB; }
+    BasicBlock* getParent() const { return ParentBB; }
     std::string getComment() const { return Comment; }
 
     struct verify_error: public std::runtime_error {
