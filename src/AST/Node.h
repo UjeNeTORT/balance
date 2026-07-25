@@ -46,7 +46,7 @@ enum class UnaryOp
 class Node
 {
   public:
-    virtual void accept(Visitor& visitor) const = 0;
+    virtual void accept(Visitor& visitor) const;
 
     virtual ~Node() = default;
 };
@@ -71,13 +71,11 @@ class IntLiteralNode final : public ExpressionNode
     int Value;
 
   public:
-    explicit IntLiteralNode(int value)
-        : Value(value)
-    {}
+    explicit IntLiteralNode(int value);
 
     int getValue() const { return Value; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class FloatLiteralNode final : public ExpressionNode
@@ -86,13 +84,11 @@ class FloatLiteralNode final : public ExpressionNode
     float Value;
 
   public:
-    explicit FloatLiteralNode(float value)
-        : Value(value)
-    {}
+    explicit FloatLiteralNode(float value);
 
     float getValue() const { return Value; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class LValNode final : public ExpressionNode
@@ -102,16 +98,13 @@ class LValNode final : public ExpressionNode
     std::vector<ExprPtr> Indices;
 
   public:
-    LValNode(std::string name, std::vector<ExprPtr>&& indices = {})
-        : Name(std::move(name))
-        , Indices(std::move(indices))
-    {}
+    LValNode(std::string name, std::vector<ExprPtr>&& indices = {});
 
     const std::string& getName() const { return Name; }
 
     const std::vector<ExprPtr>& getIndices() const { return Indices; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using LValPtr = LValNode*;
@@ -124,11 +117,7 @@ class BinaryOpNode final : public ExpressionNode
     BinaryOp Op;
 
   public:
-    BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right)
-        : Left(left)
-        , Right(right)
-        , Op(op)
-    {}
+    BinaryOpNode(ExprPtr left, BinaryOp op, ExprPtr right);
 
     BinaryOp getOp() const { return Op; }
 
@@ -136,7 +125,7 @@ class BinaryOpNode final : public ExpressionNode
 
     const ExpressionNode* getRight() const { return Right; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class UnaryOpNode final : public ExpressionNode
@@ -146,16 +135,13 @@ class UnaryOpNode final : public ExpressionNode
     UnaryOp Op;
 
   public:
-    UnaryOpNode(ExprPtr operand, UnaryOp op)
-        : Operand(operand)
-        , Op(op)
-    {}
+    UnaryOpNode(ExprPtr operand, UnaryOp op);
 
     UnaryOp getOp() const { return Op; }
 
     const ExpressionNode* getOperand() const { return Operand; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class CallNode final : public ExpressionNode
@@ -165,16 +151,13 @@ class CallNode final : public ExpressionNode
     std::vector<ExprPtr> Args;
 
   public:
-    CallNode(std::string callee, std::vector<ExprPtr>&& args = {})
-        : Callee(std::move(callee))
-        , Args(std::move(args))
-    {}
+    CallNode(std::string callee, std::vector<ExprPtr>&& args = {});
 
     const std::string& getCallee() const { return Callee; }
 
     const std::vector<ExprPtr>& getArgs() const { return Args; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 // ----- Declarations -----
@@ -187,16 +170,9 @@ class InitValNode final : public Node
     bool IsList;
 
   public:
-    explicit InitValNode(ExprPtr expr)
-        : Expr(expr)
-        , IsList(false)
-    {}
+    explicit InitValNode(ExprPtr expr);
 
-    explicit InitValNode(std::vector<InitValNode*>&& list)
-        : Expr(nullptr)
-        , List(std::move(list))
-        , IsList(true)
-    {}
+    explicit InitValNode(std::vector<InitValNode*>&& list);
 
     bool isList() const { return IsList; }
 
@@ -204,7 +180,7 @@ class InitValNode final : public Node
 
     const std::vector<InitValNode*>& getList() const { return List; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using InitValPtr = InitValNode*;
@@ -218,11 +194,7 @@ class VarDefNode final : public Node
 
   public:
     VarDefNode(std::string name, std::vector<ExprPtr>&& dims,
-               InitValPtr init = nullptr)
-        : Name(std::move(name))
-        , Dims(std::move(dims))
-        , Init(init)
-    {}
+               InitValPtr init = nullptr);
 
     const std::string& getName() const { return Name; }
 
@@ -232,7 +204,7 @@ class VarDefNode final : public Node
 
     const InitValNode* getInit() const { return Init; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using VarDefPtr = VarDefNode*;
@@ -245,11 +217,7 @@ class VarDeclNode final : public StatementNode
     bool IsConst;
 
   public:
-    VarDeclNode(BaseType type, std::vector<VarDefPtr>&& defs, bool isConst)
-        : Type(type)
-        , Defs(std::move(defs))
-        , IsConst(isConst)
-    {}
+    VarDeclNode(BaseType type, std::vector<VarDefPtr>&& defs, bool isConst);
 
     BaseType getType() const { return Type; }
 
@@ -257,7 +225,7 @@ class VarDeclNode final : public StatementNode
 
     bool isConst() const { return IsConst; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using VarDeclPtr = VarDeclNode*;
@@ -273,29 +241,19 @@ class FuncParamNode final : public Node
     bool IsArray;
 
   public:
-    FuncParamNode(BaseType type, std::string name)
-        : Type(type)
-        , Name(std::move(name))
-        , IsArray(false)
-    {}
+    FuncParamNode(BaseType type, std::string name);
 
-    FuncParamNode(BaseType type, std::string name, std::vector<ExprPtr>&& dims)
-        : Type(type)
-        , Name(std::move(name))
-        , Dims(std::move(dims))
-        , IsArray(true)
-    {}
+    FuncParamNode(BaseType type, std::string name, std::vector<ExprPtr>&& dims);
 
     BaseType getType() const { return Type; }
 
     const std::string& getName() const { return Name; }
 
-    // Dimensions after the leading empty one, e.g. a[][3] -> {3}
     const std::vector<ExprPtr>& getDims() const { return Dims; }
 
     bool isArray() const { return IsArray; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using FuncParamPtr = FuncParamNode*;
@@ -306,15 +264,13 @@ class BlockNode final : public StatementNode
     std::vector<StmtPtr> Items;
 
   public:
-    explicit BlockNode(std::vector<StmtPtr>&& items)
-        : Items(std::move(items))
-    {}
+    explicit BlockNode(std::vector<StmtPtr>&& items);
 
     const std::vector<StmtPtr>& getItems() const { return Items; }
 
     bool empty() const { return Items.empty(); }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using BlockPtr = BlockNode*;
@@ -329,12 +285,7 @@ class FuncDefNode final : public Node
 
   public:
     FuncDefNode(BaseType returnType, std::string name,
-                std::vector<FuncParamPtr>&& params, BlockPtr body)
-        : ReturnType(returnType)
-        , Name(std::move(name))
-        , Params(std::move(params))
-        , Body(body)
-    {}
+                std::vector<FuncParamPtr>&& params, BlockPtr body);
 
     BaseType getReturnType() const { return ReturnType; }
 
@@ -344,7 +295,7 @@ class FuncDefNode final : public Node
 
     const BlockNode* getBody() const { return Body; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using FuncDefPtr = FuncDefNode*;
@@ -358,16 +309,13 @@ class AssignNode final : public StatementNode
     ExprPtr Src;
 
   public:
-    AssignNode(LValPtr dest, ExprPtr src)
-        : Dest(dest)
-        , Src(src)
-    {}
+    AssignNode(LValPtr dest, ExprPtr src);
 
     const LValNode* getDest() const { return Dest; }
 
     const ExpressionNode* getSrc() const { return Src; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class ExprStmtNode final : public StatementNode
@@ -376,15 +324,13 @@ class ExprStmtNode final : public StatementNode
     ExprPtr Expr;
 
   public:
-    explicit ExprStmtNode(ExprPtr expr = nullptr)
-        : Expr(expr)
-    {}
+    explicit ExprStmtNode(ExprPtr expr = nullptr);
 
     bool hasExpr() const { return Expr != nullptr; }
 
     const ExpressionNode* getExpr() const { return Expr; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class IfNode final : public StatementNode
@@ -395,11 +341,7 @@ class IfNode final : public StatementNode
     StmtPtr Else;
 
   public:
-    IfNode(ExprPtr cond, StmtPtr then, StmtPtr elseStmt = nullptr)
-        : Cond(cond)
-        , Then(then)
-        , Else(elseStmt)
-    {}
+    IfNode(ExprPtr cond, StmtPtr then, StmtPtr elseStmt = nullptr);
 
     const ExpressionNode* getCond() const { return Cond; }
 
@@ -409,7 +351,7 @@ class IfNode final : public StatementNode
 
     const StatementNode* getElse() const { return Else; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class WhileNode final : public StatementNode
@@ -419,28 +361,25 @@ class WhileNode final : public StatementNode
     StmtPtr Body;
 
   public:
-    WhileNode(ExprPtr cond, StmtPtr body)
-        : Cond(cond)
-        , Body(body)
-    {}
+    WhileNode(ExprPtr cond, StmtPtr body);
 
     const ExpressionNode* getCond() const { return Cond; }
 
     const StatementNode* getBody() const { return Body; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class BreakNode final : public StatementNode
 {
   public:
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class ContinueNode final : public StatementNode
 {
   public:
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 class ReturnNode final : public StatementNode
@@ -449,15 +388,13 @@ class ReturnNode final : public StatementNode
     ExprPtr Expr;
 
   public:
-    explicit ReturnNode(ExprPtr expr = nullptr)
-        : Expr(expr)
-    {}
+    explicit ReturnNode(ExprPtr expr = nullptr);
 
     bool hasExpr() const { return Expr != nullptr; }
 
     const ExpressionNode* getExpr() const { return Expr; }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 // ----- Compilation unit -----
@@ -465,18 +402,16 @@ class ReturnNode final : public StatementNode
 class CompUnitNode final : public Node
 {
   private:
-    std::vector<NodePtr> Items; // VarDeclNode or FuncDefNode
+    std::vector<NodePtr> Items;
 
   public:
-    explicit CompUnitNode(std::vector<NodePtr>&& items)
-        : Items(std::move(items))
-    {}
+    explicit CompUnitNode(std::vector<NodePtr>&& items);
 
     const std::vector<NodePtr>& getItems() const { return Items; }
 
     bool empty() const { return Items.empty(); }
 
-    void accept(Visitor& visitor) const override { visitor.visit(*this); }
+    void accept(Visitor& visitor) const override;
 };
 
 using CompUnitPtr = CompUnitNode*;

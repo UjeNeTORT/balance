@@ -7,7 +7,7 @@
 #include <string>
 
 #include "Frontend/Driver.h"
-#include "parser.h"
+#include "parser.hpp"
 
 %}
 

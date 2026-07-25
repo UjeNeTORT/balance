@@ -2,14 +2,13 @@
 #define FRONTEND_DRIVER_H
 
 #include <cstdio>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "AST/Ast.h"
 #include "AST/Node.h"
-#include "parser.h"
+#include "parser.hpp"
 
 extern FILE* yyin;
 
@@ -48,39 +47,11 @@ class Driver final
 
     const AST::CompUnitNode* getCompUnit() const { return Tree.getCompUnit(); }
 
-    // Parses the given file, or stdin when the name is empty.
-    // Returns 0 on success.
-    int parse(const std::string& fileName)
-    {
-        File = fileName;
-
-        Location.initialize(&File);
-
-        scanBegin();
-
-        yy::parser parser(*this);
-
-        int status = parser();
-
-        scanEnd();
-
-        return status;
-    }
+    int parse(const std::string& fileName);
 
   private:
-    void scanBegin()
-    {
-        if (File.empty())
-            yyin = stdin;
-        else if (!(yyin = fopen(File.c_str(), "r")))
-            throw std::runtime_error("Can't open input file: " + File);
-    }
-
-    void scanEnd()
-    {
-        if (yyin && yyin != stdin)
-            fclose(yyin);
-    }
+    void scanBegin();
+    void scanEnd();
 };
 
 } // namespace Balance
