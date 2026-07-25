@@ -25,12 +25,19 @@ void DomFrontier<FuncTy, BBTy>::compute(const FuncTy &F) {
 
         const auto &IDom = DT.getIDom(&BB);
 
-        for (const BBTy *Runner : BB.getPredecessors()) {
+        // bb with multiple predecessors (BB) is a candidate for a dominance frontier of some previous basic block
+        // Algorithm:
+        // - we start at some of its predecessors (P) and climb up the dom tree (using idom relationship)
+        // - for each bb on this way (Runner), it is true that they dominate P, but do not dominate successor of P (BB)
+        // - which exactly means that BB is in dom frontier of Runner
+        for (const BBTy *P : BB.getPredecessors()) {
+            auto Runner = P;
+            assert(Runner != IDom && "Predecessor of BB with multiple predecessors cannot immediately dominate BB");
+
             while (Runner != IDom) {
-                DomFront[Runner].insert(P);
+                DomFront[Runner].insert(&BB);
                 Runner = DT.getIDom(Runner);
             }
-
         }
     }
 }

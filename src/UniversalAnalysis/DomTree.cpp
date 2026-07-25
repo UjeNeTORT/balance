@@ -70,7 +70,7 @@ void DomTree<FuncTy, BBTy, InstTy>::compute(const FuncTy &MF) {
             // Since only difference matters, we use sizes of dominators sets instead
             // of strict dominators as they are always less by 1
             if (DomMap.find(Dom)->second.size() + 1 == DomSetSize) {
-                assert(IDomMap.empty());
+                assert(IDomMap.find(&MBB) == IDomMap.end() && "Found multiple idoms for a single BB");
                 IDomMap.insert({&MBB, Dom});
                 break;
             }
