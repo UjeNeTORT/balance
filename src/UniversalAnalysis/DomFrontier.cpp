@@ -3,6 +3,9 @@
 #include "MachineBB.h"
 #include "MachineFunction.h"
 
+#include "IR/Function.h"
+#include "IR/BasicBlock.h"
+
 #include <cassert>
 
 namespace Balance {
@@ -50,5 +53,6 @@ DomFrontier<FuncTy, BBTy>::getFrontier(const BBTy *BB) {
 }
 
 template class DomFrontier<MachineFunction, MachineBB>;
+template class DomFrontier<Function, BasicBlock>;
 
 } // namespace Balance
