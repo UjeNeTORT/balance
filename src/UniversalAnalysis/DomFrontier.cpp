@@ -35,8 +35,11 @@ void DomFrontier<FuncTy, BBTy>::compute(const FuncTy &F) {
         // - which exactly means that BB is in dom frontier of Runner
         for (const BBTy *P : BB.getPredecessors()) {
             auto Runner = P;
-            assert(Runner != IDom && "Predecessor of BB with multiple predecessors cannot immediately dominate BB");
 
+            // note that situation where Runner == IDom where Runner = P
+            // is possible when for example bb2 is a loop bb and has an edge inside itself
+            // and bb1 is its predecessor, so preds(bb2): bb1, bb2
+            // and bb1 idom bb2 = true
             while (Runner != IDom) {
                 DomFront[Runner].insert(&BB);
                 Runner = DT.getIDom(Runner);

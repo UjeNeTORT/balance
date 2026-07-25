@@ -23,6 +23,8 @@ template<typename FuncTy, typename BBTy, typename InstTy>
 void DomTree<FuncTy, BBTy, InstTy>::compute(const FuncTy &MF) {
     Worklist.clear();
     refillNodeSet(MF);
+    // Handle empty function
+    if (NodeSet.empty()) return;
 
     // refill Dom[N] for each N in NodeSet
     auto InitNodeDom = [&](const BBTy *MBB) {
