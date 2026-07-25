@@ -4,12 +4,15 @@
 #include "RISCV/RISCVRegisters.h"
 #include "Register.h"
 #include "UniversalAnalysis/RPOTraversal.h"
+#include "UniversalAnalysis/DomTree.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <iomanip>
 #include <map>
+#include <stack>
+#include <unordered_map>
 #include <set>
 #include <sstream>
 
@@ -79,10 +82,78 @@ void LinearScanRAL::linearizeInstructions(MachineFunction &MF) {
     #endif
 }
 
+void LinearScanRAL::computeSpillCosts(MachineFunction &MF) {
+    DomTree<MachineFunction, MachineBB, MachineInst> DT(MF);
+
+    // edge T -> H is a back edge if H dom T
+    std::vector<std::pair<const MachineBB *, const MachineBB *>> BackEdges;
+    for (const auto &TRef : MF) {
+        auto T = &TRef;
+        for (const auto H : T->getSuccessors()) {
+            if (DT.dom(H, T)) BackEdges.push_back({T, H});
+        }
+    }
+
+    std::unordered_map<const MachineBB *, int> LoopDepth;
+    for (const auto &MBB : MF) LoopDepth.emplace(&MBB, 0);
+
+    for (const auto &E : BackEdges) {
+        auto T = E.first;
+        auto H = E.second;
+        std::unordered_set<const MachineBB *> Visited = {T, H};
+        std::stack<const MachineBB *> Worklist;
+
+        // eventually T and H should only have their loop depth increased by 1
+        LoopDepth.find(H)->second++;
+        Worklist.push(T);
+        while (!Worklist.empty()) {
+            const auto &B = Worklist.top();
+            assert(LoopDepth.find(B) != LoopDepth.end());
+            Worklist.pop();
+            LoopDepth.find(B)->second++;
+            Visited.insert(B);
+            for (const auto &P : B->getPredecessors()) {
+                if (Visited.find(P) != Visited.end()) continue;
+                Worklist.push(P);
+            }
+        }
+    }
+
+    #if 0
+    for (const auto &MBB : MF) {
+        dbg() << "loop depth " << MBB.getReferenceName() << ": " << LoopDepth.at(&MBB) << '\n';
+    }
+    #endif
+
+    std::vector<LiveInterval *> SortedIntervals;
+    for (auto &p : LiveIntervals) SortedIntervals.push_back(&p.second);
+    std::sort(SortedIntervals.begin(), SortedIntervals.end(), [](const LiveInterval *a, const LiveInterval *b) {
+        assert(!isReservedRegister(a->Reg) && !isReservedRegister(b->Reg) && "Live Interval reg must not be reserved");
+
+        // we give physical registers priority in LIS
+        // in order to remove them from the pool of free regs ASAP
+        if (a->Reg.isPhysical() && b->Reg.isVirtual()) {
+            return true; // a < b
+        } else if (a->Reg.isVirtual() && b->Reg.isPhysical()) {
+            return false; // a > b
+        }
+        return a->StartIdx < b->StartIdx;
+    });
+
+    std::unordered_map<Register, int> Degrees;
+    for (const auto &LI : SortedIntervals) {
+        if (LI->Reg.isPhysical()) continue;
+        // TODO: not finished!
+        unreachable("Not finished!");
+    }
+
+}
+
 bool LinearScanRAL::run(MachineFunction &MF) {
     using namespace RISCV;
 
-    linearizeInstructions(MF);
+    linearizeInstructions(MF); // ... and compute Live Intervals
+    computeSpillCosts(MF);
 
     // TODO: implement machine register info
     std::unordered_set<Register> Pool {

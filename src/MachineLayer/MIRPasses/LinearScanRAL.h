@@ -24,6 +24,9 @@ public:
 
         Register Reg;
 
+        // -1 means not initialized
+        int SpillCost = -1;
+
         LiveInterval() = default;
         LiveInterval(unsigned S, unsigned E, Register R) : StartIdx(S), EndIdx(E), Reg(R) {}
 
@@ -41,7 +44,7 @@ public:
         }
 
         void print(std::ostream &OS) const {
-            OS << "[" << StartIdx << ", " << EndIdx << ")" << " " << Reg;
+            OS << "[" << StartIdx << ", " << EndIdx << ")" << " " << Reg << " [cost: " << SpillCost << "]";
         }
     };
 
@@ -93,6 +96,7 @@ public:
 private:
     void updateRanges(const MachineBB *MBB, int LinBeginIdx);
     void linearizeInstructions(MachineFunction &MF);
+    void computeSpillCosts(MachineFunction &MF);
     void expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool);
     void spillAtInterval(const LiveInterval &LI);
     void applyRegMapping(MachineFunction &MF);
