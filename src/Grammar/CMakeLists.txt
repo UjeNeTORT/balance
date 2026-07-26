@@ -3,14 +3,16 @@ cmake_minimum_required(VERSION 3.15)
 include(FetchContent)
 
 if(WIN32)
+    include(FetchContent)
+
     FetchContent_Declare(
         winflexbison
         URL "https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip"
     )
     FetchContent_MakeAvailable(winflexbison)
 
-    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_bison.exe")
-    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_flex.exe")
+    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_bison.exe" CACHE FILEPATH "Path to win_bison" FORCE)
+    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_flex.exe" CACHE FILEPATH "Path to win_flex" FORCE)
 
 elseif(UNIX)
     set(BISON_INSTALL_DIR "${CMAKE_BINARY_DIR}/deps_install/bison")
@@ -43,10 +45,6 @@ elseif(UNIX)
         execute_process(COMMAND make -j install WORKING_DIRECTORY "${flex_src_SOURCE_DIR}")
     endif()
 endif()
-
-# Now proceed with standard lookups
-find_package(BISON 3.8.2 REQUIRED)
-find_package(FLEX REQUIRED)
 
 find_package(BISON 3.8.2 REQUIRED)
 find_package(FLEX REQUIRED)
