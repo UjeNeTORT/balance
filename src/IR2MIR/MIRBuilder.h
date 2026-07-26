@@ -26,8 +26,7 @@ private:
 
     void buildFunction(IR::iterator IRIt, MIR::iterator MIRIt);
     void buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
-                         std::map<const BasicBlock*, MachineBB*>& BBRegistry,
-                         ssize_t* AllocasSize);
+                         std::map<const BasicBlock*, MachineBB*>& BBRegistry);
 };
 
 } // Balance

@@ -66,6 +66,11 @@ public:
         return {Type, VirtRegCounter++, DefBlock};
     }
 
+    int getAllocasSize() const {
+        auto FuncDefImm = *entryBB()->begin()->getImm();
+        return *std::get_if<int>(&FuncDefImm);
+    }
+
     iterator       begin()       { return BasicBlocks.begin(); }
     iterator       end()         { return BasicBlocks.end(); }
     const_iterator begin() const { return BasicBlocks.cbegin(); }

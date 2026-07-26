@@ -36,10 +36,8 @@ void MIRBuilder::buildFunction(const IR::iterator IRIt, const MIR::iterator MIRI
     auto IRBlock = RPO.begin();
     auto MIRBlock = MIRIt->begin();
 
-    ssize_t AllocasSize = -1;
-
     for (; IRBlock != RPO.end() && MIRBlock != MIRIt->end(); IRBlock++, MIRBlock++)
-        buildBasicBlock(*IRBlock, &*MIRBlock, BBRegistry, &AllocasSize);
+        buildBasicBlock(*IRBlock, &*MIRBlock, BBRegistry);
 }
 
 namespace {
@@ -136,8 +134,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
 } // anonymous namespace
 
 void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
-                                 std::map<const BasicBlock*, MachineBB*>& BBRegistry,
-                                 ssize_t* AllocasSize) {
+                                 std::map<const BasicBlock*, MachineBB*>& BBRegistry) {
     for (const auto& Instr: *IRBlock) {
         auto Src = Instr.getSrc();
         auto Dst = Instr.getDst();
@@ -214,9 +211,8 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 if (Src.size() == 1)
                     MIRBlock->createMI(RVOp::ADDW).addReg(RVReg::A0).addReg(Src[0]).addReg(RVReg::ZERO);
 
-                assert(*AllocasSize != -1);
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
-                                              .addImm(static_cast<int64_t>(*AllocasSize)); // TODO: check overflow
+                                              .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getAllocasSize())); // TODO: check overflow
                 MIRBlock->createMI(RVOp::JALR).addReg(RVReg::ZERO).addReg(RVReg::RA).addImm(0);
 
             break; case Opcodes::BR:
@@ -250,8 +246,8 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                                              .addReg(Src[0]).addMBB(BBRegistry[*Src[0].DefBlock])
                                              .addReg(Src[1]).addMBB(BBRegistry[*Src[1].DefBlock]);
             break; case Opcodes::FUNC_DEF:
-                assert(*AllocasSize == -1);
-                *AllocasSize = createFuncDef(MIRBlock, *std::get_if<int>(&*Imm), Dst);
+                assert(IRBlock->getParentFunction()->getAllocasSize() == *std::get_if<int>(&*Imm));
+                createFuncDef(MIRBlock, *std::get_if<int>(&*Imm), Dst);
             break; default:
                 assert(0);
         }
