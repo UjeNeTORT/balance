@@ -137,16 +137,29 @@ void LinearScanRAL::computeSpillCosts(MachineFunction &MF) {
         } else if (a->Reg.isVirtual() && b->Reg.isPhysical()) {
             return false; // a > b
         }
+        if (a->StartIdx == b->StartIdx)
+            return a->EndIdx < b->EndIdx;
         return a->StartIdx < b->StartIdx;
     });
 
-    std::unordered_map<Register, int> Degrees;
+    std::map<int, int> Events;
+
     for (const auto &LI : SortedIntervals) {
         if (LI->Reg.isPhysical()) continue;
-        // TODO: not finished!
-        unreachable("Not finished!");
+
+        if (Events.count(LI->StartIdx)) Events.find(LI->StartIdx)->second++;
+        else Events.insert({LI->StartIdx, +1});
+
+        if (Events.count(LI->EndIdx)) Events.find(LI->EndIdx)->second--;
+        else Events.insert({LI->EndIdx, -1});
     }
 
+    std::map<int, int> InterferenceAtIdx;
+    int Active = 0;
+    for (const auto &E : Events) {
+        Active += E.second;
+        InterferenceAtIdx.insert({E.first, Active});
+    }
 }
 
 bool LinearScanRAL::run(MachineFunction &MF) {

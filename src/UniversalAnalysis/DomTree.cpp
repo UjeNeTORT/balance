@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <type_traits>
 
 namespace Balance {
 
@@ -120,42 +121,11 @@ bool DomTree<FuncTy, BBTy, InstTy>::dom(const BBTy *BBA, const BBTy *BBB) const 
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
-bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTy *IA, const InstTy *IB) const {
-    assert(DomMap.find(IA->getParent()) != DomMap.end() && "Unknown Dom[IA->getParent()]");
-    assert(DomMap.find(IB->getParent()) != DomMap.end() && "Unknown Dom[IB->getParent()]");
-
-    const BBTy *ParentA = IA->getParent();
-    const BBTy *ParentB = IB->getParent();
-
-    if (sdom(ParentA, ParentB)) return true;
-    if (ParentA == ParentB) {
-        for (auto It = ParentA->begin(), Ie = ParentA->end(); It != Ie; ++It) {
-            auto &MI = *It;
-            // now look who is first in parent mbb
-            // if A => then A dom B = true
-            if (&MI == IA) return true;
-            if (&MI == IB) return false;
-        }
-
-    }
-
-    return false;
-}
-
-template<typename FuncTy, typename BBTy, typename InstTy>
 bool DomTree<FuncTy, BBTy, InstTy>::sdom(const BBTy *BBA, const BBTy *BBB) const {
     assert(DomMap.find(BBA) != DomMap.end() && "Unknown Dom[BBA]");
     assert(DomMap.find(BBB) != DomMap.end() && "Unknown Dom[BBB]");
 
     return dom(BBA, BBB) && BBA != BBB;
-}
-
-template<typename FuncTy, typename BBTy, typename InstTy>
-bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTy *IA, const InstTy *IB) const {
-    const BBTy *ParentA = IA->getParent();
-    const BBTy *ParentB = IB->getParent();
-
-    return dom(ParentA, ParentB) && IA != IB;
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
