@@ -11,7 +11,7 @@
 
 %}
 
-%option noyywrap nounput noinput batch nounistd
+%option noyywrap nounput noinput batch nounistd never-interactive
 
 %x COMMENT
 
