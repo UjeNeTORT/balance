@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-find_package(BISON REQUIRED)
+find_package(BISON 3.8.2 REQUIRED)
 find_package(FLEX REQUIRED)
 
 BISON_TARGET(parser
