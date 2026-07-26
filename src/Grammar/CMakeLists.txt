@@ -11,8 +11,7 @@ if(WIN32)
     )
     FetchContent_MakeAvailable(winflexbison)
 
-    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_bison.exe" CACHE FILEPATH "Path to win_bison" FORCE)
-    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/win_flex.exe" CACHE FILEPATH "Path to win_flex" FORCE)
+    list(APPEND CMAKE_PROGRAM_PATH "${winflexbison_SOURCE_DIR}")
 
 elseif(UNIX)
     set(BISON_INSTALL_DIR "${CMAKE_BINARY_DIR}/deps_install/bison")
