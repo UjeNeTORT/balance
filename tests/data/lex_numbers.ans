@@ -1,0 +1,51 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef dec
+          Init
+            IntLiteral 42
+      VarDecl int
+        VarDef oct
+          Init
+            IntLiteral 42
+      VarDecl int
+        VarDef hex
+          Init
+            IntLiteral 42
+      VarDecl int
+        VarDef zero
+          Init
+            IntLiteral 0
+      VarDecl float
+        VarDef f1
+          Init
+            FloatLiteral 1.5
+      VarDecl float
+        VarDef f2
+          Init
+            FloatLiteral 0.5
+      VarDecl float
+        VarDef f3
+          Init
+            FloatLiteral 2
+      VarDecl float
+        VarDef f4
+          Init
+            FloatLiteral 1000
+      VarDecl float
+        VarDef f5
+          Init
+            FloatLiteral 0.015
+      VarDecl float
+        VarDef f6
+          Init
+            FloatLiteral 16
+      Return
+        BinaryOp +
+          BinaryOp +
+            BinaryOp +
+              LVal dec
+              LVal oct
+            LVal hex
+          LVal zero

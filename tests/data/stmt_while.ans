@@ -1,0 +1,41 @@
+CompUnit
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef i
+          Init
+            IntLiteral 0
+      VarDecl int
+        VarDef sum
+          Init
+            IntLiteral 0
+      While
+        Cond
+          BinaryOp <
+            LVal i
+            IntLiteral 10
+        Body
+          Block
+            Assign
+              LVal sum
+              BinaryOp +
+                LVal sum
+                LVal i
+            Assign
+              LVal i
+              BinaryOp +
+                LVal i
+                IntLiteral 1
+      While
+        Cond
+          BinaryOp >
+            LVal i
+            IntLiteral 0
+        Body
+          Assign
+            LVal i
+            BinaryOp -
+              LVal i
+              IntLiteral 1
+      Return
+        LVal sum

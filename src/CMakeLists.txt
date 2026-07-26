@@ -5,6 +5,9 @@ add_subdirectory(UniversalAnalysis)
 add_subdirectory(MachineLayer)
 add_subdirectory(RISCV)
 add_subdirectory(IR)
+add_subdirectory(AST)
+add_subdirectory(Frontend)
+add_subdirectory(Grammar)
 
 add_executable(balance main.cpp)
 

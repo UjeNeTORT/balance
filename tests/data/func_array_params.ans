@@ -1,0 +1,40 @@
+CompUnit
+  FuncDef int sum
+    Param int a[]
+    Param int n
+    Block
+      Return
+        LVal a
+          Index
+            BinaryOp -
+              LVal n
+              IntLiteral 1
+  FuncDef int sumMatrix
+    Param int m[]
+      Dim
+        IntLiteral 3
+    Param int rows
+    Block
+      Return
+        LVal m
+          Index
+            LVal rows
+          Index
+            IntLiteral 0
+  FuncDef int main
+    Block
+      VarDecl int
+        VarDef a
+          Dim
+            IntLiteral 3
+          InitList
+            Init
+              IntLiteral 1
+            Init
+              IntLiteral 2
+            Init
+              IntLiteral 3
+      Return
+        Call sum
+          LVal a
+          IntLiteral 3

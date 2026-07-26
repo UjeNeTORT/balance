@@ -1,0 +1,23 @@
+CompUnit
+  FuncDef int add
+    Param int a
+    Param int b
+    Block
+      Return
+        BinaryOp +
+          LVal a
+          LVal b
+  FuncDef float scale
+    Param float x
+    Param int factor
+    Block
+      Return
+        BinaryOp *
+          LVal x
+          LVal factor
+  FuncDef int main
+    Block
+      Return
+        Call add
+          IntLiteral 1
+          IntLiteral 2

@@ -1,0 +1,9 @@
+const int N = 4;
+int a[10];
+int b[N][N + 1];
+float m[2][3][4];
+
+int main()
+{
+    return a[0];
+}
