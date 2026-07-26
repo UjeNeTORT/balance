@@ -3,6 +3,7 @@
 
 #include "Utils/Utils.h"
 
+#include <array>
 #include <string_view>
 
 using namespace Balance;
@@ -80,6 +81,17 @@ enum class RISCVRegister {
     F29 = 61,           FT9 = 61,   // FP Temporary 9
     F30 = 62,           FT10 = 62,  // FP Temporary 10
     F31 = 63,           FT11 = 63   // FP Temporary 11
+};
+
+// not ai-generated :)
+const std::array CallIntArgsRegs {
+    RISCVRegister::A0, RISCVRegister::A1, RISCVRegister::A2, RISCVRegister::A3,
+    RISCVRegister::A4, RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7
+};
+
+const std::array CallFloatArgsRegs {
+    RISCVRegister::FA0, RISCVRegister::FA1, RISCVRegister::FA2, RISCVRegister::FA3,
+    RISCVRegister::FA4, RISCVRegister::FA5, RISCVRegister::FA6, RISCVRegister::FA7
 };
 
 // ai-generated

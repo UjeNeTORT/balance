@@ -25,9 +25,12 @@ class MachineInst {
 public:
     MachineInst(RISCVOpcode Opcode) : Opcode(Opcode) {}
     MachineInst &addReg(Register Reg);
-    MachineInst &addImm(uint64_t Imm);
+    MachineInst &addReg(int RegId) { return addReg(Register(RegId)); };
+    MachineInst &addImm(int64_t Imm);
     MachineInst &addMBB(MachineBB *MBB);
     MachineInst &addMO(MachineOperand MO);
+    MachineInst &addFunc(MachineFunction *MF);
+    MachineInst &addLabel(std::string Label);
 
     RISCVOpcode getOpcode() const { return Opcode; }
     MachineBB *getParent() const { return MBB; }

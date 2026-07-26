@@ -31,12 +31,20 @@ MachineInst &MachineInst::addReg(Register Reg) {
     return *this;
 }
 
-MachineInst &MachineInst::addImm(uint64_t Imm) {
+MachineInst &MachineInst::addImm(int64_t Imm) {
     return addMO(MachineOperand(Imm));
 }
 
 MachineInst &MachineInst::addMBB(MachineBB *MBB) {
     return addMO(MachineOperand(MBB));
+}
+
+MachineInst &MachineInst::addFunc(MachineFunction *MF) {
+    return addMO(MachineOperand(MF));
+}
+
+MachineInst &MachineInst::addLabel(std::string Label) {
+    return addMO(MachineOperand(Label));
 }
 
 MachineInst &MachineInst::addMO(MachineOperand MO) {

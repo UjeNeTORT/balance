@@ -8,6 +8,7 @@ add_subdirectory(IR)
 add_subdirectory(AST)
 add_subdirectory(Frontend)
 add_subdirectory(Grammar)
+add_subdirectory(IR2MIR)
 
 add_executable(balance main.cpp)
 

@@ -2,6 +2,7 @@
 #define IR_FUNCTION_H_
 
 #include "BasicBlock.h"
+#include "Operand.h"
 
 #include <iterator>
 #include <list>
@@ -60,6 +61,11 @@ public:
 
     size_t getNewBBId() { return BBCounter++; }
 
+    VirtRegister getNewVirtReg(VirtRegister::RegType Type,
+                               std::optional<BasicBlock*> DefBlock = std::nullopt) {
+        return {Type, VirtRegCounter++, DefBlock};
+    }
+
     iterator       begin()       { return BasicBlocks.begin(); }
     iterator       end()         { return BasicBlocks.end(); }
     const_iterator begin() const { return BasicBlocks.cbegin(); }
@@ -68,6 +74,7 @@ private:
     std::string Name;
     std::list<BasicBlock> BasicBlocks;
     size_t BBCounter = 0;
+    int VirtRegCounter = 1;
 };
 
 }
