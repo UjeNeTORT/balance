@@ -8,6 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(cmake/tools.cmake)
+
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, default to Release")
     set(CMAKE_BUILD_TYPE Release)
@@ -29,7 +31,5 @@ add_subdirectory(src)
 
 option(BUILD_TESTS "Build unit tests" OFF)
 
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+enable_testing()
+add_subdirectory(tests)

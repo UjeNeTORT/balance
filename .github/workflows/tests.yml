@@ -1,0 +1,73 @@
+name: "run tests"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 'checkout'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 'build'
+        run: |
+          bash tests/dummy-build.sh
+
+      - name: 'upload artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'compiler'
+          path: tests/compiler
+
+  compile-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 'checkout'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 'download compiler'
+        uses: actions/download-artifact@v5
+        with:
+          name: 'compiler'
+          path: tests/compiler
+
+      - name: 'compile'
+        cd tests
+        cmake -S . -B build
+        cmake --build build --parallel `nproc` --target=TestsCompile
+
+      - name: 'upload artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'compiled-tests'
+          path: tests/build
+
+  run-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 'checkout'
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 'download tests'
+        uses: actions/download-artifact@v5
+        with:
+          name: 'compiled-tests'
+          path: tests/build
+
+      - name: 'run tests'
+        run: |
+          cd tests
+          ctest --test-dir build --output-on-failure --parallel `nproc`
+
