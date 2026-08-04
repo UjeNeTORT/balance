@@ -15,6 +15,7 @@ public:
     using iterator = FunctionStorage::iterator;
     using const_iterator = FunctionStorage::const_iterator;
 
+    // TODO: verify that functions have different names
     void verify() const {
         for (const auto& Func: Functions)
             Func.verify();

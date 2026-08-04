@@ -38,6 +38,7 @@ public:
     using pred_iterator = std::list<MachineBB *>::iterator;
     using const_pred_iterator = std::list<MachineBB *>::const_iterator;
 
+    MachineBB() = delete;
     MachineBB(MachineFunction *MF, std::string Name = "");
 
     MachineInst &createMI(MachineBB::iterator I, RISCVOpcode Opcode);

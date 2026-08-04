@@ -214,6 +214,8 @@ static const MIRInstrInfo MIRInstructionDB[] = {
     { "C_FSDSP",       false, 0, 2, 2 },
     { "C_SWSP",        false, 0, 2, 2 },
     { "C_SDSP",        false, 0, 2, 2 },
+    { "CALL",          false, 1, 0, 2 },
+    { "LI",            false, 1, 0, 2 },
     { "PHI",           false, 1, -1, -1, false },
 };
 } // namespace

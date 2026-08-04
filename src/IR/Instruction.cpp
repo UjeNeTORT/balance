@@ -44,7 +44,8 @@ void Instruction::verify() const {
                     throwVerifyError("COPY operation with immediate must have no source and 1 destination");
 
                 if ((std::holds_alternative<int>(*Immediate) && Dst[0].Type != VirtRegister::Int) ||
-                    (std::holds_alternative<float>(*Immediate) && Dst[0].Type != VirtRegister::Float))
+                    (std::holds_alternative<float>(*Immediate) && Dst[0].Type != VirtRegister::Float) ||
+                    (std::holds_alternative<std::string>(*Immediate) && Dst[0].Type != VirtRegister::Int))
                     throwVerifyError("COPY operation must have same source and destination types");
             } else {
                 if (Src.size() != 1 || Dst.size() != 1)
@@ -101,21 +102,6 @@ void Instruction::verify() const {
                 if (Source.Type != Dst[0].Type)
                     throwVerifyError("Binary operation sources types must be same with dst type");
             break;
-        case Opcodes::CMP:
-            verifyNoImmediate();
-            if (!CmpType.has_value())
-                throwVerifyError("CMP operation must have CmpType");
-            verifyNoBrDstBB();
-            verifyNoFunc();
-            if (Src.size() != 2 || Dst.size() != 1)
-                throwVerifyError("CMP operation must have 2 sources and 1 destination");
-
-            if (Dst[0].Type != VirtRegister::Int)
-                throwVerifyError("CMP operation must have Int result");
-
-            if (Src[0].Type != Src[1].Type)
-                throwVerifyError("CMP operands must have same type");
-            break;
 
         case Opcodes::RET:
             verifyNoImmediate();
@@ -131,14 +117,24 @@ void Instruction::verify() const {
             verifyNoImmediate();
             verifyNoDst();
             verifyNoFunc();
-            if (Src.size() >= 2)
-                throwVerifyError("BR operation must have no or 1 source");
 
-            if (Src.size() == 0)
+            if (Src.size() == 0) {
                 verifyNoCmpType();
 
-            if (BrDstBB.size() != 1 || BrDstBB.size() != 2)
+                if (BrDstBB.size() != 1)
+                    throwVerifyError("BR operation with no Src must have 1 BrDstBB");
+            } else if (Src.size() == 2) {
+                if (!CmpType.has_value())
+                    throwVerifyError("BR operation with 2 sources must have CmpType");
+
+                if (Src[0].Type != Src[1].Type)
+                    throwVerifyError("BR operation with CmpType must have same type Src");
+
+                if (BrDstBB.size() != 2)
+                    throwVerifyError("BR operation with CmpType must have 2 BrDstBB");
+            } else {
                 throwVerifyError("BR operation must have 1 or 2 BrDstBB");
+            }
             break;
 
         case Opcodes::LOAD:
@@ -183,8 +179,8 @@ void Instruction::verify() const {
             verifyNoBrDstBB();
             verifyNoFunc();
 
-            if (Dst.size() != 1 || Src.size() < 2)
-                throwVerifyError("PHI operation must have 1 destination and at least 2 sources");
+            if (Dst.size() != 1 || Src.size() != 2)
+                throwVerifyError("PHI operation must have 1 destination and 2 sources");
 
             for (auto Arg: Src) {
                 if (Arg.Type != Dst[0].Type)
@@ -196,23 +192,16 @@ void Instruction::verify() const {
             break;
 
         case Opcodes::FUNC_DEF:
-            verifyNoImmediate();
             verifyNoCmpType();
             verifyNoSrc();
             verifyNoBrDstBB();
             verifyNoFunc();
-        break;
+            if (Dst.size() < 1)
+                throwVerifyError("FUNC_DEF must have at least 1 Dst");
 
-        case Opcodes::ALLOCA:
-            verifyNoCmpType();
-            verifyNoBrDstBB();
-            verifyNoFunc();
-
-            if (!Immediate.has_value() || !std::holds_alternative<int>(*Immediate))
-                throwVerifyError("ALLOCA operation must have integer Immediate for size");
-
-            if (Dst.size() != 1 || Dst[0].Type != VirtRegister::Int)
-                throwVerifyError("ALLOCA operation must have 1 integer destination");
+            if (!Immediate.has_value() || !std::holds_alternative<int>(*Immediate) ||
+                *std::get_if<int>(&*Immediate) < 0)
+                throwVerifyError("FUNC_DEF operation must have non-negative Int immediate with stack frame size");
             break;
 
         default:

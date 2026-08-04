@@ -1,12 +1,15 @@
 #include "MachineInst.h"
 #include "MachineOperand.h"
 #include "MachineBB.h"
+#include "MachineFunction.h"
 
 #include "Utils/Utils.h"
 
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <variant>
 
 namespace Balance {
@@ -21,11 +24,19 @@ bool MachineOperand::isReg() const {
 }
 
 bool MachineOperand::isImm() const {
-    return std::holds_alternative<uint64_t>(Value);
+    return std::holds_alternative<int64_t>(Value);
 }
 
 bool MachineOperand::isMBB() const {
     return std::holds_alternative<MachineBB *>(Value);
+}
+
+bool MachineOperand::isFunc() const {
+    return std::holds_alternative<MachineFunction *>(Value);
+}
+
+bool MachineOperand::isLabel() const {
+    return std::holds_alternative<std::string>(Value);
 }
 
 Register MachineOperand::getReg() const {
@@ -35,7 +46,7 @@ Register MachineOperand::getReg() const {
 
 uint64_t MachineOperand::getImm() const {
     assert(isImm() && "Wrong type for accessor");
-    return *std::get_if<uint64_t>(&Value);
+    return *std::get_if<int64_t>(&Value);
 }
 
 MachineBB *MachineOperand::getMBB() const {
@@ -43,25 +54,39 @@ MachineBB *MachineOperand::getMBB() const {
     return *std::get_if<MachineBB *>(&Value);
 }
 
+MachineFunction *MachineOperand::getFunc() const {
+    assert(isFunc() && "Wrong type for accessor");
+    return *std::get_if<MachineFunction *>(&Value);
+}
+
+std::string_view MachineOperand::getLabel() const {
+    assert(isLabel() && "Wrong type for accessor");
+    return *std::get_if<std::string>(&Value);
+}
+
 Register MachineOperand::setReg(Register NewReg) {
     assert(isReg() && "Wrong type for setter");
-    Register OldReg = *std::get_if<Register>(&Value);
-    *std::get_if<Register>(&Value) = NewReg;
-    return OldReg;
+    return std::exchange(*std::get_if<Register>(&Value), NewReg);
 }
 
 uint64_t MachineOperand::setImm(uint64_t NewImm) {
     assert(isImm() && "Wrong type for setter");
-    uint64_t OldImm = *std::get_if<uint64_t>(&Value);
-    *std::get_if<uint64_t>(&Value) = NewImm;
-    return OldImm;
+    return std::exchange(*std::get_if<int64_t>(&Value), NewImm);
 }
 
 MachineBB *MachineOperand::setMBB(MachineBB *NewMBB) {
     assert(isMBB() && "Wrong type for setter");
-    MachineBB *OldMBB = *std::get_if<MachineBB *>(&Value);
-    *std::get_if<MachineBB *>(&Value) = NewMBB;
-    return OldMBB;
+    return std::exchange(*std::get_if<MachineBB *>(&Value), NewMBB);
+}
+
+MachineFunction *MachineOperand::setFunc(MachineFunction *NewFunc) {
+    assert(isFunc() && "Wrong type for setter");
+    return std::exchange(*std::get_if<MachineFunction *>(&Value), NewFunc);
+}
+
+std::string MachineOperand::setLabel(std::string Label) {
+    assert(isLabel() && "Wrong type for setter");
+    return std::exchange(*std::get_if<std::string>(&Value), Label);
 }
 
 MachineInst *MachineOperand::getMI() const {
@@ -73,24 +98,13 @@ void MachineOperand::setMI(MachineInst *NewMI) {
 }
 
 std::string MachineOperand::getAsmString() const {
-    std::string AsmString;
-
-    switch (Value.index()) {
-    case 0: // Register
-        AsmString += std::get<0>(Value).getAsmString();
-        break;
-    case 1: // Imm
-        AsmString += std::to_string(std::get<1>(Value));
-        break;
-    case 2: // MachineBB *
-        AsmString += std::get<2>(Value)->getReferenceName();
-        break;
-    default:
-        unreachable("Unexpected variant index");
-        break;
-    }
-
-    return AsmString;
+    return std::visit(overloaded {
+        [](Register Val)         { return Val.getAsmString(); },
+        [](int64_t Val)          { return std::to_string(Val); },
+        [](MachineBB *Val)       { return std::string(Val->getReferenceName()); },
+        [](MachineFunction* Val) { return std::string(Val->getName()); },
+        [](std::string Val)      { return Val; }
+    }, Value);
 }
 
 void MachineOperand::print(std::ostream &OS) const {

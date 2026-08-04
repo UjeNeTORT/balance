@@ -11,9 +11,10 @@ namespace Balance {
 
 class MachineBB;
 class MachineInst;
+class MachineFunction;
 
 class MachineOperand {
-    std::variant<Register, uint64_t, MachineBB *> Value;
+    std::variant<Register, int64_t, MachineBB *, MachineFunction*, std::string> Value;
 
     MachineInst *MI;
 
@@ -25,20 +26,28 @@ class MachineOperand {
 public:
     MachineOperand(MachineInst *MI = nullptr) : Value(Register(0)), MI(MI) {}
     MachineOperand(Register R, MachineInst *MI = nullptr) : Value(R), MI(MI) {}
-    MachineOperand(uint64_t Imm, MachineInst *MI = nullptr) : Value(Imm), MI(MI) {}
+    MachineOperand(int64_t Imm, MachineInst *MI = nullptr) : Value(Imm), MI(MI) {}
     MachineOperand(MachineBB *MBB, MachineInst *MI = nullptr) : Value(MBB), MI(MI) {}
+    MachineOperand(MachineFunction *MF, MachineInst *MI = nullptr) : Value(MF), MI(MI) {}
+    MachineOperand(std::string Label, MachineInst *MI = nullptr) : Value(Label), MI(MI) {}
 
     bool isReg() const;
     bool isImm() const;
     bool isMBB() const;
+    bool isFunc() const;
+    bool isLabel() const;
 
     Register getReg() const;
     uint64_t getImm() const;
     MachineBB *getMBB() const;
+    MachineFunction *getFunc() const;
+    std::string_view getLabel() const;
 
     Register setReg(Register NewReg);
     uint64_t setImm(uint64_t NewImm);
     MachineBB *setMBB(MachineBB *NewMBB);
+    MachineFunction *setFunc(MachineFunction *NewFunc);
+    std::string setLabel(std::string Label);
 
     MachineInst *getMI() const;
     void setMI(MachineInst *NewMI);

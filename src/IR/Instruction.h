@@ -18,7 +18,7 @@ enum class Opcodes {
     // Unary
     CONVERT, BITCAST, COPY, NEG,
     // Binary
-    ADD, SUB, MUL, DIV, REM, SHL, SHR, AND, OR, XOR, CMP,
+    ADD, SUB, MUL, DIV, REM, SHL, SHR, AND, OR, XOR,
 
     RET,
     BR,
@@ -27,7 +27,6 @@ enum class Opcodes {
     CALL,
     PHI,
     FUNC_DEF,
-    ALLOCA,
 };
 
 enum class CmpTypes {
@@ -52,7 +51,7 @@ public:
 
     void addSrc(VirtRegister Reg) { Src.push_back(Reg); }
     void addDst(VirtRegister Reg) { Dst.push_back(Reg); }
-    void setImmediate(std::variant<int, float> Imm) { Immediate = Imm; }
+    void setImmediate(std::variant<int, float, std::string> Imm) { Immediate = Imm; }
     void setCmpType(CmpTypes Type) { CmpType = Type; }
     void addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); }
     void setCallFunc(Function* Funct) { CallFunc = Funct; }
@@ -67,7 +66,7 @@ public:
     const std::vector<VirtRegister>& getDst() const { return Dst; }
     const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
     std::optional<Function*> getCallFunc() const { return CallFunc; }
-    std::optional<std::variant<int, float>> getImm() const { return Immediate; }
+    std::optional<std::variant<int, float, std::string>> getImm() const { return Immediate; }
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
@@ -84,7 +83,7 @@ private:
     std::string Comment;
     std::optional<SourceInfo> SrcInfo;
 
-    std::optional<std::variant<int, float>> Immediate;
+    std::optional<std::variant<int, float, std::string>> Immediate;
     std::optional<CmpTypes> CmpType;
     std::vector<VirtRegister> Src;
     std::vector<VirtRegister> Dst;
