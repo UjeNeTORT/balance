@@ -1,12 +1,16 @@
 #include "AST/Node.h"
 
+#include <cassert>
+
 namespace Balance
 {
 
 namespace AST
 {
 
-void Node::accept(Visitor& visitor) const {}
+void Node::accept(Visitor&) const {
+    assert(0 && "Node is abstract class");
+}
 
 IntLiteralNode::IntLiteralNode(int value)
     : Value(value)

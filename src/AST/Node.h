@@ -1,10 +1,10 @@
 #ifndef AST_NODE_H
 #define AST_NODE_H
 
+#include "AST/Visitor.h"
+
 #include <string>
 #include <vector>
-
-#include "AST/Visitor.h"
 
 namespace Balance
 {

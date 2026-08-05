@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "AST/Ast.h"
+#include "AST/ConstantFolding.h"
 #include "AST/Node.h"
 #include "parser.hpp"
 
@@ -48,6 +49,10 @@ class Driver final
     const AST::CompUnitNode* getCompUnit() const { return Tree.getCompUnit(); }
 
     int parse(const std::string& fileName);
+
+    void foldConstants() {
+        Tree = AST::AstConstantFolder().fold(std::move(Tree));
+    }
 
   private:
     void scanBegin();
