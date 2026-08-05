@@ -7,4 +7,6 @@ add_library(BalanceAST STATIC
     AstDotDumper.cpp
 )
 
+target_link_libraries(BalanceAST PRIVATE Utils)
+
 target_include_directories(BalanceAST PUBLIC ${CMAKE_SOURCE_DIR}/src)
