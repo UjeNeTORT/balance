@@ -1,7 +1,7 @@
 #ifndef IR_BASICBLOCK_H_
 #define IR_BASICBLOCK_H_
 
-#include "Instruction.h"
+#include "IR/Instruction.h"
 
 #include <iterator>
 #include <list>
@@ -43,16 +43,15 @@ public:
             throw Instruction::verify_error("No terminal instruction in the end of basic block");
     }
 
-    iterator insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    Instruction& insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         auto Instr = Instruction(Opcode, this, SrcInf);
         if (!Instructions.empty() && std::prev(Instructions.end())->isTerminal() &&
             Instr.isTerminal())
             throwVerifyError("Trying to add terminal instruction to basic block that already has it");
 
-        return Instructions.insert(It, std::move(Instr));
-
+        return *Instructions.insert(It, std::move(Instr));
     }
-    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    Instruction& addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         return insertInstruction(Instructions.end(), Opcode, SrcInf);
     }
 

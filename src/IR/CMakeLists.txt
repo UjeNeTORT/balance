@@ -5,7 +5,7 @@ add_library(IR STATIC
     IR.cpp
 )
 
-target_link_libraries(IR INTERFACE Utils)
+target_link_libraries(IR PRIVATE Utils)
 
-target_include_directories(IR INTERFACE ${CMAKE_CURRENT_SOURCE_SIR})
+target_include_directories(IR PRIVATE ${PROJECT_SOURCE_DIR}/src)
 

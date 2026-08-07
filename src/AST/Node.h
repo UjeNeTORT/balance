@@ -5,6 +5,8 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include <variant>
 
 namespace Balance
 {
@@ -415,6 +417,20 @@ class CompUnitNode final : public Node
 };
 
 using CompUnitPtr = CompUnitNode*;
+
+// ----- Helpers -----
+
+inline std::optional<std::variant<int, float>> getConstVal(ExprPtr Expr) {
+    IntLiteralNode* IntNode = dynamic_cast<IntLiteralNode*>(Expr);
+    if (IntNode)
+        return IntNode->getValue();
+
+    FloatLiteralNode* FloatNode = dynamic_cast<FloatLiteralNode*>(Expr);
+    if (FloatNode)
+        return FloatNode->getValue();
+
+    return std::nullopt;
+}
 
 } // namespace AST
 

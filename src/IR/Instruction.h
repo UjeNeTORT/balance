@@ -1,7 +1,7 @@
 #ifndef IR_INSTRUCTION_H_
 #define IR_INSTRUCTION_H_
 
-#include "Operand.h"
+#include "IR/Operand.h"
 
 #include <cassert>
 #include <optional>
@@ -49,12 +49,12 @@ public:
         , SrcInfo(SrcInf)
     {}
 
-    void addSrc(VirtRegister Reg) { Src.push_back(Reg); }
-    void addDst(VirtRegister Reg) { Dst.push_back(Reg); }
-    void setImmediate(std::variant<int, float, std::string> Imm) { Immediate = Imm; }
-    void setCmpType(CmpTypes Type) { CmpType = Type; }
-    void addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); }
-    void setCallFunc(Function* Funct) { CallFunc = Funct; }
+    Instruction& addSrc(VirtRegister Reg) { Src.push_back(Reg); return *this; }
+    Instruction& addDst(VirtRegister Reg) { Dst.push_back(Reg); return *this; }
+    Instruction& setImmediate(std::variant<int, float, std::string> Imm) { Immediate = Imm; return *this; }
+    Instruction& setCmpType(CmpTypes Type) { CmpType = Type; return *this; }
+    Instruction& addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); return *this; }
+    Instruction& setCallFunc(Function* Funct) { CallFunc = Funct; return *this; }
 
     void verify() const;
 

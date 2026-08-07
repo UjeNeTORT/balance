@@ -44,7 +44,7 @@ namespace {
 
 void createBinaryOp(MachineBB* MIRBlock, RISCVOpcode IntOpcode, RISCVOpcode FloatOpcode,
                     const std::vector<VirtRegister>& Dst, const std::vector<VirtRegister>& Src) {
-    if (Dst[0].Type == VirtRegister::Int)
+    if (Dst[0].Type.isInt())
         MIRBlock->createMI(IntOpcode).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
     else
         MIRBlock->createMI(FloatOpcode).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
@@ -56,7 +56,7 @@ size_t createFuncDef(MachineBB* MIRBlock, int FrameSize, const std::vector<VirtR
     size_t StackCnt = 0;
 
     for (auto It = std::next(Dst.begin()); It != Dst.end(); It++) {
-        if (It->Type == VirtRegister::Int) {
+        if (It->Type.isInt()) {
             if (IRegCnt < CallIntArgsRegs.size())
                 MIRBlock->createMI(RVOp::ADDI).addReg(*It).addReg(CallIntArgsRegs[IRegCnt]).addImm(0);
             else
@@ -87,7 +87,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     size_t FRegCnt = 0;
 
     for (const auto& Arg: Src) {
-        if (Arg.Type == VirtRegister::Int) {
+        if (Arg.Type.isInt()) {
             if (++IRegCnt > CallIntArgsRegs.size())
                 StackArgsCnt++;
         } else {
@@ -105,7 +105,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     IRegCnt = 0;
     FRegCnt = 0;
     for (const auto& Arg: Src) {
-        if (Arg.Type == VirtRegister::Int) {
+        if (Arg.Type.isInt()) {
             if (IRegCnt < CallIntArgsRegs.size())
                 MIRBlock->createMI(ADDI).addReg(CallIntArgsRegs[IRegCnt]).addReg(Arg).addImm(0);
             else
@@ -148,25 +148,25 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::ZERO).addReg(RVReg::ZERO).addImm(0);
 
             break; case Opcodes::CONVERT:
-                if (Dst[0].Type == VirtRegister::Int)
+                if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::FCVT_W_S).addReg(Dst[0]).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FCVT_S_W).addReg(Dst[0]).addReg(Src[0]);
 
             break; case Opcodes::BITCAST:
-                if (Dst[0].Type == VirtRegister::Int)
+                if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::FMV_W_X).addReg(Dst[0]).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FMV_X_W).addReg(Dst[0]).addReg(Src[0]);
 
             break; case Opcodes::COPY:
                 if (Src.size() == 1) {
-                    if (Dst[0].Type == VirtRegister::Int)
+                    if (Dst[0].Type.isInt())
                         MIRBlock->createMI(RVOp::ADDIW).addReg(Dst[0]).addReg(Src[0]).addImm(0);
                     else
                         MIRBlock->createMI(RVOp::FSGNJ_S).addReg(Dst[0]).addReg(Src[0]).addReg(Src[0]);
                 } else {
-                    if (Dst[0].Type == VirtRegister::Int) {
+                    if (Dst[0].Type.isInt()) {
                         if (std::get_if<int>(&*Imm))
                             MIRBlock->createMI(RVOp::LI).addReg(Dst[0])
                                             .addImm(static_cast<int64_t>(*std::get_if<int>(&*Imm)));
@@ -176,13 +176,13 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                     } else {
                         uint32_t Val = 0;
                         std::memcpy(&Val, std::get_if<float>(&*Imm), sizeof(float));
-                        VirtRegister Vreg = IRBlock->getParentFunction()->getNewVirtReg(VirtRegister::Int);
+                        VirtRegister Vreg = IRBlock->getParentFunction()->getNewVirtReg(OpFloat());
                         MIRBlock->createMI(RVOp::LI).addReg(Vreg).addImm(Val);
-                        MIRBlock->createMI(RVOp::FMV_X_W).addReg(Dst[0]).addReg(RVReg::RA);
+                        MIRBlock->createMI(RVOp::FMV_X_W).addReg(Dst[0]).addReg(Vreg);
                     }
                 }
             break; case Opcodes::NEG:
-                if (Dst[0].Type == VirtRegister::Int)
+                if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::SUBW).addReg(Dst[0]).addReg(RVReg::ZERO).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FSGNJN_S).addReg(Dst[0]).addReg(Src[0]).addReg(Src[0]);
@@ -212,7 +212,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                     MIRBlock->createMI(RVOp::ADDW).addReg(RVReg::A0).addReg(Src[0]).addReg(RVReg::ZERO);
 
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
-                                              .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getAllocasSize())); // TODO: check overflow
+                                              .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getFrameSize())); // TODO: check overflow
                 MIRBlock->createMI(RVOp::JALR).addReg(RVReg::ZERO).addReg(RVReg::RA).addImm(0);
 
             break; case Opcodes::BR:
@@ -246,8 +246,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                                              .addReg(Src[0]).addMBB(BBRegistry[*Src[0].DefBlock])
                                              .addReg(Src[1]).addMBB(BBRegistry[*Src[1].DefBlock]);
             break; case Opcodes::FUNC_DEF:
-                assert(IRBlock->getParentFunction()->getAllocasSize() == *std::get_if<int>(&*Imm));
-                createFuncDef(MIRBlock, *std::get_if<int>(&*Imm), Dst);
+                createFuncDef(MIRBlock, IRBlock->getParentFunction()->getFrameSize(), Dst);
             break; default:
                 assert(0);
         }

@@ -11,18 +11,6 @@ using namespace AST;
 
 namespace {
 
-std::optional<std::variant<int, float>> getConstVal(ExprPtr Expr) {
-    IntLiteralNode* IntNode = dynamic_cast<IntLiteralNode*>(Expr);
-    if (IntNode)
-        return IntNode->getValue();
-
-    FloatLiteralNode* FloatNode = dynamic_cast<FloatLiteralNode*>(Expr);
-    if (FloatNode)
-        return FloatNode->getValue();
-
-    return std::nullopt;
-}
-
 float convertToFloat(std::variant<int, float> Value) {
     return std::visit(overloaded {
                 [](float& Val) { return Val; },
