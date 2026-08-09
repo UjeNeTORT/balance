@@ -12,4 +12,4 @@ add_subdirectory(IR2MIR)
 
 add_executable(balance main.cpp)
 
-target_link_libraries(balance Frontend Utils IR MachineLayer MIRPasses Analysis MIRInfo)
+target_link_libraries(balance Frontend Utils IR IR2MIR MachineLayer MIRPasses Analysis MIRInfo)

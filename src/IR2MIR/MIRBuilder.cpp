@@ -1,4 +1,6 @@
 #include "MIRBuilder.h"
+
+#include "IR/Operand.h"
 #include "MachineLayer/MachineInst.h"
 #include "RISCV/RISCVRegisters.h"
 #include "UniversalAnalysis/RPOTraversal.h"
@@ -172,7 +174,8 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                                             .addImm(static_cast<int64_t>(*std::get_if<int>(&*Imm)));
                         else
                             MIRBlock->createMI(RVOp::LI).addReg(Dst[0])
-                                            .addLabel(*std::get_if<std::string>(&*Imm));
+                                            .addGData(MachineIR.findGData(
+                                                        (*std::get_if<GlobalData*>(&*Imm))->getName()));
                     } else {
                         uint32_t Val = 0;
                         std::memcpy(&Val, std::get_if<float>(&*Imm), sizeof(float));

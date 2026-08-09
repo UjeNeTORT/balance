@@ -2,6 +2,7 @@
 #define MACHINE_FUNCTION_H
 
 // for Register, TODO: move Register to Register.h
+#include "MachineBB.h"
 #include "MachineOperand.h"
 
 #include <string>

@@ -12,12 +12,13 @@
 #include <map>
 #include <optional>
 #include <stdexcept>
+#include <string>
 
 namespace Balance {
 
 class IR {
 public:
-    constexpr static std::string InternalFuncsPrefix = "0_internal_";
+    static std::string internalFunc(std::string Name) { return "internal_func_" + Name; }
 
     IR(const IR&) = delete;
     IR& operator=(const IR&) = delete;
@@ -25,11 +26,15 @@ public:
     IR(IR&&) = default;
     IR& operator=(IR&&) = default;
 
-    explicit IR();
+    explicit IR() {}
 
     using FunctionStorage = std::list<Function>;
     using iterator = FunctionStorage::iterator;
     using const_iterator = FunctionStorage::const_iterator;
+
+    using GlobalDataStorage = std::list<GlobalData>;
+    using gdata_iterator = GlobalDataStorage::iterator;
+    using gdata_const_iterator = GlobalDataStorage::const_iterator;
 
     void verify() const {
         for (const auto& Func: Functions)
@@ -40,15 +45,29 @@ public:
         if (FunctionsMap.find(Func.getName()) != FunctionsMap.end())
             throw std::runtime_error("Duplicate function: " + std::string(Func.getName()));
 
-        auto It = Functions.insert(Functions.end(), std::move(Func));
+        auto It = Functions.insert(Functions.end(), Func);
         FunctionsMap.emplace(It->getName(), It);
         return It;
     }
-
     iterator findFunction(std::string Name) {
         auto It = FunctionsMap.find(Name);
         if (It == FunctionsMap.end())
             return Functions.end();
+        return It->second;
+    }
+
+    gdata_iterator addGlobalData(GlobalData&& Data) {
+        if (GDataMap.find(Data.getName()) != GDataMap.end())
+            throw std::runtime_error("Duplicate global variable: " + std::string(Data.getName()));
+
+        auto It = GData.insert(GData.end(), Data);
+        GDataMap.emplace(It->getName(), It);
+        return It;
+    }
+    gdata_iterator findGlobalData(std::string Name) {
+        auto It = GDataMap.find(Name);
+        if (It == GDataMap.end())
+            return GData.end();
         return It->second;
     }
 
@@ -78,10 +97,16 @@ public:
     iterator       end()          { return Functions.end(); }
     const_iterator cbegin() const { return Functions.cbegin(); }
     const_iterator cend()   const { return Functions.cend(); }
+
+    gdata_const_iterator gdata_cbegin() const { return GData.cbegin(); }
+    gdata_const_iterator gdata_cend()   const { return GData.cend(); }
+
 private:
     FunctionStorage Functions;
+    GlobalDataStorage GData;
 
     std::map<std::string_view, iterator> FunctionsMap;
+    std::map<std::string_view, gdata_iterator> GDataMap;
 };
 
 } // Balance

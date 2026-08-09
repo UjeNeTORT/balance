@@ -4,7 +4,7 @@ add_library(IR2MIR STATIC
     MIRBuilder.cpp
 )
 
-target_link_libraries(IR2MIR PRIVATE Utils IR MIR Traversals)
+target_link_libraries(IR2MIR PRIVATE Utils IR MachineLayer UniversalAnalysis)
 
 target_include_directories(IR2MIR PRIVATE ${PROJECT_SOURCE_DIR}/src)
 

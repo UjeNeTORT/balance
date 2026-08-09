@@ -2,7 +2,9 @@
 #include "AST/Node.h"
 #include "Utils/Utils.h"
 
+#include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <variant>
 #include <optional>
 
@@ -24,7 +26,6 @@ std::variant<int, float> evalConstBinary(BinaryOp Op, T Left, T Right) {
         case BinaryOp::Add:          return Left +  Right;
         case BinaryOp::Sub:          return Left -  Right;
         case BinaryOp::Mul:          return Left *  Right;
-        case BinaryOp::Div:          return Left /  Right;
         case BinaryOp::Less:         return Left <  Right;
         case BinaryOp::Greater:      return Left >  Right;
         case BinaryOp::LessEqual:    return Left <= Right;
@@ -34,11 +35,19 @@ std::variant<int, float> evalConstBinary(BinaryOp Op, T Left, T Right) {
         case BinaryOp::LogicalAnd:   return Left && Right;
         case BinaryOp::LogicalOr:    return Left || Right;
 
+        case BinaryOp::Div:
+            if (Right == 0)
+                throw std::runtime_error("Division by zero");
+            return Left / Right;
+
         case BinaryOp::Mod:
-            if constexpr (std::is_same_v<T, float>)
+            if constexpr (std::is_same_v<T, float>) {
                 throw std::runtime_error("Mod operation (%) isn't allowed for float operands");
-            else
-                return Left %  Right;
+            } else {
+                if (Right == 0)
+                    throw std::runtime_error("Division by zero");
+                return Left % Right;
+            }
 
         default: unreachable("Unhandled operation");
     }
@@ -242,7 +251,35 @@ void AstConstantFolder::visit(const LValNode& node) {
     for (const auto* Indice: node.getIndices())
         NewIndices.push_back(visitChildAndConstruct<ExpressionNode>(Indice));
 
-    returnChild(std::make_unique<LValNode>(node.getName(), std::move(NewIndices)));
+    if (!Vars) {
+        returnChild(std::make_unique<LValNode>(node.getName(), std::move(NewIndices)));
+        return;
+    }
+
+    auto Var = Vars->findVar(node.getName());
+    if (NewIndices.size() != Var.Type.getSize())
+        throw std::runtime_error("Array access has invalid number of dimensions");
+
+    size_t Offset = 0;
+    for (size_t i = 0; i < NewIndices.size(); i++) {
+        auto Val = getConstVal(NewIndices[i]);
+        if (!Val)
+            throw std::runtime_error("Global variable initialization must be constant expression");
+        Offset += convertToFloat(*Val) * Var.Type.getSubdimSize(i + 1);
+    }
+
+    auto Val = std::visit([Var, Offset](auto& Vec) {
+        assert(Vec.size() > 0);
+        assert(Offset % Var.Type.getSize() == 0);
+        if (Offset / Var.Type.getSize() >= Vec.size())
+            throw std::runtime_error("Array access is out of bounds");
+        return ImmBaseVariant(Vec[Offset / Var.Type.getSize()]);
+    }, Var.getGData()->getInit());
+
+    std::visit(overloaded {
+        [this](int& Int)     { returnChild(std::make_unique<IntLiteralNode>(Int)); },
+        [this](float& Float) { returnChild(std::make_unique<FloatLiteralNode>(Float)); }
+    }, Val);
 }
 
 void AstConstantFolder::visit(const IntLiteralNode& node) {

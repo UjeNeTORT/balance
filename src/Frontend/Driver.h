@@ -8,7 +8,9 @@
 
 #include "AST/Ast.h"
 #include "AST/ConstantFolding.h"
+#include "AST/IRBuilder.h"
 #include "AST/Node.h"
+#include "IR/IR.h"
 #include "parser.hpp"
 
 extern FILE* yyin;
@@ -52,6 +54,10 @@ class Driver final
 
     void foldConstants() {
         Tree = AST::AstConstantFolder().fold(std::move(Tree));
+    }
+
+    IR buildIR() const {
+        return AST::IRBuilder().build(Tree);
     }
 
   private:

@@ -16,23 +16,26 @@ class Instruction;
 
 class OpBaseType {
 public:
-    static constexpr bool isArray() { return false; }
+    static constexpr bool IsArray = false;
 };
 
 class OpInt: public OpBaseType {
 public:
     static constexpr size_t getSize() { return 4; }
-    static constexpr bool isInt() { return true; }
+    static constexpr bool IsInt = true;
 };
 class OpFloat: public OpBaseType {
 public:
     static constexpr size_t getSize() { return 4; }
-    static constexpr bool isInt() { return false; }
+    static constexpr bool IsInt = false;
 };
 
 template<typename T>
 class OpArray: public std::vector<size_t> {
 public:
+    static constexpr bool IsArray = true;
+    static constexpr bool IsInt = true; //< because it's address
+
     using array_t = T;
 
     using std::vector<size_t>::vector;
@@ -41,15 +44,14 @@ public:
         : std::vector<size_t>(Other)
     {}
 
-    bool isArray() const { return size() != 0; }
-    bool isInt()   const { return isArray() || T::isInt(); }
-
-    size_t getSize() {
+    size_t getSubdimSize(size_t Depth) const {
+        assert(Depth <= size());
         size_t Size = T::getSize();
-        for (auto Dim: *this)
-            Size *= Dim;
+        for (size_t i = Depth; i < size(); i++)
+            Size *= operator[](i);
         return Size;
     }
+    size_t getSize() const { return getSubdimSize(0); }
 
     bool operator==(const OpArray<T>& Other) const {
         if (size() != Other.size())
@@ -66,22 +68,71 @@ public:
         return !(*this == Other);
     }
 
-    bool operator==(const T&) const { return !isArray(); }
+    bool operator==(const T&) const { return false; }
     bool operator!=(const T& Other) const { return !(*this == Other); }
     friend bool operator==(const T& a, const OpArray<T>& b) { return b == a; }
     friend bool operator!=(const T& a, const OpArray<T>& b) { return b != a; }
 };
-using OpIntArray = OpArray<OpInt>;
-using OpFloatArray = OpArray<OpFloat>;
 
-using OpTypeVariant = std::variant<OpInt, OpFloat, OpIntArray, OpFloatArray>;
+using OpTypeVariant = std::variant<OpInt, OpFloat, OpArray<OpInt>, OpArray<OpFloat>>;
 
 class OpType: public OpTypeVariant {
 public:
     using OpTypeVariant::variant;
 
-    bool isArray() const { return std::visit([](auto& Op) { return Op.isArray(); }, *this); }
-    bool isInt()   const { return std::visit([](auto& Op) { return Op.isInt(); }, *this); }
+    bool isArray() const { return std::visit([](auto& Op) {
+                                    return std::decay_t<decltype(Op)>::IsArray; }, *this); }
+    bool isInt()   const { return std::visit([](auto& Op) {
+                                    return std::decay_t<decltype(Op)>::IsInt; }, *this); }
+
+    size_t getSize() const { return std::visit([](auto& Op) { return Op.getSize(); }, *this); }
+
+    size_t getSubdimSize(size_t Depth) const {
+        return std::visit([Depth](const auto& Op) {
+            if constexpr (std::decay_t<decltype(Op)>::IsArray) {
+                return Op.getSubdimSize(Depth);
+            } else {
+                assert(0 && "for arrays only");
+                return 0ul;
+            }
+        }, *this);
+    }
+
+    OpType getSubdimType(size_t Depth) const {
+        return std::visit([Depth](auto& Op) {
+            using T = std::decay_t<decltype(Op)>;
+            if constexpr (T::IsArray) {
+                assert(Depth <= Op.size());
+                return OpType(T(Op.begin() + Depth, Op.end()));
+            } else {
+                assert(0 && "for arrays only");
+                return OpType();
+            }
+        }, *this);
+    }
+
+    OpType makeArray(std::vector<size_t>&& Dims) const {
+        return std::visit([Dims](const auto& Type) {
+            using T = std::decay_t<decltype(Type)>;
+            if constexpr (!T::IsArray) {
+                return OpType(OpArray<T>(Dims));
+            } else {
+                assert(0 && "for plain types only");
+                return OpType();
+            }
+        }, *this);
+    }
+
+    size_t getDepth() const {
+        return std::visit([](const auto& Op) {
+            using T = std::decay_t<decltype(Op)>;
+            if constexpr (T::IsArray) {
+                return Op.size();
+            } else {
+                return 0ul;
+            }
+        }, *this);
+    }
 
     bool operator==(const OpType& OtherV) const {
         return std::visit([](const auto& This, const auto& Other){
@@ -108,6 +159,37 @@ struct VirtRegister {
 
     operator int() const { return Id; }
 };
+
+using ImmBaseVariant = std::variant<int, float>;
+
+using ImmBaseVectorVariant = MakeVectorVariant<ImmBaseVariant>::type;
+
+class GlobalData {
+public:
+    GlobalData(std::string VarName, bool IsConst, ImmBaseVectorVariant&& InitVals)
+        : Name(VarName)
+        , Const(IsConst)
+        , Init(InitVals)
+    {}
+
+    std::string_view getName() const { return Name; }
+    bool isConst() const { return Const; }
+    ImmBaseVectorVariant& getInit() { return Init; }
+    void addInitVal(ImmBaseVariant Value) {
+        std::visit([Value](auto& Vec) {
+            using T = std::decay_t<typename std::decay_t<decltype(Vec)>::value_type>;
+            Vec.push_back(std::visit([](auto& Val) { return (T)Val; }, Value));
+        }, Init);
+    }
+    void setInitVals(ImmBaseVectorVariant&& Vals) { Init = Vals; }
+
+private:
+    std::string Name;
+    bool Const;
+    ImmBaseVectorVariant Init;
+};
+
+using ImmVariant = VariantAppend<ImmBaseVariant, GlobalData*>::type;
 
 } // Balance
 

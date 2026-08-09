@@ -30,7 +30,7 @@ public:
     MachineInst &addMBB(MachineBB *MBB);
     MachineInst &addMO(MachineOperand MO);
     MachineInst &addFunc(MachineFunction *MF);
-    MachineInst &addLabel(std::string Label);
+    MachineInst &addGData(MachineGData* Data);
 
     RISCVOpcode getOpcode() const { return Opcode; }
     MachineBB *getParent() const { return MBB; }

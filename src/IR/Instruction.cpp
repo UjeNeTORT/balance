@@ -49,7 +49,7 @@ void Instruction::verify() const {
 
                 if ((std::holds_alternative<int>(*Immediate) && !std::holds_alternative<OpInt>(Dst[0].Type)) ||
                     (std::holds_alternative<float>(*Immediate) && !std::holds_alternative<OpFloat>(Dst[0].Type)) ||
-                    (std::holds_alternative<std::string>(*Immediate) && !std::holds_alternative<OpInt>(Dst[0].Type)))
+                    (std::holds_alternative<GlobalData*>(*Immediate) && !Dst[0].Type.isInt()))
                     throwVerifyError("COPY operation must have same source and destination types");
             } else {
                 if (Src.size() != 1 || Dst.size() != 1)

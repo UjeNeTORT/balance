@@ -51,10 +51,14 @@ public:
 
     Instruction& addSrc(VirtRegister Reg) { Src.push_back(Reg); return *this; }
     Instruction& addDst(VirtRegister Reg) { Dst.push_back(Reg); return *this; }
-    Instruction& setImmediate(std::variant<int, float, std::string> Imm) { Immediate = Imm; return *this; }
+    Instruction& setImmediate(ImmVariant Imm) { Immediate = Imm; return *this; }
     Instruction& setCmpType(CmpTypes Type) { CmpType = Type; return *this; }
     Instruction& addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); return *this; }
     Instruction& setCallFunc(Function* Funct) { CallFunc = Funct; return *this; }
+
+    std::vector<BasicBlock*>::iterator addEmptyBrDst() {
+        return BrDstBB.insert(BrDstBB.end(), nullptr);
+    }
 
     void verify() const;
 
@@ -66,7 +70,7 @@ public:
     const std::vector<VirtRegister>& getDst() const { return Dst; }
     const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
     std::optional<Function*> getCallFunc() const { return CallFunc; }
-    std::optional<std::variant<int, float, std::string>> getImm() const { return Immediate; }
+    std::optional<ImmVariant> getImm() const { return Immediate; }
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
@@ -83,7 +87,7 @@ private:
     std::string Comment;
     std::optional<SourceInfo> SrcInfo;
 
-    std::optional<std::variant<int, float, std::string>> Immediate;
+    std::optional<ImmVariant> Immediate;
     std::optional<CmpTypes> CmpType;
     std::vector<VirtRegister> Src;
     std::vector<VirtRegister> Dst;

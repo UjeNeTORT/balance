@@ -43,8 +43,8 @@ MachineInst &MachineInst::addFunc(MachineFunction *MF) {
     return addMO(MachineOperand(MF));
 }
 
-MachineInst &MachineInst::addLabel(std::string Label) {
-    return addMO(MachineOperand(Label));
+MachineInst &MachineInst::addGData(MachineGData *Data) {
+    return addMO(MachineOperand(Data));
 }
 
 MachineInst &MachineInst::addMO(MachineOperand MO) {

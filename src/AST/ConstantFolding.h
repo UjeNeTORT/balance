@@ -2,8 +2,11 @@
 #define AST_CONSTANT_FOLDING_H_
 
 #include "AST/Ast.h"
+#include "AST/IRBuilder.h"
 #include "AST/Node.h"
 #include "AST/Visitor.h"
+#include <optional>
+#include <stdexcept>
 
 namespace Balance {
 
@@ -14,6 +17,19 @@ public:
     Ast fold(Ast&& OldAst) && {
         OldAst.getCompUnit()->accept(*this);
         return std::move(NewTree);
+    }
+
+    std::variant<int, float> foldConstInit(const Node* ExprNode, Variables* DecldVars) &&  {
+        Vars = DecldVars;
+        std::unique_ptr<Node> Res = visitChild<Node>(ExprNode);
+        auto Int = std::unique_ptr<IntLiteralNode>(dynamic_cast<IntLiteralNode*>(Res.release()));
+        if (Int)
+            return Int->getValue();
+        auto Float = std::unique_ptr<FloatLiteralNode>(dynamic_cast<FloatLiteralNode*>(Res.release()));
+        if (Float)
+            return Float->getValue();
+
+        throw std::runtime_error("This is not constant expression");
     }
 
     void visit(const CompUnitNode& node) override;
@@ -39,6 +55,7 @@ public:
 
 private:
     Ast NewTree;
+    Variables* Vars = nullptr;
 
     std::unique_ptr<Node> RetChild = nullptr;
 

@@ -6,6 +6,7 @@ add_library(BalanceAST STATIC
     ConstantFolding.cpp
     AstDumper.cpp
     AstDotDumper.cpp
+    IRBuilder.cpp
 )
 
 target_link_libraries(BalanceAST PRIVATE Utils)

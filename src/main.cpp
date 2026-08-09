@@ -5,6 +5,10 @@
 #include "AST/AstDotDumper.h"
 #include "AST/AstDumper.h"
 #include "Frontend/Driver.h"
+#include "IR2MIR/MIRBuilder.h"
+
+using namespace Balance;
+using namespace AST;
 
 int main(int argc, char** argv)
 {
@@ -52,6 +56,10 @@ int main(int argc, char** argv)
         Balance::AST::AstDumper dumper(std::cout);
         driver.getCompUnit()->accept(dumper);
     }
+
+    IR Ir = driver.buildIR();
+
+    MIR Mir = MIRBuilder(std::move(Ir)).build();
 
     return 0;
 }
