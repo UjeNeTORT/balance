@@ -219,6 +219,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 MIRBlock->createMI(RVOp::JALR).addReg(RVReg::ZERO).addReg(RVReg::RA).addImm(0);
 
             break; case Opcodes::BR:
+                MIRBlock->addSuccessor(BBRegistry[BrDstBB[0]]);
                 if (Src.size() != 0) {
                     RVOp BROpcode;
                     bool RevOp;
@@ -235,6 +236,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                         MIRBlock->createMI(BROpcode).addReg(Src[1]).addReg(Src[0]).addMBB(BBRegistry[BrDstBB[1]]);
                     else
                         MIRBlock->createMI(BROpcode).addReg(Src[0]).addReg(Src[1]).addMBB(BBRegistry[BrDstBB[1]]);
+                    MIRBlock->addSuccessor(BBRegistry[BrDstBB[1]]);
                 }
                 MIRBlock->createMI(RVOp::JAL).addReg(RVReg::ZERO).addMBB(BBRegistry[BrDstBB[0]]);
 

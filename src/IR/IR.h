@@ -41,11 +41,11 @@ public:
             Func.verify();
     }
 
-    Function* addFunction(Function&& Func) {
-        if (FunctionsMap.find(Func.getName()) != FunctionsMap.end())
-            throw std::runtime_error("Duplicate function: " + std::string(Func.getName()));
+    Function* addFunction(std::string Name) {
+        if (FunctionsMap.find(Name) != FunctionsMap.end())
+            throw std::runtime_error("Duplicate function: " + Name);
 
-        auto It = Functions.insert(Functions.end(), Func);
+        auto It = Functions.emplace(Functions.end(), std::move(Name));
         FunctionsMap.emplace(It->getName(), It);
         return &*It;
     }
@@ -60,7 +60,7 @@ public:
         if (GDataMap.find(Data.getName()) != GDataMap.end())
             throw std::runtime_error("Duplicate global variable: " + std::string(Data.getName()));
 
-        auto It = GData.insert(GData.end(), Data);
+        auto It = GData.emplace(GData.end(), Data);
         GDataMap.emplace(It->getName(), It);
         return &*It;
     }

@@ -30,6 +30,7 @@ public:
 
         bool isGlobal() const { return std::holds_alternative<GlobalData*>(Id); }
         VirtRegister getReg() const {
+            assert(!Type.isArray() && !isGlobal());
             return {Type, static_cast<int>(*std::get_if<size_t>(&Id)), std::nullopt};
         }
         size_t getId() const {
@@ -116,9 +117,8 @@ private:
     void binaryOpVisitCondition(const BinaryOpNode& node);
     void binaryOpVisitExpression(const BinaryOpNode& node);
 
-    Variables Vars;
-
     IR Ir;
+    Variables Vars;
 
     VirtRegister convertRegType(OpType NewType, VirtRegister Src);
     void convertRegType(VirtRegister Dst, VirtRegister Src);
@@ -184,7 +184,7 @@ private:
         InitTraversalData = std::nullopt;
     }
 
-    auto curFunc() { return Ir.getLastFunction(); }
+    Function* curFunc() { return Ir.getLastFunction(); }
 
     template<typename T>
     VirtRegister copyImm(T Val) {

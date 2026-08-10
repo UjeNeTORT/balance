@@ -136,10 +136,12 @@ public:
 
     bool operator==(const OpType& OtherV) const {
         return std::visit([](const auto& This, const auto& Other){
-            if constexpr (has_eq_v<decltype(This), decltype(Other)>) {
+            using ThisT = std::decay_t<decltype(This)>;
+            using OtherT = std::decay_t<decltype(Other)>;
+            if constexpr (has_eq_v<ThisT, OtherT>) {
                 return This == Other;
-            } else if constexpr (std::is_same_v<decltype(This), decltype(Other)>) {
-                static_assert(std::is_base_of_v<OpBaseType, std::decay_t<decltype(This)>>);
+            } else if constexpr (std::is_same_v<ThisT, OtherT>) {
+                static_assert(std::is_base_of_v<OpBaseType, ThisT>);
                 return true;
             } else {
                 return false;
@@ -148,6 +150,13 @@ public:
     }
     bool operator!=(const OpType& Other) const {
         return !(*this == Other);
+    }
+    bool isArithmCompatible(const OpType& OtherV) const {
+        return std::visit([](const auto& This, const auto& Other){
+            using ThisT = std::decay_t<decltype(This)>;
+            using OtherT = std::decay_t<decltype(Other)>;
+            return ThisT::IsInt == OtherT::IsInt;
+        }, *this, OtherV);
     }
 };
 

@@ -3,7 +3,6 @@
 
 #include "MachineFunction.h"
 #include "MachineOperand.h"
-#include "MachineInst.h"
 
 #include <list>
 

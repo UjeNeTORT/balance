@@ -7,6 +7,14 @@
 #include "Frontend/Driver.h"
 #include "IR2MIR/MIRBuilder.h"
 
+#include "MachineLayer/PassManager.h"
+
+#include "MachineLayer/MIRPasses/VerifierPass.h"
+#include "MachineLayer/MIRPasses/LivenessAnalysis.h"
+#include "MachineLayer/MIRPasses/PhiElimination.h"
+#include "MachineLayer/MIRPasses/LinearScanRAL.h"
+#include "MachineLayer/MIRPasses/DCE.h"
+
 using namespace Balance;
 using namespace AST;
 
@@ -59,7 +67,25 @@ int main(int argc, char** argv)
 
     IR Ir = driver.buildIR();
 
+    Ir.verify();
+
     MIR Mir = MIRBuilder(std::move(Ir)).build();
+
+    PassManager PM;
+    PM.registerPass<VerifierPass>();
+    PM.registerPass<DeadCodeElimination>();
+    PM.registerPass<VerifierPass>();
+    PM.registerPass<PhiElimination>();
+    PM.registerPass<VerifierPass>();
+    PM.registerPass<LivenessAnalysis>();
+    PM.registerPass<VerifierPass>();
+    PM.registerPass<LinearScanRAL>();
+
+    for (auto& Func: Mir)
+        Func.print(std::cout);
+
+    for (auto& Func: Mir)
+        PM.run(Func);
 
     for (auto& Func: Mir)
         Func.print(std::cout);

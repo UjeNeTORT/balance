@@ -16,21 +16,28 @@ public:
     using iterator = BasicBlockStorage::iterator;
     using const_iterator = std::list<BasicBlock>::const_iterator;
 
-    Function(std::string Name)
-        : Name(Name)
-    {}
+    Function(const Function&) = delete;
+    Function& operator=(const Function&) = delete;
 
-    void addArg(OpType Arg) { Args.push_back(Arg); }
-    void setRetType(std::optional<OpType> Type) { RetType = Type; }
-    void incFrameSize(size_t Increment) { FrameSize += Increment; }
+    Function(Function&&) = default;
+    Function& operator=(Function&&) = default;
+
+    Function(std::string Name)
+        : Name(std::move(Name)) {
+        addBasicBlock();
+    }
+
+    Function& addArg(OpType Arg) { Args.push_back(Arg); return *this;}
+    Function& setRetType(std::optional<OpType> Type) { RetType = Type; return *this; }
+    Function& incFrameSize(size_t Increment) { FrameSize += Increment; return *this; }
 
     std::string_view getName() const { return Name; }
     const std::vector<OpType>& getArgs() const { return Args; }
     std::optional<OpType> getRetType() const { return RetType; }
 
     iterator addBasicBlock() {
-        return BasicBlocks.insert(BasicBlocks.end(), {this,
-                            Name + "_bb" + std::to_string(getNewBBId())});
+        return BasicBlocks.emplace(BasicBlocks.end(), this,
+                            Name + "_bb" + std::to_string(getNewBBId()));
     }
 
     Instruction& addInstruction(Opcodes Opcode,
@@ -75,11 +82,15 @@ public:
     size_t getNewBBId() { return BBCounter++; }
 
     VirtRegister getNewVirtReg(OpType Type, std::optional<BasicBlock*> DefBlock = std::nullopt) {
+        if (!DefBlock)
+            DefBlock = &*std::prev(BasicBlocks.end());
         return {Type, VirtRegCounter++, DefBlock};
     }
     template<size_t NUM>
     std::array<VirtRegister, NUM> getNewVirtRegs(OpType Type,
                                             std::optional<BasicBlock*> DefBlock = std::nullopt) {
+        if (!DefBlock)
+            DefBlock = &*std::prev(BasicBlocks.end());
         std::array<VirtRegister, NUM> Res;
         for (auto& Elem: Res)
             Elem = getNewVirtReg(Type, DefBlock);

@@ -113,22 +113,29 @@ Variables::Variable& Variables::findVar(std::string Name) {
     throw std::runtime_error("Usage of undeclared variable");
 }
 
-IRBuilder::IRBuilder(): Vars(Ir) {
-    Ir.addFunction(IR::internalFunc("memset"));
+IRBuilder::IRBuilder()
+        : Ir()
+        , Vars(Ir) {
+    Ir.addFunction(IR::internalFunc("memset"))->addArg(OpArray<OpInt>({0})).addArg(OpInt()).addArg(OpInt());
 
-    auto Addr = Ir.getNewVirtReg(OpInt());
-    auto Val  = Ir.getNewVirtReg(OpInt());
-    auto Len  = Ir.getNewVirtReg(OpInt());
+    auto PreAddr = Ir.getNewVirtReg(OpArray<OpInt>({0}));
+    auto Val = Ir.getNewVirtReg(OpInt());
+    auto Len = Ir.getNewVirtReg(OpInt());
     Ir.addInstruction(Opcodes::FUNC_DEF).addDst(Ir.getNewVirtReg(OpInt()))
-                                        .addDst(Addr).addDst(Val).addDst(Len);
-    auto FinAddr = Ir.getNewVirtReg(OpInt());
-    Ir.addInstruction(Opcodes::ADD).addDst(FinAddr).addSrc(Addr).addSrc(Len);
+                                        .addDst(PreAddr).addDst(Val).addDst(Len);
 
-    auto& IfBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
+    auto FinAddr = Ir.getNewVirtReg(OpArray<OpInt>({0}));
+    Ir.addInstruction(Opcodes::ADD).addDst(FinAddr).addSrc(PreAddr).addSrc(Len);
+
+    auto& IfBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(PreAddr).addSrc(FinAddr);
+    auto Addr = Ir.getNewVirtReg(OpArray<OpInt>({0}));
+    auto IncAddr = Ir.getNewVirtReg(OpArray<OpInt>({0}));
+    Ir.addInstruction(Opcodes::PHI).addDst(Addr).addSrc(PreAddr).addSrc(IncAddr);
+
     auto BodyBB = Ir.addInstruction(Opcodes::STORE).addSrc(Addr).addSrc(Val).getParent();
-    Ir.addInstruction(Opcodes::ADD).addDst(Addr).addSrc(Addr).addSrc(copyImm(1));
+    Ir.addInstruction(Opcodes::ADD).addDst(IncAddr).addSrc(Addr).addSrc(copyImm((int)OpInt().getSize()));
 
-    auto& WhileBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
+    auto& WhileBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(IncAddr).addSrc(FinAddr);
 
     auto FinBB = Ir.addInstruction(Opcodes::RET).getParent();
 
@@ -157,8 +164,10 @@ void IRBuilder::convertRegType(VirtRegister Dst, VirtRegister Src) {
     if (Src.Type.isArray() != Dst.Type.isArray())
         throw std::runtime_error("Can't convert non-array type from/to array type");
 
-    if (Src.Type == Dst.Type)
+    if (Src.Type == Dst.Type) {
         Ir.addInstruction(Opcodes::COPY).addDst(Dst).addSrc(Src);
+        return;
+    }
 
     if (Src.Type.isArray())
         throw std::runtime_error("Can't convert array to a different type array");
@@ -200,7 +209,7 @@ void IRBuilder::visit(const CompUnitNode& node) {
 void IRBuilder::visit(const FuncDefNode& node) {
     VariablesScoped Scope(Vars);
 
-    auto Func = Ir.addFunction(Function(node.getName()));
+    auto* Func = Ir.addFunction(node.getName());
 
     switch (node.getReturnType()) {
         case BaseType::Int:   Func->setRetType(OpInt()); break;
@@ -212,7 +221,7 @@ void IRBuilder::visit(const FuncDefNode& node) {
     for (const auto* Param: node.getParams())
         Param->accept(*this);
 
-    auto& FuncDef = Ir.addInstruction(Opcodes::FUNC_DEF).addDst(Func->getNewVirtReg(OpInt()));
+    auto& FuncDef = Ir.addInstruction(Opcodes::FUNC_DEF).addDst(Ir.getNewVirtReg(OpInt()));
 
     for (auto& Var: Scope.getScopeVars())
         FuncDef.addDst(Var.second.getReg());
@@ -257,37 +266,38 @@ void IRBuilder::visit(const VarDefNode&) {
 void IRBuilder::visit(const InitValNode& node) {
     assert(InitTraversalData.has_value());
 
-    auto& Var = *InitTraversalData->Var;
+    auto* Var = InitTraversalData->Var;
     auto& Depth = InitTraversalData->Depth;
     auto& CurOffset = InitTraversalData->CurrentOffset;
 
-    if (Depth == 0 && node.isList() != Var.Type.isArray())
+    if (Depth == 0 && (node.isList() != Var->Type.isArray()))
         throw std::runtime_error("Array variable must have list-style initializer");
 
-    if (!Var.Type.isArray()) {
+    if (!Var->Type.isArray()) {
         assert(Depth == 0);
 
-        if (Var.isGlobal()) {
-            Var.getGData()->addInitVal(AstConstantFolder().foldConstInit(node.getExpr(), &Vars));
+        if (Var->isGlobal()) {
+            Var->getGData()->addInitVal(AstConstantFolder().foldConstInit(node.getExpr(), &Vars));
             return;
         }
-        convertRegType(Var.getReg(), evalExpr(node.getExpr()));
+
+        convertRegType(Var->getReg(), evalExpr(node.getExpr()));
         return;
     }
 
     if (Depth == 0) {
         assert(CurOffset == 0);
 
-        if (Var.isGlobal()) {
-            Var.getGData()->setInitVals(std::vector<int>(0, Var.Type.getSize() / Var.Type.getSize()));
+        if (Var->isGlobal()) {
+            Var->getGData()->setInitVals(std::vector<int>(0, Var->Type.getSize() / Var->Type.getSize()));
         } else {
             auto Reg = Ir.getNewVirtReg(OpInt());
 
             Ir.addInstruction(Opcodes::ADD ).addDst(Reg).addSrc(curFunc()->getFrameVReg())
-                                                        .addSrc(copyImm((int)(CurOffset + Var.getOffset())));
+                                                        .addSrc(copyImm((int)(CurOffset + Var->getOffset())));
 
             Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Ir.findFunction(IR::internalFunc("memset")))
-                                            .addSrc(Reg).addSrc(copyImm(0)).addSrc(copyImm((int)Var.Type.getSize()));
+                                            .addSrc(Reg).addSrc(copyImm(0)).addSrc(copyImm((int)Var->Type.getSize()));
         }
     }
 
@@ -299,14 +309,14 @@ void IRBuilder::visit(const InitValNode& node) {
             ValNode->accept(*this);
         Depth--;
 
-        CurOffset = DepthOffset + Var.Type.getSubdimSize(Depth);
+        CurOffset = DepthOffset + Var->Type.getSubdimSize(Depth);
 
         if (Depth == 0)
-            assert(CurOffset == Var.Type.getSize());
+            assert(CurOffset == Var->Type.getSize());
         return;
     }
 
-    if (!Var.isGlobal()) {
+    if (!Var->isGlobal()) {
         auto Res = evalExpr(node.getExpr());
         std::visit([this, &Res](auto& VarType, auto& ResType) {
             using VarT = std::decay_t<decltype(VarType)>;
@@ -321,9 +331,9 @@ void IRBuilder::visit(const InitValNode& node) {
             } else {
                 assert(0 && "this code is for arrays only");
             }
-        }, Var.Type, Res.Type);
+        }, Var->Type, Res.Type);
 
-        auto AddrReg = Ir.getNewVirtReg(Var.Type.getSubdimType(Depth));
+        auto AddrReg = Ir.getNewVirtReg(Var->Type.getSubdimType(Depth));
 
         Ir.addInstruction(Opcodes::ADD).addDst(AddrReg).addSrc(curFunc()->getFrameVReg())
                                                        .addSrc(copyImm((int)CurOffset));
@@ -333,8 +343,8 @@ void IRBuilder::visit(const InitValNode& node) {
 
     auto Value = AstConstantFolder().foldConstInit(node.getExpr(), &Vars);
     std::visit([CurOffset, Var](auto& Init, auto& Val) {
-        Init[CurOffset / Var.Type.getSize()] = Val;
-    }, Var.getGData()->getInit(), Value);
+        Init[CurOffset / Var->Type.getSize()] = Val;
+    }, Var->getGData()->getInit(), Value);
 }
 
 void IRBuilder::visit(const BlockNode& node) {
@@ -348,6 +358,9 @@ void IRBuilder::visit(const BlockNode& node) {
 }
 
 void IRBuilder::visit(const ExprStmtNode& node) {
+    if (ExprResRequired != node.hasExpr())
+        throw std::runtime_error("ExprStmt semantic error");
+
     if (node.hasExpr())
         ExprRes = evalExpr(node.getExpr());
 }
@@ -374,6 +387,7 @@ void IRBuilder::visit(const AssignNode& node) {
             auto Addr = Ir.getNewVirtReg(DstReg.Type.makeArray({0}));
             Ir.addInstruction(Opcodes::COPY).addDst(Addr).setImmediate(Var.getGData());
             Ir.addInstruction(Opcodes::STORE).addSrc(Addr).addSrc(DstReg);
+            return;
         }
         return;
     }
@@ -572,7 +586,7 @@ void IRBuilder::visit(const IntLiteralNode& node) {
 }
 
 void IRBuilder::visit(const FloatLiteralNode& node) {
-    ExprRes = Ir.getNewVirtReg(OpInt());
+    ExprRes = Ir.getNewVirtReg(OpFloat());
     Ir.addInstruction(Opcodes::COPY).addDst(*ExprRes).setImmediate(node.getValue());
 }
 
@@ -596,13 +610,17 @@ void IRBuilder::visit(const CallNode& node) {
 }
 
 void IRBuilder::visit(const ReturnNode& node) {
+    VirtRegister Expr;
+    if (node.hasExpr())
+        Expr = evalExpr(node.getExpr());
+
     auto& Ret = Ir.addInstruction(Opcodes::RET);
 
     if (node.hasExpr() != curFunc()->getRetType().has_value())
         throw std::runtime_error("Invalid return type");
 
     if (node.hasExpr())
-        Ret.addSrc(convertRegType(*curFunc()->getRetType(), evalExpr(node.getExpr())));
+        Ret.addSrc(convertRegType(*curFunc()->getRetType(), Expr));
 }
 
 void IRBuilder::visit(const IfNode& node) {

@@ -83,7 +83,7 @@ void Instruction::verify() const {
                 throwVerifyError("Binary operation must have 2 sources and 1 destination");
 
             for (auto Source: Src)
-                if (Source.Type != Dst[0].Type)
+                if (!Source.Type.isArithmCompatible(Dst[0].Type))
                     throwVerifyError("Binary operation sources types must be same with dst type");
             break;
         case Opcodes::REM:
@@ -103,7 +103,7 @@ void Instruction::verify() const {
                 throwVerifyError("This operation is Int only");
 
             for (auto Source: Src)
-                if (Source.Type != Dst[0].Type)
+                if (!Source.Type.isArithmCompatible(Dst[0].Type))
                     throwVerifyError("Binary operation sources types must be same with dst type");
             break;
 
@@ -116,9 +116,9 @@ void Instruction::verify() const {
             if (Src.size() >= 2)
                 throwVerifyError("RET operation must have no or 1 source");
 
-            auto RetType = getParent()->getParentFunction()->getRetType();
-            if ((Src.size() == 1 && RetType.has_value()) ||
-                (Src[1].Type != *RetType))
+            const auto& RetType = getParent()->getParentFunction()->getRetType();
+            if (((Src.size() == 1) != RetType.has_value()) ||
+                (RetType.has_value() && Src[0].Type != *RetType))
                 throwVerifyError("RET type mismatch");
 
             break;
@@ -182,7 +182,7 @@ void Instruction::verify() const {
             if (!CallFunc.has_value())
                 throwVerifyError("CALL operation must have CallFunc");
 
-            const auto Args = CallFunc.value()->getArgs();
+            const auto& Args = CallFunc.value()->getArgs();
             if (Src.size() != Args.size())
                 throw Instruction::verify_error("CALL Src size must be equal to function argument count");
 
@@ -217,14 +217,11 @@ void Instruction::verify() const {
             verifyNoSrc();
             verifyNoBrDstBB();
             verifyNoFunc();
+            verifyNoImmediate();
             if (Dst.size() < 1 || !std::holds_alternative<OpInt>(Dst[0].Type))
                 throwVerifyError("FUNC_DEF must have at least 1 Dst and Dst[0] must be Int");
 
-            if (!Immediate.has_value() || !std::holds_alternative<int>(*Immediate) ||
-                *std::get_if<int>(&*Immediate) < 0)
-                throwVerifyError("FUNC_DEF operation must have non-negative Int immediate with stack frame size");
-
-            auto Args = getParent()->getParentFunction()->getArgs();
+            auto& Args = getParent()->getParentFunction()->getArgs();
             if (Dst.size() != Args.size() + 1)
                 throw Instruction::verify_error("FUNC_DEF Dst size must be equal to function argument count + 1");
 
@@ -233,7 +230,6 @@ void Instruction::verify() const {
             for (; ArgIt != Args.end(); DstIt++, ArgIt++)
                 if (DstIt->Type != *ArgIt)
                     throw Instruction::verify_error("Func definition arg type mismatch");
-
             break;
         }
         default:

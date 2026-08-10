@@ -31,9 +31,15 @@ public:
         , SrcInfo(SrcInf)
     {}
 
+    BasicBlock(const BasicBlock&) = delete;
+    BasicBlock& operator=(const BasicBlock&) = delete;
+
+    BasicBlock(BasicBlock&&) = default;
+    BasicBlock& operator=(BasicBlock&&) = default;
+
     void verify() const {
         bool IsTerminal = false;
-        for (auto& Instr: Instructions) {
+        for (const auto& Instr: Instructions) {
             Instr.verify();
             if (IsTerminal)
                 throw Instruction::verify_error("Terminal instruction not in the end of basic block");
@@ -65,6 +71,7 @@ public:
     const_iterator end()   const  { return Instructions.cend(); }
     bool           empty()  const { return Instructions.empty(); }
 
+    void addPredecessor(BasicBlock* BB) { Predecessors.insert(Predecessors.end(), BB); }
     bb_storage getPredecessors() const { return Predecessors; }
 
     bb_iterator       predecessorsBegin()        { return Predecessors.begin(); }
