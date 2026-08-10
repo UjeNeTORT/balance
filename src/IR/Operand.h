@@ -93,7 +93,7 @@ public:
                 return Op.getSubdimSize(Depth);
             } else {
                 assert(0 && "for arrays only");
-                return 0ul;
+                return (size_t)0;
             }
         }, *this);
     }
@@ -129,7 +129,7 @@ public:
             if constexpr (T::IsArray) {
                 return Op.size();
             } else {
-                return 0ul;
+                return (size_t)0;
             }
         }, *this);
     }

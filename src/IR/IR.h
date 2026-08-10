@@ -41,34 +41,34 @@ public:
             Func.verify();
     }
 
-    iterator addFunction(Function&& Func) {
+    Function* addFunction(Function&& Func) {
         if (FunctionsMap.find(Func.getName()) != FunctionsMap.end())
             throw std::runtime_error("Duplicate function: " + std::string(Func.getName()));
 
         auto It = Functions.insert(Functions.end(), Func);
         FunctionsMap.emplace(It->getName(), It);
-        return It;
+        return &*It;
     }
-    iterator findFunction(std::string Name) {
+    Function* findFunction(std::string Name) {
         auto It = FunctionsMap.find(Name);
         if (It == FunctionsMap.end())
-            return Functions.end();
-        return It->second;
+            return nullptr;
+        return &*It->second;
     }
 
-    gdata_iterator addGlobalData(GlobalData&& Data) {
+    GlobalData* addGlobalData(GlobalData&& Data) {
         if (GDataMap.find(Data.getName()) != GDataMap.end())
             throw std::runtime_error("Duplicate global variable: " + std::string(Data.getName()));
 
         auto It = GData.insert(GData.end(), Data);
         GDataMap.emplace(It->getName(), It);
-        return It;
+        return &*It;
     }
-    gdata_iterator findGlobalData(std::string Name) {
+    GlobalData* findGlobalData(std::string Name) {
         auto It = GDataMap.find(Name);
         if (It == GDataMap.end())
-            return GData.end();
-        return It->second;
+            return nullptr;
+        return &*It->second;
     }
 
     VirtRegister getNewVirtReg(OpType Type) {
@@ -79,10 +79,10 @@ public:
         return getLastFunction()->getNewVirtRegs<NUM>(Type);
     }
 
-    iterator getLastFunction() {
+    Function* getLastFunction() {
         if (Functions.empty())
-            return Functions.end();
-        return std::prev(Functions.end());
+            return nullptr;
+        return &*std::prev(Functions.end());
     }
 
     Instruction& addInstruction(Opcodes Opcode,

@@ -4,10 +4,10 @@
 #include "IR/Operand.h"
 
 #include <cassert>
+#include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace Balance {
@@ -56,8 +56,9 @@ public:
     Instruction& addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); return *this; }
     Instruction& setCallFunc(Function* Funct) { CallFunc = Funct; return *this; }
 
-    std::vector<BasicBlock*>::iterator addEmptyBrDst() {
-        return BrDstBB.insert(BrDstBB.end(), nullptr);
+    std::pair<std::vector<BasicBlock*>*, size_t> addEmptyBrDst() {
+        BrDstBB.push_back(nullptr);
+        return {&BrDstBB, BrDstBB.size() - 1};
     }
 
     void verify() const;
@@ -109,7 +110,7 @@ private:
         if (Dst.size() != 0) throwVerifyError("Dst.size != 0");
     }
     void verifyNoBrDstBB() const {
-        if (BrDstBB.size() != 0) throwVerifyError("BrDstBB hsa value");
+        if (BrDstBB.size() != 0) throwVerifyError("BrDstBB has value");
     }
     void verifyNoFunc() const {
         if (CallFunc.has_value()) throwVerifyError("Func has value");

@@ -46,7 +46,10 @@ public:
         }
     };
 
-    auto enterScope() { return Scopes.insert(Scopes.end(), {}); }
+    size_t enterScope() {
+        Scopes.push_back({});
+        return Scopes.size() - 1;
+    }
     void leaveScope() { Scopes.pop_back(); }
 
     Variable& addVar(std::string Name, OpType Type, bool IsConst = false);
@@ -54,6 +57,8 @@ public:
                        Function& Func, bool isConst = false);
 
     Variable& findVar(std::string Name);
+
+    const std::vector<std::map<std::string, Variable>>& getScopes() const { return Scopes; }
 
 private:
     std::vector<std::map<std::string, Variable>> Scopes;
@@ -67,15 +72,15 @@ class VariablesScoped {
 public:
     VariablesScoped(Variables& VarsRef)
         : Vars(VarsRef)
-        , Scope(Vars.enterScope())
+        , ScopeIndex(Vars.enterScope())
     {}
     ~VariablesScoped() { Vars.leaveScope(); }
 
-    auto getScopeVars() const { return Scope; }
+    const auto& getScopeVars() const { return Vars.getScopes()[ScopeIndex]; }
 
 private:
     Variables& Vars;
-    const std::vector<std::map<std::string, Variables::Variable>>::iterator Scope;
+    size_t ScopeIndex;
 };
 
 class IRBuilder final: public AST::Visitor {
@@ -122,18 +127,22 @@ private:
     bool ExprResRequired = false;
     VirtRegister evalExpr(const Node* Expr) {
         assert(!ExprRes.has_value());
-        assert(!ExprResRequired);
+        bool PrevExprResReq = ExprResRequired;
         ExprResRequired = true;
 
         Expr->accept(*this);
 
         assert(ExprRes.has_value());
-        assert(ExprResRequired);
-        ExprResRequired = false;
+        ExprResRequired = PrevExprResReq;
         return *std::exchange(ExprRes, std::nullopt);
     }
 
-    using BrDstIt = std::vector<BasicBlock*>::iterator;
+    struct BrDstIt {
+        BrDstIt(std::pair<std::vector<BasicBlock*>*, size_t> Iterator): It(Iterator) {}
+        std::pair<std::vector<BasicBlock*>*, size_t> It;
+        BasicBlock*& operator*() { return (*It.first)[It.second]; }
+    };
+
     struct ConditionRes {
         BasicBlock* CondBB;
         std::vector<BrDstIt> FalsePaths;
@@ -143,8 +152,8 @@ private:
     bool CondResRequired = false;
     ConditionRes evalCond(const Node* Expr) {
         assert(!CondRes.has_value());
-        assert(!ExprResRequired);
-        assert(!CondResRequired);
+        bool PrevExprResReq = ExprResRequired;
+        bool PrevCondResReq = CondResRequired;
         ExprResRequired = true;
         CondResRequired = true;
 
@@ -157,10 +166,8 @@ private:
             CondRes = {Instr.getParent(), {Instr.addEmptyBrDst()}, {Instr.addEmptyBrDst()}};
         }
         assert(CondRes.has_value());
-        assert(ExprResRequired);
-        assert(CondResRequired);
-        CondResRequired = false;
-        ExprResRequired = false;
+        CondResRequired = PrevCondResReq;
+        ExprResRequired = PrevExprResReq;
         return *std::exchange(CondRes, std::nullopt);
     }
 
@@ -221,14 +228,13 @@ private:
     std::vector<LoopFixups> LoopFixupsStack;
 
     void applyFixups(std::vector<BrDstIt>&& Vec) {
-        for (const auto& Fixup: Vec)
+        for (auto& Fixup: Vec)
             *Fixup = &*std::prev(curFunc()->end());
     }
     void applyFixups(std::vector<BrDstIt>&& Vec, BasicBlock* BB) {
-        for (const auto& Fixup: Vec)
+        for (auto& Fixup: Vec)
             *Fixup = BB;
     }
-
 };
 
 } // namespace AST

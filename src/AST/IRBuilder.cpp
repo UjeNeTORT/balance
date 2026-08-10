@@ -124,11 +124,11 @@ IRBuilder::IRBuilder(): Vars(Ir) {
     auto FinAddr = Ir.getNewVirtReg(OpInt());
     Ir.addInstruction(Opcodes::ADD).addDst(FinAddr).addSrc(Addr).addSrc(Len);
 
-    auto IfBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
+    auto& IfBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
     auto BodyBB = Ir.addInstruction(Opcodes::STORE).addSrc(Addr).addSrc(Val).getParent();
     Ir.addInstruction(Opcodes::ADD).addDst(Addr).addSrc(Addr).addSrc(copyImm(1));
 
-    auto WhileBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
+    auto& WhileBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(Addr).addSrc(FinAddr);
 
     auto FinBB = Ir.addInstruction(Opcodes::RET).getParent();
 
@@ -212,9 +212,9 @@ void IRBuilder::visit(const FuncDefNode& node) {
     for (const auto* Param: node.getParams())
         Param->accept(*this);
 
-    auto FuncDef = Ir.addInstruction(Opcodes::FUNC_DEF).addDst(Func->getNewVirtReg(OpInt()));
+    auto& FuncDef = Ir.addInstruction(Opcodes::FUNC_DEF).addDst(Func->getNewVirtReg(OpInt()));
 
-    for (auto& Var: *Scope.getScopeVars())
+    for (auto& Var: Scope.getScopeVars())
         FuncDef.addDst(Var.second.getReg());
 
     node.getBody()->accept(*this);
@@ -230,7 +230,7 @@ void IRBuilder::visit(const FuncParamNode& node) {
     else
         Type = convertBaseTypeForVar(node.getType());
 
-    auto Var = Vars.addVar(node.getName(), Type);
+    Vars.addVar(node.getName(), Type);
     curFunc()->addArg(Type);
 }
 
@@ -356,7 +356,7 @@ void IRBuilder::visit(const AssignNode& node) {
     auto Res = evalExpr(node.getSrc());
 
     auto Dst = node.getDest();
-    auto Var = Vars.findVar(Dst->getName());
+    auto& Var = Vars.findVar(Dst->getName());
 
     if (Dst->getIndices().size() != Var.Type.getSize())
         throw std::runtime_error("Incompatible dimensions in assignment");
@@ -384,7 +384,7 @@ void IRBuilder::visit(const AssignNode& node) {
 }
 
 void IRBuilder::visit(const LValNode& node) {
-    auto Var = Vars.findVar(node.getName());
+    auto& Var = Vars.findVar(node.getName());
 
     if (!Var.Type.isArray()) {
         if (node.getIndices().size() != 0)
@@ -477,8 +477,7 @@ void IRBuilder::binaryOpVisitCondition(const BinaryOpNode& node) {
             auto Left = evalCond(node.getLeft());
             auto Right = evalCond(node.getRight());
 
-            for (auto LTrue: Left.TruePaths)
-                *LTrue = Right.CondBB;
+            applyFixups(std::move(Left.TruePaths), Right.CondBB);
 
             auto AllFalse = std::move(Left.FalsePaths);
             AllFalse.insert(AllFalse.end(), Right.FalsePaths.begin(), Right.FalsePaths.end());
@@ -489,8 +488,7 @@ void IRBuilder::binaryOpVisitCondition(const BinaryOpNode& node) {
             auto Left = evalCond(node.getLeft());
             auto Right = evalCond(node.getRight());
 
-            for (auto LFalse: Left.FalsePaths)
-                *LFalse = Right.CondBB;
+            applyFixups(std::move(Left.FalsePaths), Right.CondBB);
 
             auto AllTrue = std::move(Left.TruePaths);
             AllTrue.insert(AllTrue.end(), Right.TruePaths.begin(), Right.TruePaths.end());
@@ -499,9 +497,9 @@ void IRBuilder::binaryOpVisitCondition(const BinaryOpNode& node) {
         }
         default: unreachable("Unhandled operation");
     }
-    auto Br = Ir.addInstruction(Opcodes::BR).setCmpType(BrCmp)
-                                            .addSrc(evalExpr(node.getLeft()))
-                                            .addSrc(evalExpr(node.getRight()));
+    auto& Br = Ir.addInstruction(Opcodes::BR).setCmpType(BrCmp)
+                                             .addSrc(evalExpr(node.getLeft()))
+                                             .addSrc(evalExpr(node.getRight()));
     CondRes = {Br.getParent(), {Br.addEmptyBrDst()}, {Br.addEmptyBrDst()}};
 
 }
@@ -581,7 +579,7 @@ void IRBuilder::visit(const FloatLiteralNode& node) {
 void IRBuilder::visit(const CallNode& node) {
     auto Func = Ir.findFunction(node.getCallee());
 
-    auto Call = Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Func);
+    auto& Call = Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Func);
 
     if (node.getArgs().size() != Func->getArgs().size())
         throw std::runtime_error("Call has invalid number of arguments");
@@ -598,7 +596,7 @@ void IRBuilder::visit(const CallNode& node) {
 }
 
 void IRBuilder::visit(const ReturnNode& node) {
-    auto Ret = Ir.addInstruction(Opcodes::RET);
+    auto& Ret = Ir.addInstruction(Opcodes::RET);
 
     if (node.hasExpr() != curFunc()->getRetType().has_value())
         throw std::runtime_error("Invalid return type");

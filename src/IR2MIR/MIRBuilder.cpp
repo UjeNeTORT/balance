@@ -24,7 +24,7 @@ MIR MIRBuilder::build() && {
     for (; IRIt != IntermRepr.end() && MIRIt != MachineIR.end(); IRIt++, MIRIt++)
         buildFunction(IRIt, MIRIt);
 
-    return MachineIR;
+    return std::move(MachineIR);
 }
 
 void MIRBuilder::buildFunction(const IR::iterator IRIt, const MIR::iterator MIRIt) {

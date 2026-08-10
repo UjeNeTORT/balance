@@ -61,5 +61,8 @@ int main(int argc, char** argv)
 
     MIR Mir = MIRBuilder(std::move(Ir)).build();
 
+    for (auto& Func: Mir)
+        Func.print(std::cout);
+
     return 0;
 }
