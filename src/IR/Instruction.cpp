@@ -177,7 +177,7 @@ void Instruction::verify() const {
             verifyNoBrDstBB();
 
             if (Dst.size() >= 2)
-                throwVerifyError("CALL operation must habe no or 1 destination");
+                throwVerifyError("CALL operation must have no or 1 destination");
 
             if (!CallFunc.has_value())
                 throwVerifyError("CALL operation must have CallFunc");
@@ -186,7 +186,7 @@ void Instruction::verify() const {
             if (Src.size() != Args.size())
                 throw Instruction::verify_error("CALL Src size must be equal to function argument count");
 
-            auto SrcIt = Src.cbegin() + 1;
+            auto SrcIt = Src.cbegin();
             auto ArgIt = Args.cbegin();
             for (; ArgIt != Args.end(); SrcIt++, ArgIt++)
                 if (SrcIt->Type != *ArgIt)

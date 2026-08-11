@@ -103,7 +103,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP).addImm(-StackShift); // TODO: check overflow
     MIRBlock->createMI(RVOp::SD).addReg(RVReg::RA).addReg(RVReg::SP).addImm(StackShift - 8);
 
-    MachineInst Call = MachineInst(RVOp::CALL).addFunc(MFunc);
+    MachineInst Call = MachineInst(RVOp::CALL);
     if (Dst.size() == 1) {
         if (Dst[0].Type.isInt())
             Call.addReg(RVReg::A0);
@@ -112,6 +112,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     } else {
         Call.addReg(RVReg::ZERO);
     }
+    Call.addFunc(MFunc);
 
     StackArgsCnt = 0;
     IRegCnt = 0;
@@ -138,7 +139,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
         }
     }
 
-    MIRBlock->insertMI(Call);
+    MIRBlock->insertMI(std::move(Call));
 
     if (Dst.size() == 1) {
         if (Dst[0].Type.isInt())
@@ -242,7 +243,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
 
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
                                               .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getFrameSize())); // TODO: check overflow
-                MIRBlock->insertMI(Ret);
+                MIRBlock->insertMI(std::move(Ret));
             }
             break; case Opcodes::BR:
                 MIRBlock->addSuccessor(BBRegistry[BrDstBB[0]]);
