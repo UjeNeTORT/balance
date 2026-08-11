@@ -34,8 +34,8 @@ public:
     BasicBlock(const BasicBlock&) = delete;
     BasicBlock& operator=(const BasicBlock&) = delete;
 
-    BasicBlock(BasicBlock&&) = default;
-    BasicBlock& operator=(BasicBlock&&) = default;
+    BasicBlock(BasicBlock&&) = delete;
+    BasicBlock& operator=(BasicBlock&&) = delete;
 
     void verify() const {
         bool IsTerminal = false;

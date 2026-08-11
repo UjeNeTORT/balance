@@ -19,8 +19,8 @@ public:
     Function(const Function&) = delete;
     Function& operator=(const Function&) = delete;
 
-    Function(Function&&) = default;
-    Function& operator=(Function&&) = default;
+    Function(Function&&) = delete;
+    Function& operator=(Function&&) = delete;
 
     Function(std::string Name)
         : Name(std::move(Name)) {

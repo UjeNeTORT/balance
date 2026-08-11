@@ -103,31 +103,49 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP).addImm(-StackShift); // TODO: check overflow
     MIRBlock->createMI(RVOp::SD).addReg(RVReg::RA).addReg(RVReg::SP).addImm(StackShift - 8);
 
+    MachineInst Call = MachineInst(RVOp::CALL).addFunc(MFunc);
+    if (Dst.size() == 1) {
+        if (Dst[0].Type.isInt())
+            Call.addReg(RVReg::A0);
+        else
+            Call.addReg(RVReg::FA0);
+    } else {
+        Call.addReg(RVReg::ZERO);
+    }
+
     StackArgsCnt = 0;
     IRegCnt = 0;
     FRegCnt = 0;
     for (const auto& Arg: Src) {
         if (Arg.Type.isInt()) {
-            if (IRegCnt < CallIntArgsRegs.size())
+            if (IRegCnt < CallIntArgsRegs.size()) {
                 MIRBlock->createMI(ADDI).addReg(CallIntArgsRegs[IRegCnt]).addReg(Arg).addImm(0);
-            else
+                Call.addReg(CallIntArgsRegs[IRegCnt]);
+            } else {
                 MIRBlock->createMI(RVOp::SW).addReg(RVReg::SP).addImm(8 * StackArgsCnt++).addReg(Arg);
+            }
 
             IRegCnt++;
         } else {
-            if (FRegCnt < CallFloatArgsRegs.size())
+            if (FRegCnt < CallFloatArgsRegs.size()) {
                 MIRBlock->createMI(RVOp::FSGNJ_S).addReg(CallFloatArgsRegs[FRegCnt]).addReg(Arg).addReg(Arg);
-            else
+                Call.addReg(CallFloatArgsRegs[FRegCnt]);
+            } else {
                 MIRBlock->createMI(RVOp::FSW).addReg(RVReg::SP).addImm(8 * StackArgsCnt++).addReg(Arg);
+            }
 
             FRegCnt++;
         }
     }
 
-    MIRBlock->createMI(RVOp::CALL).addReg(RVReg::RA).addFunc(MFunc);
+    MIRBlock->insertMI(Call);
 
-    if (Dst.size() == 1)
-        MIRBlock->createMI(RVOp::ADDIW).addReg(Dst[0]).addReg(RVReg::A0).addImm(0);
+    if (Dst.size() == 1) {
+        if (Dst[0].Type.isInt())
+            MIRBlock->createMI(RVOp::ADDIW).addReg(Dst[0]).addReg(RVReg::A0).addImm(0);
+        else
+            MIRBlock->createMI(RVOp::FSGNJ_S).addReg(Dst[0]).addReg(RVReg::FA0).addReg(RVReg::FA0);
+    }
 
     MIRBlock->createMI(RVOp::LD).addReg(RVReg::RA).addReg(RVReg::SP).addImm(StackShift - 8);
     MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP).addImm(StackShift); // TODO: check overflow
@@ -210,14 +228,22 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 MIRBlock->createMI(RVOp::OR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
             break; case Opcodes::XOR:
                 MIRBlock->createMI(RVOp::XOR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::RET:
-                if (Src.size() == 1)
-                    MIRBlock->createMI(RVOp::ADDW).addReg(RVReg::A0).addReg(Src[0]).addReg(RVReg::ZERO);
+            break; case Opcodes::RET: {
+                MachineInst Ret = MachineInst(RVOp::RET);
+                if (Src.size() == 1) {
+                    if (Src[0].Type.isInt()) {
+                        MIRBlock->createMI(RVOp::ADDW).addReg(RVReg::A0).addReg(Src[0]).addReg(RVReg::ZERO);
+                        Ret.addReg(RVReg::A0);
+                    } else {
+                        MIRBlock->createMI(RVOp::FSGNJ_S).addReg(RVReg::A0).addReg(Src[0]).addReg(Src[0]);
+                        Ret.addReg(RVReg::FA0);
+                    }
+                }
 
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
                                               .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getFrameSize())); // TODO: check overflow
-                MIRBlock->createMI(RVOp::JALR).addReg(RVReg::ZERO).addReg(RVReg::RA).addImm(0);
-
+                MIRBlock->insertMI(Ret);
+            }
             break; case Opcodes::BR:
                 MIRBlock->addSuccessor(BBRegistry[BrDstBB[0]]);
                 if (Src.size() != 0) {
