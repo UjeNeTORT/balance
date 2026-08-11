@@ -24,18 +24,18 @@ public:
     Variables(IR& IrRef) : Ir(IrRef) {}
 
     struct Variable {
-        std::variant<size_t, GlobalData*> Id;
+        std::variant<int, size_t, GlobalData*> Id;
         OpType Type;
         bool isConst;
 
         bool isGlobal() const { return std::holds_alternative<GlobalData*>(Id); }
         VirtRegister getReg() const {
             assert(!Type.isArray() && !isGlobal());
-            return {Type, static_cast<int>(*std::get_if<size_t>(&Id)), std::nullopt};
+            return {Type, getId(), std::nullopt};
         }
-        size_t getId() const {
+        int getId() const {
             assert(!Type.isArray() && !isGlobal());
-            return *std::get_if<size_t>(&Id);
+            return *std::get_if<int>(&Id);
         }
         size_t getOffset() const {
             assert(Type.isArray() && !isGlobal());
@@ -63,8 +63,6 @@ public:
 
 private:
     std::vector<std::map<std::string, Variable>> Scopes;
-
-    size_t VarCount = 0;
 
     IR& Ir;
 };

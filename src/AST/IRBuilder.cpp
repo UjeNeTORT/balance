@@ -69,7 +69,7 @@ Variables::Variable& Variables::addVar(std::string Name, OpType Type, bool IsCon
     if (Scopes.size() == 1)
         Var = Variable{&*Ir.addGlobalData(GlobalData(Name, IsConst, {})), Type, IsConst};
     else
-        Var = Variable{VarCount++, Type, IsConst};
+        Var = Variable{Ir.getNewVirtReg(Type).Id, Type, IsConst};
 
     auto [It, Succ] = std::prev(Scopes.end())->emplace(Name, std::move(Var));
     if (!Succ)
