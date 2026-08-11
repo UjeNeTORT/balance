@@ -155,9 +155,10 @@ private:
         Expr->accept(*this);
 
         if (ExprRes.has_value()) {
+            auto ZeroImm = copyImmToSpecType(ExprRes->Type, 0);
             auto Instr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::NE)
                                                        .addSrc(*std::exchange(ExprRes, std::nullopt))
-                                                       .addSrc(copyImmToSpecType(ExprRes->Type, 0));
+                                                       .addSrc(ZeroImm);
             CondRes = {Instr.getParent(), {Instr.addEmptyBrDst()}, {Instr.addEmptyBrDst()}};
         }
         assert(CondRes.has_value());
@@ -172,9 +173,9 @@ private:
         size_t CurrentOffset = 0;
     };
     std::optional<InitializerTraversalData> InitTraversalData;
-    void initializerTraversal(const Variables::Variable& Var, const InitValNode* Node) {
+    void initializerTraversal(const Variables::Variable* Var, const InitValNode* Node) {
         assert(!InitTraversalData.has_value());
-        InitTraversalData = InitializerTraversalData{&Var};
+        InitTraversalData = InitializerTraversalData{Var};
         Node->accept(*this);
         InitTraversalData = std::nullopt;
     }

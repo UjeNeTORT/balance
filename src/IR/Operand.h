@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <optional>
+#include <ostream>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -23,11 +24,13 @@ class OpInt: public OpBaseType {
 public:
     static constexpr size_t getSize() { return 4; }
     static constexpr bool IsInt = true;
+    static void print(std::ostream& OS) { OS << "OpInt"; }
 };
 class OpFloat: public OpBaseType {
 public:
     static constexpr size_t getSize() { return 4; }
     static constexpr bool IsInt = false;
+    static void print(std::ostream& OS) { OS << "OpFloat"; }
 };
 
 template<typename T>
@@ -40,7 +43,7 @@ public:
 
     using std::vector<size_t>::vector;
 
-    OpArray(const std::vector<size_t>& Other)
+    OpArray(std::vector<size_t> Other)
         : std::vector<size_t>(Other)
     {}
 
@@ -72,6 +75,18 @@ public:
     bool operator!=(const T& Other) const { return !(*this == Other); }
     friend bool operator==(const T& a, const OpArray<T>& b) { return b == a; }
     friend bool operator!=(const T& a, const OpArray<T>& b) { return b != a; }
+
+    void print(std::ostream& OS) const {
+        OS << "OpArray<";
+        T::print(OS);
+        OS << ">(";
+        for (auto It = begin(); It != end(); It++) {
+            OS << *It;
+            if (It + 1 != end())
+                OS << ", ";
+        }
+        OS << ")";
+    }
 };
 
 using OpTypeVariant = std::variant<OpInt, OpFloat, OpArray<OpInt>, OpArray<OpFloat>>;
@@ -134,6 +149,17 @@ public:
         }, *this);
     }
 
+    size_t getElemSize() const {
+        return std::visit([](const auto& Op) {
+            using T = std::decay_t<decltype(Op)>;
+            if constexpr (T::IsArray) {
+                return T::array_t::getSize();
+            } else {
+                return Op.getSize();
+            }
+        }, *this);
+    }
+
     bool operator==(const OpType& OtherV) const {
         return std::visit([](const auto& This, const auto& Other){
             using ThisT = std::decay_t<decltype(This)>;
@@ -158,7 +184,13 @@ public:
             return ThisT::IsInt == OtherT::IsInt;
         }, *this, OtherV);
     }
+
 };
+
+inline std::ostream& operator<<(std::ostream& OS, const OpType& Type) {
+    std::visit([&OS](const auto& Op) { Op.print(OS); }, Type);
+    return OS;
+}
 
 struct VirtRegister {
     OpType Type;
@@ -181,13 +213,14 @@ public:
     std::string_view getName() const { return Name; }
     bool isConst() const { return Const; }
     ImmBaseVectorVariant& getInit() { return Init; }
+    const ImmBaseVectorVariant& getInit() const { return Init; }
     void addInitVal(ImmBaseVariant Value) {
         std::visit([Value](auto& Vec) {
             using T = std::decay_t<typename std::decay_t<decltype(Vec)>::value_type>;
             Vec.push_back(std::visit([](auto& Val) { return (T)Val; }, Value));
         }, Init);
     }
-    void setInitVals(ImmBaseVectorVariant&& Vals) { Init = Vals; }
+    void setInitVals(ImmBaseVectorVariant Vals) { Init = std::move(Vals); }
 
 private:
     std::string Name;

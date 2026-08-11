@@ -49,6 +49,14 @@ public:
         FunctionsMap.emplace(It->getName(), It);
         return &*It;
     }
+    Function* addFunctionDecl(std::string Name) {
+        if (FunctionsMap.find(Name) != FunctionsMap.end())
+            throw std::runtime_error("Duplicate function: " + Name);
+
+        auto It = Functions.emplace(Functions.end(), std::move(Name), true);
+        FunctionsMap.emplace(It->getName(), It);
+        return &*It;
+    }
     Function* findFunction(std::string Name) {
         auto It = FunctionsMap.find(Name);
         if (It == FunctionsMap.end())

@@ -92,8 +92,6 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
 
-    unsigned PoolSize = Pool.size();
-
     std::vector<LiveInterval *> SortedIntervals;
     for (auto &p : LiveIntervals) SortedIntervals.push_back(&p.second);
     std::sort(SortedIntervals.begin(), SortedIntervals.end(), [](const LiveInterval *a, const LiveInterval *b) {
@@ -109,7 +107,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         return a->StartIdx < b->StartIdx;
     });
 
-    for (const auto &LI : SortedIntervals) {
+    for (const auto *LI : SortedIntervals) {
         expireOldIntervals(*LI, Pool);
 
         if (LI->Reg.isPhysical()) {
@@ -117,7 +115,7 @@ bool LinearScanRAL::run(MachineFunction &MF) {
             continue;
         }
 
-        if (Active.size() == PoolSize) {
+        if (Pool.empty()) {
             spillAtInterval(*LI);
             continue;
         }
@@ -191,10 +189,10 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 
 void LinearScanRAL::allocateSpillSpace(MachineFunction &MF) {
     MachineBB &Entry = *MF.entryBB();
-    Entry.insertMI(Entry.begin(), RISCVOpcode::SUB)
+    Entry.insertMI(Entry.begin(), RISCVOpcode::ADDI)
         .addReg(RISCV::RISCVRegister::SP)
         .addReg(RISCV::RISCVRegister::SP)
-        .addImm(StackSlotCnt * 4);
+        .addImm(-(int64_t)StackSlotCnt * 4);
 }
 
 void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool) {

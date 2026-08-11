@@ -217,6 +217,7 @@ static const MIRInstrInfo MIRInstructionDB[] = {
     { "CALL",          false, 1, -1, -1 },
     { "RET",           true,  0, -1, -1 },
     { "LI",            false, 1, 0, 2 },
+    { "LA",            false, 1, 0, 2 },
     { "PHI",           false, 1, -1, -1, false },
 };
 } // namespace
@@ -227,6 +228,7 @@ bool isControlTransferInst(const MachineInst &MI) {
 
 bool hasSideEffects(RISCVOpcode Opcode) {
     if (isControlTransferInst(Opcode)) return true;
+    if (Opcode == RISCVOpcode::CALL) return true;
     return false; // todo: maybe other insts have side effects
 }
 

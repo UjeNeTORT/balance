@@ -16,19 +16,20 @@ class MachineFunction;
 // Global data: variables and arrays in .data and .rodata
 class MachineGData {
 public:
-    MachineGData(std::string VarName, size_t ElemBytes, bool IsConst, std::vector<int64_t>&& InitVals) :
-        Name(VarName), ElemSize(ElemBytes), Const(IsConst), Init(InitVals) {}
+    using DataVariant = std::variant<uint8_t, uint16_t, uint32_t, uint64_t>;
+    using DataVector = MakeVectorVariant<DataVariant>::type;
+
+    MachineGData(std::string VarName, bool IsConst, DataVector&& InitVals) :
+        Name(VarName), Const(IsConst), Init(InitVals) {}
 
     std::string_view getName() const { return Name; }
     bool isConst() const { return Const; }
-    const std::vector<int64_t>& getInit() const { return Init; }
-    size_t getSize() const { return Init.size() * ElemSize; }
+    const DataVector& getInit() const { return Init; }
 
 private:
     std::string Name;
-    size_t ElemSize;
     bool Const;
-    std::vector<int64_t> Init;
+    DataVector Init;
 };
 
 class MachineOperand {
@@ -60,6 +61,7 @@ public:
     MachineBB *getMBB() const;
     MachineFunction *getFunc() const;
     MachineGData *getGData() const;
+    const auto &getValue() const { return Value; };
 
     Register setReg(Register NewReg);
     uint64_t setImm(uint64_t NewImm);

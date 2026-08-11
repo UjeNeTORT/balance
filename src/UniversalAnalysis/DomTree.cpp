@@ -4,9 +4,9 @@
 #include "IR/Function.h"
 #include "IR/Instruction.h"
 
-#include "MachineBB.h"
-#include "MachineInst.h"
-#include "MachineFunction.h"
+#include "MachineLayer/MachineBB.h"
+#include "MachineLayer/MachineInst.h"
+#include "MachineLayer/MachineFunction.h"
 #include "Utils/Utils.h"
 
 #include <algorithm>
