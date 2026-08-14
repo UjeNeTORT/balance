@@ -113,9 +113,7 @@ Variables::Variable& Variables::findVar(std::string Name) {
     throw std::runtime_error("Usage of undeclared variable");
 }
 
-IRBuilder::IRBuilder()
-        : Ir()
-        , Vars(Ir) {
+IRBuilder::IRBuilder() : Ir(), Vars(Ir) {
     Ir.addFunction(IR::internalFunc("memset"))->addArg(OpArray<OpInt>({0})).addArg(OpInt()).addArg(OpInt());
 
     auto PreAddr = Ir.getNewVirtReg(OpArray<OpInt>({0}));

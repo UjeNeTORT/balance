@@ -43,11 +43,8 @@ class Function;
 
 class Instruction {
 public:
-    Instruction(Opcodes Op, BasicBlock* Parent, std::optional<SourceInfo> SrcInf = std::nullopt)
-        : Opcode(Op)
-        , ParentBB(Parent)
-        , SrcInfo(SrcInf)
-    {}
+    Instruction(Opcodes Op, BasicBlock* Parent, std::optional<SourceInfo> SrcInf = std::nullopt) :
+        Opcode(Op), ParentBB(Parent), SrcInfo(SrcInf) {}
 
     Instruction& addSrc(VirtRegister Reg) { Src.push_back(Reg); return *this; }
     Instruction& addDst(VirtRegister Reg) { Dst.push_back(Reg); return *this; }

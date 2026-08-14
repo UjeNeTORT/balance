@@ -98,7 +98,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
         }
     }
 
-    size_t StackShift = (8 + (StackArgsCnt * 8) + 15) & ~15;
+    size_t StackShift = (8 + (StackArgsCnt * 8) + 15) & ~15; //< (ret addr + stack args).alignUp(16)
 
     MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP).addImm(-StackShift); // TODO: check overflow
     MIRBlock->createMI(RVOp::SD).addReg(RVReg::RA).addReg(RVReg::SP).addImm(StackShift - 8);
@@ -167,20 +167,20 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
         switch (Instr.getOpcode()) {
             case Opcodes::NOP:
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::ZERO).addReg(RVReg::ZERO).addImm(0);
-
-            break; case Opcodes::CONVERT:
+                break;
+            case Opcodes::CONVERT:
                 if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::FCVT_W_S).addReg(Dst[0]).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FCVT_S_W).addReg(Dst[0]).addReg(Src[0]);
-
-            break; case Opcodes::BITCAST:
+                break;
+            case Opcodes::BITCAST:
                 if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::FMV_W_X).addReg(Dst[0]).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FMV_X_W).addReg(Dst[0]).addReg(Src[0]);
-
-            break; case Opcodes::COPY:
+                break;
+            case Opcodes::COPY:
                 if (Src.size() == 1) {
                     if (Dst[0].Type.isInt())
                         MIRBlock->createMI(RVOp::ADDIW).addReg(Dst[0]).addReg(Src[0]).addImm(0);
@@ -203,33 +203,34 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                         MIRBlock->createMI(RVOp::FMV_X_W).addReg(Dst[0]).addReg(Vreg);
                     }
                 }
-            break; case Opcodes::NEG:
+                break;
+            case Opcodes::NEG:
                 if (Dst[0].Type.isInt())
                     MIRBlock->createMI(RVOp::SUBW).addReg(Dst[0]).addReg(RVReg::ZERO).addReg(Src[0]);
                 else
                     MIRBlock->createMI(RVOp::FSGNJN_S).addReg(Dst[0]).addReg(Src[0]).addReg(Src[0]);
-
-            break; case Opcodes::ADD:
-                createBinaryOp(MIRBlock, RVOp::ADDW, RVOp::FADD_S, Dst, Src);
-            break; case Opcodes::SUB:
-                createBinaryOp(MIRBlock, RVOp::SUBW, RVOp::FSUB_S, Dst, Src);
-            break; case Opcodes::MUL:
-                createBinaryOp(MIRBlock, RVOp::MULW, RVOp::FMUL_S, Dst, Src);
-            break; case Opcodes::DIV:
-                createBinaryOp(MIRBlock, RVOp::DIVW, RVOp::FDIV_S, Dst, Src);
-            break; case Opcodes::REM:
-                MIRBlock->createMI(RVOp::REMW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::SHL:
-                MIRBlock->createMI(RVOp::SLLW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::SHR:
-                MIRBlock->createMI(RVOp::SRAW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::AND:
-                MIRBlock->createMI(RVOp::AND).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::OR:
-                MIRBlock->createMI(RVOp::OR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::XOR:
-                MIRBlock->createMI(RVOp::XOR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
-            break; case Opcodes::RET: {
+                break;
+            case Opcodes::ADD:
+                createBinaryOp(MIRBlock, RVOp::ADDW, RVOp::FADD_S, Dst, Src); break;
+            case Opcodes::SUB:
+                createBinaryOp(MIRBlock, RVOp::SUBW, RVOp::FSUB_S, Dst, Src); break;
+            case Opcodes::MUL:
+                createBinaryOp(MIRBlock, RVOp::MULW, RVOp::FMUL_S, Dst, Src); break;
+            case Opcodes::DIV:
+                createBinaryOp(MIRBlock, RVOp::DIVW, RVOp::FDIV_S, Dst, Src); break;
+            case Opcodes::REM:
+                MIRBlock->createMI(RVOp::REMW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::SHL:
+                MIRBlock->createMI(RVOp::SLLW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::SHR:
+                MIRBlock->createMI(RVOp::SRAW).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::AND:
+                MIRBlock->createMI(RVOp::AND).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::OR:
+                MIRBlock->createMI(RVOp::OR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::XOR:
+                MIRBlock->createMI(RVOp::XOR).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]); break;
+            case Opcodes::RET: {
                 MachineInst Ret = MachineInst(RVOp::RET);
                 if (Src.size() == 1) {
                     if (Src[0].Type.isInt()) {
@@ -244,8 +245,8 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
                                               .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getFrameSize())); // TODO: check overflow
                 MIRBlock->insertMI(std::move(Ret));
-            }
-            break; case Opcodes::BR:
+            } break;
+            case Opcodes::BR:
                 MIRBlock->addSuccessor(BBRegistry[BrDstBB[0]]);
                 if (Src.size() != 0) {
                     RVOp BROpcode;
@@ -266,20 +267,22 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                     MIRBlock->addSuccessor(BBRegistry[BrDstBB[1]]);
                 }
                 MIRBlock->createMI(RVOp::JAL).addReg(RVReg::ZERO).addMBB(BBRegistry[BrDstBB[0]]);
-
-            break; case Opcodes::LOAD:
-                MIRBlock->createMI(RVOp::LW).addReg(Dst[0]).addReg(Src[0]).addImm(0);
-            break; case Opcodes::STORE:
-                MIRBlock->createMI(RVOp::SW).addReg(Src[0]).addImm(0).addReg(Src[1]);
-            break; case Opcodes::CALL:
-                createCall(MIRBlock, FuncRegistry[*CallFunc], Src, Dst);
-            break; case Opcodes::PHI:
+                break;
+            case Opcodes::LOAD:
+                MIRBlock->createMI(RVOp::LW).addReg(Dst[0]).addReg(Src[0]).addImm(0); break;
+            case Opcodes::STORE:
+                MIRBlock->createMI(RVOp::SW).addReg(Src[0]).addImm(0).addReg(Src[1]); break;
+            case Opcodes::CALL:
+                createCall(MIRBlock, FuncRegistry[*CallFunc], Src, Dst); break;
+            case Opcodes::PHI:
                 MIRBlock->createMI(RVOp::PHI).addReg(Dst[0])
                                              .addReg(Src[0]).addMBB(BBRegistry[*Src[0].DefBlock])
                                              .addReg(Src[1]).addMBB(BBRegistry[*Src[1].DefBlock]);
-            break; case Opcodes::FUNC_DEF:
-                createFuncDef(MIRBlock, IRBlock->getParentFunction()->getFrameSize(), Dst);
-            break; default:
+                break;
+            case Opcodes::FUNC_DEF:
+                createFuncDef(MIRBlock, IRBlock->getParentFunction()->getFrameSize(), Dst); break;
+
+            default:
                 assert(0);
         }
     }

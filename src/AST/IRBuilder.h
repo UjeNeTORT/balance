@@ -69,10 +69,7 @@ private:
 
 class VariablesScoped {
 public:
-    VariablesScoped(Variables& VarsRef)
-        : Vars(VarsRef)
-        , ScopeIndex(Vars.enterScope())
-    {}
+    VariablesScoped(Variables& VarsRef) : Vars(VarsRef), ScopeIndex(Vars.enterScope()) {}
     ~VariablesScoped() { Vars.leaveScope(); }
 
     const auto& getScopeVars() const { return Vars.getScopes()[ScopeIndex]; }

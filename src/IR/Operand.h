@@ -175,11 +175,8 @@ using ImmBaseVectorVariant = MakeVectorVariant<ImmBaseVariant>::type;
 
 class GlobalData {
 public:
-    GlobalData(std::string VarName, bool IsConst, ImmBaseVectorVariant&& InitVals)
-        : Name(VarName)
-        , Const(IsConst)
-        , Init(InitVals)
-    {}
+    GlobalData(std::string VarName, bool IsConst, ImmBaseVectorVariant&& InitVals) :
+        Name(VarName), Const(IsConst), Init(InitVals) {}
 
     std::string_view getName() const { return Name; }
     bool isConst() const { return Const; }

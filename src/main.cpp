@@ -18,15 +18,13 @@
 using namespace Balance;
 using namespace AST;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     bool dotOutput = false;
     std::string fileName;
 
     int argIndex = 1;
 
-    if (argIndex < argc && std::string(argv[argIndex]) == "--dot")
-    {
+    if (argIndex < argc && std::string(argv[argIndex]) == "--dot") {
         dotOutput = true;
         ++argIndex;
     }
@@ -38,13 +36,10 @@ int main(int argc, char** argv)
 
     int status = 0;
 
-    try
-    {
+    try {
         // No file name: read from stdin.
         status = driver.parse(fileName);
-    }
-    catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;
     }
@@ -54,13 +49,10 @@ int main(int argc, char** argv)
 
     driver.foldConstants();
 
-    if (dotOutput)
-    {
+    if (dotOutput) {
         Balance::AST::AstDotDumper dumper(std::cout);
         dumper.dump(*driver.getCompUnit());
-    }
-    else
-    {
+    } else {
         Balance::AST::AstDumper dumper(std::cout);
         driver.getCompUnit()->accept(dumper);
     }

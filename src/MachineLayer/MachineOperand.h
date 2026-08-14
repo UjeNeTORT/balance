@@ -13,14 +13,11 @@ class MachineBB;
 class MachineInst;
 class MachineFunction;
 
+// Global data: variables and arrays in .data and .rodata
 class MachineGData {
 public:
-    MachineGData(std::string VarName, size_t ElemBytes, bool IsConst, std::vector<int64_t>&& InitVals)
-        : Name(VarName)
-        , ElemSize(ElemBytes)
-        , Const(IsConst)
-        , Init(InitVals)
-    {}
+    MachineGData(std::string VarName, size_t ElemBytes, bool IsConst, std::vector<int64_t>&& InitVals) :
+        Name(VarName), ElemSize(ElemBytes), Const(IsConst), Init(InitVals) {}
 
     std::string_view getName() const { return Name; }
     bool isConst() const { return Const; }

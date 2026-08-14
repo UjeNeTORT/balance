@@ -21,15 +21,10 @@ public:
     using bb_iterator = bb_storage::iterator;
     using bb_const_iterator = bb_storage::const_iterator;
 
-    BasicBlock(Function* Parent, std::string Name)
-        : ParentFunction(Parent)
-        , Name(Name)
-    {}
-    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf)
-        : ParentFunction(Parent)
-        , Name(Name)
-        , SrcInfo(SrcInf)
-    {}
+    BasicBlock(Function* Parent, std::string Name) : ParentFunction(Parent), Name(Name) {}
+
+    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf) :
+        ParentFunction(Parent), Name(Name), SrcInfo(SrcInf) {}
 
     BasicBlock(const BasicBlock&) = delete;
     BasicBlock& operator=(const BasicBlock&) = delete;
