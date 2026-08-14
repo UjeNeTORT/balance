@@ -1,5 +1,5 @@
-#ifndef IR_OPERAND_H_
-#define IR_OPERAND_H_
+#ifndef IR_OPERAND_H
+#define IR_OPERAND_H
 
 #include "Utils/Utils.h"
 
@@ -199,4 +199,4 @@ using ImmVariant = VariantAppend<ImmBaseVariant, GlobalData*>::type;
 
 } // Balance
 
-#endif // IR_OPERAND_H_
+#endif // IR_OPERAND_H

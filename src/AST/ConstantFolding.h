@@ -1,5 +1,5 @@
-#ifndef AST_CONSTANT_FOLDING_H_
-#define AST_CONSTANT_FOLDING_H_
+#ifndef AST_CONSTANT_FOLDING_H
+#define AST_CONSTANT_FOLDING_H
 
 #include "AST/Ast.h"
 #include "AST/IRBuilder.h"
@@ -86,4 +86,4 @@ private:
 
 } // namespace Balance
 
-#endif // AST_CONSTANT_FOLDING_H_
+#endif // AST_CONSTANT_FOLDING_H

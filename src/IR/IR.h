@@ -1,5 +1,5 @@
-#ifndef IR_IR_H_
-#define IR_IR_H_
+#ifndef IR_IR_H
+#define IR_IR_H
 
 #include "IR/BasicBlock.h"
 #include "IR/Instruction.h"
@@ -111,4 +111,4 @@ private:
 
 } // Balance
 
-#endif // IR_IR_H_
+#endif // IR_IR_H

@@ -1,5 +1,5 @@
-#ifndef IR_FUNCTION_H_
-#define IR_FUNCTION_H_
+#ifndef IR_FUNCTION_H
+#define IR_FUNCTION_H
 
 #include "IR/BasicBlock.h"
 #include "IR/Operand.h"
@@ -122,4 +122,4 @@ private:
 
 }
 
-#endif // IR_FUNCTION_H_
+#endif // IR_FUNCTION_H

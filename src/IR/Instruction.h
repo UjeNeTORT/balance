@@ -1,5 +1,5 @@
-#ifndef IR_INSTRUCTION_H_
-#define IR_INSTRUCTION_H_
+#ifndef IR_INSTRUCTION_H
+#define IR_INSTRUCTION_H
 
 #include "IR/Operand.h"
 
@@ -116,4 +116,4 @@ private:
 
 } // Balance
 
-#endif // IR_INSTRUCTION_H_
+#endif // IR_INSTRUCTION_H

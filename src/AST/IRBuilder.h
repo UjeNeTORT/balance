@@ -1,5 +1,5 @@
-#ifndef AST_IR_BUILDER_H_
-#define AST_IR_BUILDER_H_
+#ifndef AST_IR_BUILDER_H
+#define AST_IR_BUILDER_H
 
 #include "AST/Ast.h"
 #include "AST/Node.h"
@@ -236,4 +236,4 @@ private:
 
 } // namespace Balance
 
-#endif // AST_IR_BUILDER_H_
+#endif // AST_IR_BUILDER_H

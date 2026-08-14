@@ -1,5 +1,5 @@
-#ifndef MACHINE_LAYER_MIR_H_
-#define MACHINE_LAYER_MIR_H_
+#ifndef MACHINE_LAYER_MIR_H
+#define MACHINE_LAYER_MIR_H
 
 #include "MachineFunction.h"
 #include "MachineOperand.h"
@@ -55,4 +55,4 @@ private:
 
 } // Balance
 
-#endif // MACHINE_LAYER_MIR_H_
+#endif // MACHINE_LAYER_MIR_H
