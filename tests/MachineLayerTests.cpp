@@ -68,16 +68,12 @@ MachineFunction createPhiSwapTestMF() {
     Register b1 = MF.getNewVreg();
 
     Register i2 = MF.getNewVreg();
-    Register a2 = MF.getNewVreg();
-    Register b2 = MF.getNewVreg();
 
     // loop_header
     // i1 = PHI [i0, preheader], [i2, loop_body]
-    // a1 = PHI [a0, preheader], [b2, loop_body]
-    // b1 = PHI [b0, preheader], [a2, loop_body]
     MBB1_loop_header->createMI(RISCVOpcode::PHI).addReg(i1).addReg(i0).addMBB(MBB0_preheader).addReg(i2).addMBB(MBB2_loop_body);
-    MBB1_loop_header->createMI(RISCVOpcode::PHI).addReg(a1).addReg(a0).addMBB(MBB0_preheader).addReg(b2).addMBB(MBB2_loop_body);
-    MBB1_loop_header->createMI(RISCVOpcode::PHI).addReg(b1).addReg(b0).addMBB(MBB0_preheader).addReg(a2).addMBB(MBB2_loop_body);
+    MBB1_loop_header->createMI(RISCVOpcode::PHI).addReg(a1).addReg(a0).addMBB(MBB0_preheader).addReg(b1).addMBB(MBB1_loop_header);
+    MBB1_loop_header->createMI(RISCVOpcode::PHI).addReg(b1).addReg(b0).addMBB(MBB0_preheader).addReg(a1).addMBB(MBB1_loop_header);
 
     Register limit = MF.getNewVreg();
     Register cond = MF.getNewVreg();
@@ -87,10 +83,6 @@ MachineFunction createPhiSwapTestMF() {
     MBB1_loop_header->createMI(RISCVOpcode::JAL).addReg(RZ).addMBB(MBB2_loop_body);
 
     // loop_body
-    // a2 = b1; (move)
-    MBB2_loop_body->createMI(RISCVOpcode::ADD).addReg(a2).addReg(b1).addReg(RZ);
-    // b2 = a1; (move)
-    MBB2_loop_body->createMI(RISCVOpcode::ADD).addReg(b2).addReg(a1).addReg(RZ);
     // i2 = i1 + 1
     MBB2_loop_body->createMI(RISCVOpcode::ADDI).addReg(i2).addReg(i1).addImm(1);
     MBB2_loop_body->createMI(RISCVOpcode::JAL).addReg(RZ).addMBB(MBB1_loop_header);
