@@ -92,6 +92,8 @@ bool LinearScanRAL::run(MachineFunction &MF) {
         RISCVRegister::A5, RISCVRegister::A6, RISCVRegister::A7,
     };
 
+    const unsigned PoolSize = Pool.size();
+
     std::vector<LiveInterval *> SortedIntervals;
     for (auto &p : LiveIntervals) SortedIntervals.push_back(&p.second);
     std::sort(SortedIntervals.begin(), SortedIntervals.end(), [](const LiveInterval *a, const LiveInterval *b) {
@@ -112,10 +114,13 @@ bool LinearScanRAL::run(MachineFunction &MF) {
 
         if (LI->Reg.isPhysical()) {
             Pool.erase(LI->Reg);
+            Active.insert(LI);
+            RegMapping.insert({LI, LI->Reg});
             continue;
         }
 
-        if (Pool.empty()) {
+        assert(Pool.empty() == (Active.size() == PoolSize));
+        if (Active.size() == PoolSize) {
             spillAtInterval(*LI);
             continue;
         }
