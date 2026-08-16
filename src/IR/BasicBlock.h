@@ -1,7 +1,7 @@
-#ifndef IR_BASICBLOCK_H_
-#define IR_BASICBLOCK_H_
+#ifndef IR_BASICBLOCK_H
+#define IR_BASICBLOCK_H
 
-#include "Instruction.h"
+#include "IR/Instruction.h"
 
 #include <iterator>
 #include <list>
@@ -21,19 +21,20 @@ public:
     using bb_iterator = bb_storage::iterator;
     using bb_const_iterator = bb_storage::const_iterator;
 
-    BasicBlock(Function* Parent, std::string Name)
-        : ParentFunction(Parent)
-        , Name(Name)
-    {}
-    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf)
-        : ParentFunction(Parent)
-        , Name(Name)
-        , SrcInfo(SrcInf)
-    {}
+    BasicBlock(Function* Parent, std::string Name) : ParentFunction(Parent), Name(Name) {}
+
+    BasicBlock(Function* Parent, std::string Name, SourceInfo SrcInf) :
+        ParentFunction(Parent), Name(Name), SrcInfo(SrcInf) {}
+
+    BasicBlock(const BasicBlock&) = delete;
+    BasicBlock& operator=(const BasicBlock&) = delete;
+
+    BasicBlock(BasicBlock&&) = delete;
+    BasicBlock& operator=(BasicBlock&&) = delete;
 
     void verify() const {
         bool IsTerminal = false;
-        for (auto& Instr: Instructions) {
+        for (const auto& Instr: Instructions) {
             Instr.verify();
             if (IsTerminal)
                 throw Instruction::verify_error("Terminal instruction not in the end of basic block");
@@ -43,16 +44,15 @@ public:
             throw Instruction::verify_error("No terminal instruction in the end of basic block");
     }
 
-    iterator insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    Instruction& insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         auto Instr = Instruction(Opcode, this, SrcInf);
         if (!Instructions.empty() && std::prev(Instructions.end())->isTerminal() &&
             Instr.isTerminal())
             throwVerifyError("Trying to add terminal instruction to basic block that already has it");
 
-        return Instructions.insert(It, std::move(Instr));
-
+        return *Instructions.insert(It, std::move(Instr));
     }
-    iterator addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
+    Instruction& addInstruction(Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         return insertInstruction(Instructions.end(), Opcode, SrcInf);
     }
 
@@ -66,6 +66,7 @@ public:
     const_iterator end()   const  { return Instructions.cend(); }
     bool           empty()  const { return Instructions.empty(); }
 
+    void addPredecessor(BasicBlock* BB) { Predecessors.insert(Predecessors.end(), BB); }
     bb_storage getPredecessors() const { return Predecessors; }
 
     bb_iterator       predecessorsBegin()        { return Predecessors.begin(); }
@@ -98,4 +99,4 @@ private:
 
 } // Balance
 
-#endif // IR_BASICBLOCK_H_
+#endif // IR_BASICBLOCK_H

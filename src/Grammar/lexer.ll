@@ -118,13 +118,11 @@ makeIntConst(const std::string& text, const yy::parser::location_type& loc)
 {
     errno = 0;
 
-    // Base 0 handles decimal, octal and hex prefixes.
     unsigned long long value = strtoull(text.c_str(), nullptr, 0);
 
     if (errno == ERANGE || value > UINT32_MAX)
         throw yy::parser::syntax_error(loc, "integer is out of range: " + text);
 
-    // Wrap to a 32-bit int like competition compilers do (e.g. 2147483648).
     return yy::parser::make_INT_CONST(
         static_cast<int>(static_cast<uint32_t>(value)), loc);
 }

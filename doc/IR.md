@@ -27,7 +27,7 @@
 | STORE                           |          | 2        |          |     |          |      | Src[0] - absolute address, Src[1] - value
 | CALL                            | 0 \|\| 1 | >= 0     |          |     |          | +    |
 | PHI                             | 1        | 2        |          |     |          |      | Source VirtRegister's must have DefBlock
-| FUNC_DEF                        | >= 1     |          | 1        |     |          |      | Dst[0] - stack frame start address. Dst[>=1] are VReg's for function arguments. Imm - size of stack frame in **bytes**
+| FUNC_DEF                        | >= 1     |          |          |     |          |      | Dst[0] - stack frame start address. Dst[>=1] are VReg's for function arguments
 
 ## Notes
 

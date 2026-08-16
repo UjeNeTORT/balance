@@ -1,13 +1,13 @@
-#ifndef IR_INSTRUCTION_H_
-#define IR_INSTRUCTION_H_
+#ifndef IR_INSTRUCTION_H
+#define IR_INSTRUCTION_H
 
-#include "Operand.h"
+#include "IR/Operand.h"
 
 #include <cassert>
+#include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace Balance {
@@ -43,18 +43,20 @@ class Function;
 
 class Instruction {
 public:
-    Instruction(Opcodes Op, BasicBlock* Parent, std::optional<SourceInfo> SrcInf = std::nullopt)
-        : Opcode(Op)
-        , ParentBB(Parent)
-        , SrcInfo(SrcInf)
-    {}
+    Instruction(Opcodes Op, BasicBlock* Parent, std::optional<SourceInfo> SrcInf = std::nullopt) :
+        Opcode(Op), ParentBB(Parent), SrcInfo(SrcInf) {}
 
-    void addSrc(VirtRegister Reg) { Src.push_back(Reg); }
-    void addDst(VirtRegister Reg) { Dst.push_back(Reg); }
-    void setImmediate(std::variant<int, float, std::string> Imm) { Immediate = Imm; }
-    void setCmpType(CmpTypes Type) { CmpType = Type; }
-    void addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); }
-    void setCallFunc(Function* Funct) { CallFunc = Funct; }
+    Instruction& addSrc(VirtRegister Reg) { Src.push_back(Reg); return *this; }
+    Instruction& addDst(VirtRegister Reg) { Dst.push_back(Reg); return *this; }
+    Instruction& setImmediate(ImmVariant Imm) { Immediate = Imm; return *this; }
+    Instruction& setCmpType(CmpTypes Type) { CmpType = Type; return *this; }
+    Instruction& addBrDst(BasicBlock* Dst) { BrDstBB.push_back(Dst); return *this; }
+    Instruction& setCallFunc(Function* Funct) { CallFunc = Funct; return *this; }
+
+    std::pair<std::vector<BasicBlock*>*, size_t> addEmptyBrDst() {
+        BrDstBB.push_back(nullptr);
+        return {&BrDstBB, BrDstBB.size() - 1};
+    }
 
     void verify() const;
 
@@ -66,7 +68,7 @@ public:
     const std::vector<VirtRegister>& getDst() const { return Dst; }
     const std::vector<BasicBlock*>& getBrDstBB() const { return BrDstBB; }
     std::optional<Function*> getCallFunc() const { return CallFunc; }
-    std::optional<std::variant<int, float, std::string>> getImm() const { return Immediate; }
+    std::optional<ImmVariant> getImm() const { return Immediate; }
     std::optional<CmpTypes> getCmpType() const { return CmpType; }
 
     Opcodes getOpcode() const { return Opcode; }
@@ -83,7 +85,7 @@ private:
     std::string Comment;
     std::optional<SourceInfo> SrcInfo;
 
-    std::optional<std::variant<int, float, std::string>> Immediate;
+    std::optional<ImmVariant> Immediate;
     std::optional<CmpTypes> CmpType;
     std::vector<VirtRegister> Src;
     std::vector<VirtRegister> Dst;
@@ -105,7 +107,7 @@ private:
         if (Dst.size() != 0) throwVerifyError("Dst.size != 0");
     }
     void verifyNoBrDstBB() const {
-        if (BrDstBB.size() != 0) throwVerifyError("BrDstBB hsa value");
+        if (BrDstBB.size() != 0) throwVerifyError("BrDstBB has value");
     }
     void verifyNoFunc() const {
         if (CallFunc.has_value()) throwVerifyError("Func has value");
@@ -114,4 +116,4 @@ private:
 
 } // Balance
 
-#endif // IR_INSTRUCTION_H_
+#endif // IR_INSTRUCTION_H

@@ -1,13 +1,12 @@
-#ifndef IR_FUNCTION_H_
-#define IR_FUNCTION_H_
+#ifndef IR_FUNCTION_H
+#define IR_FUNCTION_H
 
-#include "BasicBlock.h"
-#include "Operand.h"
+#include "IR/BasicBlock.h"
+#include "IR/Operand.h"
 
 #include <iterator>
 #include <list>
 #include <string>
-#include <utility>
 
 namespace Balance {
 
@@ -17,21 +16,42 @@ public:
     using iterator = BasicBlockStorage::iterator;
     using const_iterator = std::list<BasicBlock>::const_iterator;
 
+    Function(const Function&) = delete;
+    Function& operator=(const Function&) = delete;
+
+    Function(Function&&) = delete;
+    Function& operator=(Function&&) = delete;
+
     Function(std::string Name)
-        : Name(Name)
-    {}
+        : Name(std::move(Name)) {
+        addBasicBlock();
+    }
+
+    Function& addArg(OpType Arg) { Args.push_back(Arg); return *this;}
+    Function& setRetType(std::optional<OpType> Type) { RetType = Type; return *this; }
+    Function& incFrameSize(size_t Increment) { FrameSize += Increment; return *this; }
 
     std::string_view getName() const { return Name; }
+    const std::vector<OpType>& getArgs() const { return Args; }
+    std::optional<OpType> getRetType() const { return RetType; }
 
-    std::pair<iterator, BasicBlock::iterator> addInstruction(Opcodes Opcode,
-                std::optional<SourceInfo> SrcInfo = std::nullopt) {
-        iterator LastBB = std::prev(BasicBlocks.end());
-        if (!BasicBlocks.empty()) {
+    iterator addBasicBlock() {
+        return BasicBlocks.emplace(BasicBlocks.end(), this,
+                            Name + "_bb" + std::to_string(getNewBBId()));
+    }
+
+    Instruction& addInstruction(Opcodes Opcode,
+                                        std::optional<SourceInfo> SrcInfo = std::nullopt) {
+        iterator LastBB;
+        if (BasicBlocks.empty()) {
+            LastBB = addBasicBlock();
+        } else {
+            LastBB = std::prev(BasicBlocks.end());
+
             if (!LastBB->empty() && std::prev(LastBB->end())->isTerminal())
-                LastBB = BasicBlocks.insert(BasicBlocks.end(), {this,
-                            Name + "_bb" + std::to_string(getNewBBId())});
+                LastBB = addBasicBlock();
         }
-        return {LastBB, LastBB->addInstruction(Opcode, SrcInfo)};
+        return LastBB->addInstruction(Opcode, SrcInfo);
     }
 
     void verify() const {
@@ -61,14 +81,28 @@ public:
 
     size_t getNewBBId() { return BBCounter++; }
 
-    VirtRegister getNewVirtReg(VirtRegister::RegType Type,
-                               std::optional<BasicBlock*> DefBlock = std::nullopt) {
+    VirtRegister getNewVirtReg(OpType Type, std::optional<BasicBlock*> DefBlock = std::nullopt) {
+        if (!DefBlock)
+            DefBlock = &*std::prev(BasicBlocks.end());
         return {Type, VirtRegCounter++, DefBlock};
     }
+    template<size_t NUM>
+    std::array<VirtRegister, NUM> getNewVirtRegs(OpType Type,
+                                            std::optional<BasicBlock*> DefBlock = std::nullopt) {
+        if (!DefBlock)
+            DefBlock = &*std::prev(BasicBlocks.end());
+        std::array<VirtRegister, NUM> Res;
+        for (auto& Elem: Res)
+            Elem = getNewVirtReg(Type, DefBlock);
+        return Res;
+    }
 
-    int getAllocasSize() const {
-        auto FuncDefImm = *entryBB()->begin()->getImm();
-        return *std::get_if<int>(&FuncDefImm);
+    VirtRegister getFrameVReg() const {
+        return entryBB()->begin()->getDst()[0];
+    }
+
+    size_t getFrameSize() const {
+        return FrameSize;
     }
 
     iterator       begin()       { return BasicBlocks.begin(); }
@@ -77,6 +111,10 @@ public:
     const_iterator end()   const { return BasicBlocks.cend(); }
 private:
     std::string Name;
+    std::vector<OpType> Args;
+    std::optional<OpType> RetType;
+    size_t FrameSize = 0;
+
     std::list<BasicBlock> BasicBlocks;
     size_t BBCounter = 0;
     int VirtRegCounter = 1;
@@ -84,4 +122,4 @@ private:
 
 }
 
-#endif // IR_FUNCTION_H_
+#endif // IR_FUNCTION_H

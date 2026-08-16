@@ -1,5 +1,5 @@
-#ifndef MIRBUILDER_H_
-#define MIRBUILDER_H_
+#ifndef MIRBUILDER_H
+#define MIRBUILDER_H
 
 #include "IR/BasicBlock.h"
 #include "IR/IR.h"
@@ -31,4 +31,4 @@ private:
 
 } // Balance
 
-#endif // MIRBUILDER_H_
+#endif // MIRBUILDER_H

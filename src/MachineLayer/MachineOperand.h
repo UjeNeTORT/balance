@@ -13,8 +13,26 @@ class MachineBB;
 class MachineInst;
 class MachineFunction;
 
+// Global data: variables and arrays in .data and .rodata
+class MachineGData {
+public:
+    MachineGData(std::string VarName, size_t ElemBytes, bool IsConst, std::vector<int64_t>&& InitVals) :
+        Name(VarName), ElemSize(ElemBytes), Const(IsConst), Init(InitVals) {}
+
+    std::string_view getName() const { return Name; }
+    bool isConst() const { return Const; }
+    const std::vector<int64_t>& getInit() const { return Init; }
+    size_t getSize() const { return Init.size() * ElemSize; }
+
+private:
+    std::string Name;
+    size_t ElemSize;
+    bool Const;
+    std::vector<int64_t> Init;
+};
+
 class MachineOperand {
-    std::variant<Register, int64_t, MachineBB *, MachineFunction*, std::string> Value;
+    std::variant<Register, int64_t, MachineBB *, MachineFunction*, MachineGData*> Value;
 
     MachineInst *MI;
 
@@ -29,25 +47,25 @@ public:
     MachineOperand(int64_t Imm, MachineInst *MI = nullptr) : Value(Imm), MI(MI) {}
     MachineOperand(MachineBB *MBB, MachineInst *MI = nullptr) : Value(MBB), MI(MI) {}
     MachineOperand(MachineFunction *MF, MachineInst *MI = nullptr) : Value(MF), MI(MI) {}
-    MachineOperand(std::string Label, MachineInst *MI = nullptr) : Value(Label), MI(MI) {}
+    MachineOperand(MachineGData *Data, MachineInst *MI = nullptr) : Value(Data), MI(MI) {}
 
     bool isReg() const;
     bool isImm() const;
     bool isMBB() const;
     bool isFunc() const;
-    bool isLabel() const;
+    bool isGData() const;
 
     Register getReg() const;
     uint64_t getImm() const;
     MachineBB *getMBB() const;
     MachineFunction *getFunc() const;
-    std::string_view getLabel() const;
+    MachineGData *getGData() const;
 
     Register setReg(Register NewReg);
     uint64_t setImm(uint64_t NewImm);
     MachineBB *setMBB(MachineBB *NewMBB);
     MachineFunction *setFunc(MachineFunction *NewFunc);
-    std::string setLabel(std::string Label);
+    MachineGData* setGData(MachineGData *Data);
 
     MachineInst *getMI() const;
     void setMI(MachineInst *NewMI);

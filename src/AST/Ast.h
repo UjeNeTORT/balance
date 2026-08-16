@@ -1,6 +1,7 @@
 #ifndef AST_AST_H
 #define AST_AST_H
 
+#include <cassert>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -21,6 +22,14 @@ class Ast final
     CompUnitPtr CompUnit = nullptr;
 
   public:
+    Ast(const Ast&) = delete;
+    Ast& operator=(const Ast&) = delete;
+
+    Ast(Ast&&) = default;
+    Ast& operator=(Ast&&) = default;
+
+    explicit Ast() = default;
+
     template <typename NodeType, typename... Args>
     NodeType* construct(Args&&... args)
     {
@@ -33,7 +42,20 @@ class Ast final
         return rawPtr;
     }
 
-    void setCompUnit(CompUnitPtr compUnit) { CompUnit = compUnit; }
+    template <typename NodeType>
+    NodeType* construct(std::unique_ptr<NodeType> NodePtr)
+    {
+        auto rawPtr = NodePtr.get();
+
+        Data.push_back(std::move(NodePtr));
+
+        return rawPtr;
+    }
+
+    void setCompUnit(CompUnitPtr compUnit) {
+        assert(CompUnit == nullptr);
+        CompUnit = compUnit;
+    }
 
     const CompUnitNode* getCompUnit() const { return CompUnit; }
 };

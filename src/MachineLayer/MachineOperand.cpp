@@ -35,8 +35,8 @@ bool MachineOperand::isFunc() const {
     return std::holds_alternative<MachineFunction *>(Value);
 }
 
-bool MachineOperand::isLabel() const {
-    return std::holds_alternative<std::string>(Value);
+bool MachineOperand::isGData() const {
+    return std::holds_alternative<MachineGData *>(Value);
 }
 
 Register MachineOperand::getReg() const {
@@ -59,9 +59,9 @@ MachineFunction *MachineOperand::getFunc() const {
     return *std::get_if<MachineFunction *>(&Value);
 }
 
-std::string_view MachineOperand::getLabel() const {
-    assert(isLabel() && "Wrong type for accessor");
-    return *std::get_if<std::string>(&Value);
+MachineGData *MachineOperand::getGData() const {
+    assert(isGData() && "Wrong type for accessor");
+    return *std::get_if<MachineGData *>(&Value);
 }
 
 Register MachineOperand::setReg(Register NewReg) {
@@ -84,9 +84,9 @@ MachineFunction *MachineOperand::setFunc(MachineFunction *NewFunc) {
     return std::exchange(*std::get_if<MachineFunction *>(&Value), NewFunc);
 }
 
-std::string MachineOperand::setLabel(std::string Label) {
-    assert(isLabel() && "Wrong type for setter");
-    return std::exchange(*std::get_if<std::string>(&Value), Label);
+MachineGData *MachineOperand::setGData(MachineGData* Data) {
+    assert(isGData() && "Wrong type for setter");
+    return std::exchange(*std::get_if<MachineGData *>(&Value), Data);
 }
 
 MachineInst *MachineOperand::getMI() const {
@@ -103,7 +103,7 @@ std::string MachineOperand::getAsmString() const {
         [](int64_t Val)          { return std::to_string(Val); },
         [](MachineBB *Val)       { return std::string(Val->getReferenceName()); },
         [](MachineFunction* Val) { return std::string(Val->getName()); },
-        [](std::string Val)      { return Val; }
+        [](MachineGData* Val)    { return std::string(Val->getName()); }
     }, Value);
 }
 

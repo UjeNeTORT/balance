@@ -45,7 +45,7 @@ bool VerifierPass::verifyCFG(MachineFunction &MF, std::string &Msg) const {
 
     bool Fail = false;
     for (const MachineBB &MBB : MF) {
-        if (MBB.getSuccessors().empty() && MBB.getPredecessors().empty() && !MF.getBasicBlocks().empty()) {
+        if (MBB.getSuccessors().empty() && MBB.getPredecessors().empty() && MF.getBasicBlocks().size() >= 2) {
             Msg += std::string(MBB.getReferenceName())
                 +  ": isolated basic block\n";
             Fail = true;
