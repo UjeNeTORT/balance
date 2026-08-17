@@ -14,6 +14,9 @@ class DomFrontier final {
 public:
     explicit DomFrontier(FuncTy &F);
     const NodeSetTy &getFrontier(const BBTy *BB);
+    const NodeSetTy getFrontier(const NodeSetTy &BBSet);
+
+    const NodeSetTy getIteratedFrontier(const NodeSetTy &BBSet);
 private:
     void compute(const FuncTy &MF);
 };

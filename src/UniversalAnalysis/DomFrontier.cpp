@@ -6,6 +6,7 @@
 #include "IR/Function.h"
 #include "IR/BasicBlock.h"
 
+#include <algorithm>
 #include <cassert>
 
 namespace Balance {
@@ -53,6 +54,51 @@ const typename DomFrontier<FuncTy, BBTy>::NodeSetTy &
 DomFrontier<FuncTy, BBTy>::getFrontier(const BBTy *BB) {
     assert(DomFront.find(BB) != DomFront.end() && "Unknown DomFront[BB]");
     return DomFront.find(BB)->second;
+}
+
+template<typename FuncTy, typename BBTy>
+const typename DomFrontier<FuncTy, BBTy>::NodeSetTy
+DomFrontier<FuncTy, BBTy>::getFrontier(const NodeSetTy &BBSet) {
+    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](const BBTy *BB) {
+        return DomFront.count(BB) > 0;
+    }) && "Unknown DomFront[BB]");
+
+    // S - set of cfg nodes
+    // DF(S) = U(DF(n)) for each n in S
+    NodeSetTy Result;
+    std::for_each(BBSet.begin(), BBSet.end(), [&](const BBTy *BB) {
+        auto&& DFn = getFrontier(BB);
+        Result.insert(DFn.begin(), DFn.end());
+    });
+    return Result;
+}
+
+template<typename FuncTy, typename BBTy>
+const typename DomFrontier<FuncTy, BBTy>::NodeSetTy
+DomFrontier<FuncTy, BBTy>::getIteratedFrontier(const NodeSetTy &BBSet) {
+    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](const BBTy *BB) {
+        return DomFront.count(BB) > 0;
+    }) && "Unknown DomFront[BB]");
+
+    // iterated DF: DF^(S)
+    // DF_{1}(S) = DF(S)
+    // DF_{i+1}(S) = DF(S U DF_{i}(S))
+    // i.e. DF^(S) is a transitive closure of DF(S) graph
+    NodeSetTy IteratedDF;
+    NodeSetTy DFi = getFrontier(BBSet);
+
+    bool Converged = false;
+    while (!Converged) {
+
+        IteratedDF = DFi;
+        DFi.insert(BBSet.begin(), BBSet.end());
+        DFi = getFrontier(DFi);
+
+        if (IteratedDF == DFi)
+            Converged = true;
+    }
+
+    return IteratedDF;
 }
 
 template class DomFrontier<MachineFunction, MachineBB>;
