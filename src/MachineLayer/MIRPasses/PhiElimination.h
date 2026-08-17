@@ -1,7 +1,7 @@
 #ifndef MIR_PASSES_PHI_ELIMINATION_H
 #define MIR_PASSES_PHI_ELIMINATION_H
 
-#include "Pass.h"
+#include "MIRPass.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
 
@@ -11,9 +11,9 @@
 
 namespace Balance {
 
-class PhiElimination final : public Pass {
+class PhiElimination final : public MIRPass {
 public:
-    PhiElimination(const std::string &Name = "PhiElimination") : Pass(Name) {}
+    PhiElimination(const std::string &Name = "PhiElimination") : MIRPass(Name) {}
 
     bool run(MachineFunction &MF) override;
 

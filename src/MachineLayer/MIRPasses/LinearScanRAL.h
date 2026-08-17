@@ -1,7 +1,7 @@
 #ifndef MIR_PASSES_LINEAR_SCAN_RAL_H
 #define MIR_PASSES_LINEAR_SCAN_RAL_H
 
-#include "Pass.h"
+#include "MIRPass.h"
 #include "MachineLayer/MachineFunction.h"
 
 #include <algorithm>
@@ -16,7 +16,7 @@
 
 namespace Balance {
 
-class LinearScanRAL final : public Pass {
+class LinearScanRAL final : public MIRPass {
 public:
     struct LiveInterval {
         unsigned StartIdx = 0;
@@ -85,7 +85,7 @@ private:
     const unsigned LinearPeriod = 4;
     mutable unsigned StackSlotCnt = 0;
 public:
-    LinearScanRAL(const std::string &Name = "(l)SRAL") : Pass(Name) {
+    LinearScanRAL(const std::string &Name = "(l)SRAL") : MIRPass(Name) {
         resetSpillReservedRegs();
     }
 

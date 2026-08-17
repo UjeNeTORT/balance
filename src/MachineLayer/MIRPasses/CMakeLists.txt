@@ -1,5 +1,5 @@
 add_library(MIRPasses STATIC
-    Pass.cpp
+    MIRPass.cpp
     VerifierPass.cpp
     LivenessAnalysis.cpp
     PhiElimination.cpp

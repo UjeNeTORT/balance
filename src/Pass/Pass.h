@@ -1,18 +1,18 @@
-#ifndef MIR_PASSES_PASS_H
-#define MIR_PASSES_PASS_H
+#ifndef PASS_PASS_H
+#define PASS_PASS_H
 
-#include "MachineFunction.h"
-
+#include <iostream>
 #include <string>
 
 namespace Balance {
 
+template<typename FuncTy>
 class Pass {
     std::string Name;
 public:
-    Pass(const std::string &Name) : Name(Name) {}
+    explicit Pass(const std::string &Name) : Name(Name) {}
 
-    virtual bool run(MachineFunction &MF) = 0;
+    virtual bool run(FuncTy &F) = 0;
     const std::string &getName() const { return Name; }
     std::ostream &dbg(std::ostream &OS = std::cerr) {
         OS << '[' << getName() << "] ";
@@ -21,7 +21,6 @@ public:
 
     virtual ~Pass() = default;
 };
+}
 
-} // namespace Balance
-
-#endif // MIR_PASSES_PASS_H
+#endif // PASS_PASS_H

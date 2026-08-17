@@ -1,7 +1,7 @@
 #ifndef MIR_PASSES_DCE_H
 #define MIR_PASSES_DCE_H
 
-#include "Pass.h"
+#include "MIRPass.h"
 
 #include <map>
 #include <string>
@@ -11,7 +11,7 @@ namespace Balance {
 
 class MachineFunction;
 
-class DeadCodeElimination : public Pass {
+class DeadCodeElimination : public MIRPass {
     // temporary measure until we have MachineRegisterInfo
     struct RegInfo {
 
@@ -32,7 +32,7 @@ class DeadCodeElimination : public Pass {
     std::map<Register, RegInfo> MRI;
 
 public:
-    DeadCodeElimination(const std::string &Name = "dce") : Pass(Name) {}
+    DeadCodeElimination(const std::string &Name = "dce") : MIRPass(Name) {}
 
     bool run(MachineFunction &MF) override;
 

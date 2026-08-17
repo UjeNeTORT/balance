@@ -7,7 +7,6 @@ add_library(MachineLayer STATIC
     MachineBB.cpp
     MachineInst.cpp
     MachineOperand.cpp
-    PassManager.cpp
     Register.cpp
 )
 

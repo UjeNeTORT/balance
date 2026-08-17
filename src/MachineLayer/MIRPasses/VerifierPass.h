@@ -2,14 +2,14 @@
 #define MIR_PASSES_VERIFIER_PASS_H
 
 #include "MachineFunction.h"
-#include "Pass.h"
+#include "MIRPass.h"
 
 #include <iostream>
 namespace Balance {
 
-class VerifierPass final : public Pass {
+class VerifierPass final : public MIRPass {
 public:
-    VerifierPass(const std::string Name = "Verifier") : Pass(Name) {}
+    VerifierPass(const std::string Name = "Verifier") : MIRPass(Name) {}
 
     bool run(MachineFunction &MF) override;
 
