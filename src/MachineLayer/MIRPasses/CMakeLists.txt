@@ -5,6 +5,7 @@ add_library(MIRPasses STATIC
     PhiElimination.cpp
     LinearScanRAL.cpp
     DCE.cpp
+    StackFrameAlloc.cpp
 )
 
 target_link_libraries(MIRPasses PRIVATE UniversalAnalysis RISCV Utils)

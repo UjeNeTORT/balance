@@ -16,6 +16,7 @@
 #include "MachineLayer/MIRPasses/PhiElimination.h"
 #include "MachineLayer/MIRPasses/LinearScanRAL.h"
 #include "MachineLayer/MIRPasses/DCE.h"
+#include "MachineLayer/MIRPasses/StackFrameAlloc.h"
 
 using namespace Balance;
 using namespace AST;
@@ -78,6 +79,7 @@ int main(int argc, char** argv) {
     PM.registerPass<LivenessAnalysis>();
     PM.registerPass<VerifierPass>();
     PM.registerPass<LinearScanRAL>();
+    PM.registerPass<StackFrameAlloc>();
 
     auto* Main = Mir.findFunction("main");
 
