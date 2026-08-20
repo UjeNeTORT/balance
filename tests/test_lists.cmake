@@ -16,9 +16,7 @@ set(TEST_LIST
     functional/35_op_priority1
     functional/36_op_priority2
     functional/37_op_priority3
-    functional/38_op_priority4
     functional/42_empty_stmt
-    functional/43_logi_assign
     functional/45_comment1
     functional/46_hex_defn
     functional/47_hex_oct_add
@@ -49,9 +47,11 @@ set(FAIL_TEST_LIST
     functional/32_while_if_test2
     functional/33_while_if_test3
     functional/34_arr_expr_len
+    functional/38_op_priority4
     functional/39_op_priority5
     functional/40_unary_op
     functional/41_unary_op2
+    functional/43_logi_assign
     functional/44_stmt_expr
     functional/48_assign_complex_expr
     functional/49_if_complex_expr

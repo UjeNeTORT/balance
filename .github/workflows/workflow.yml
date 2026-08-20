@@ -9,16 +9,66 @@ on:
         - main
 
 jobs:
-    build:
-        name: ${{ matrix.os }} ${{matrix.compiler}} (${{ matrix.build_type }})
+    build-and-test:
+        name: "Build and test ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
+        runs-on: ubuntu-latest
+        container: docker.io/ralex2304/balance-ubuntu-ci:v1.0
+
+        strategy:
+            fail-fast: false
+            matrix:
+                build_type: [Release, Debug]
+                compiler: [gcc, clang]
+                sanitizers: ["address,undefined", ""]
+                include:
+                - compiler: gcc
+                  cc: gcc
+                  cxx: g++
+
+                - compiler: clang
+                  cc: clang
+                  cxx: clang++
+
+                exclude:
+                - build_type: Release
+                  sanitizers: "address,undefined"
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Run Cmake
+              run: >
+                cmake -B ${{github.workspace}}/build
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+                -DCMAKE_C_COMPILER=${{matrix.cc}}
+                -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
+                -DUSE_SANITIZER='${{matrix.sanitizers}}'
+                ${{matrix.generator}}
+
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+
+            - name: Run tests
+              run: ctest --test-dir ${{github.workspace}}/build --output-on-failure --parallel
+
+            - name: Upload tests
+              uses: actions/upload-artifact@v4
+              with:
+                name: 'tests'
+                path: ${{github.workspace}}/build/tests
+
+    cross-platform-build:
+        name: "Build ${{ matrix.os }} ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
         runs-on: ${{ matrix.os }}
 
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
+                os: [windows-latest]
                 build_type: [Release, Debug]
                 compiler: [gcc, clang]
+                sanitizers: ["address,undefined", ""]
                 include:
                 - compiler: gcc
                   cc: gcc
@@ -48,6 +98,12 @@ jobs:
                   cc: cl
                   cxx: cl
 
+                exclude:
+                - os: windows-latest
+                  sanitizers: "address,undefined"
+                - build_type: Release
+                  sanitizers: "address,undefined"
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -58,6 +114,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
                 -DCMAKE_C_COMPILER=${{matrix.cc}}
                 -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
+                -DUSE_SANITIZER='${{matrix.sanitizers}}'
                 ${{matrix.generator}}
 
             - name: Build
