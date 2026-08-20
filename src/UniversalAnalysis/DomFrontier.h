@@ -8,17 +8,17 @@ namespace Balance {
 
 template <typename FuncTy, typename BBTy>
 class DomFrontier final {
-    using NodeSetTy = std::set<const BBTy *>;
-    std::map<const BBTy *, NodeSetTy> DomFront;
+    using NodeSetTy = std::set<BBTy *>;
+    std::map<BBTy *, NodeSetTy> DomFront;
 
 public:
     explicit DomFrontier(FuncTy &F);
-    const NodeSetTy &getFrontier(const BBTy *BB);
-    const NodeSetTy getFrontier(const NodeSetTy &BBSet);
+    NodeSetTy getFrontier(BBTy *BB) const;
+    NodeSetTy getFrontier(NodeSetTy &BBSet) const;
 
-    const NodeSetTy getIteratedFrontier(const NodeSetTy &BBSet);
+    NodeSetTy getIteratedFrontier(NodeSetTy &BBSet);
 private:
-    void compute(const FuncTy &MF);
+    void compute(FuncTy &MF);
 };
 
 } // namespace Balance

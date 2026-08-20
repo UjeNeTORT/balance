@@ -15,7 +15,7 @@ std::unordered_set<Register> ComputeDefs(const MachineBB &B) {
     std::unordered_set<Register> Defs;
 
     for (const auto &MI : B) {
-        if (MI.getOpcode() == PHI) continue;
+        if (MI.getOpcode() == PHI) continue; // ?
         const auto &MIDefs = MI.getDefs();
         Defs.insert(MIDefs.begin(), MIDefs.end());
     }
@@ -27,7 +27,7 @@ std::unordered_set<Register> ComputeUses(const MachineBB &B) {
     std::unordered_set<Register> Uses;
 
     for (const auto &MI : B) {
-        if (MI.getOpcode() == PHI) continue;
+        if (MI.getOpcode() == PHI) continue; // ?
         const auto &MIUses = MI.getUses();
         Uses.insert(MIUses.begin(), MIUses.end());
     }

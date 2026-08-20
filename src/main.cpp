@@ -5,7 +5,10 @@
 #include "AST/AstDotDumper.h"
 #include "AST/AstDumper.h"
 #include "Frontend/Driver.h"
+#include "IR/PassManager.h"
 #include "IR2MIR/MIRBuilder.h"
+
+#include "IR/IRPasses/SSAConstruction.h"
 
 #include "MachineLayer/PassManager.h"
 
@@ -60,6 +63,9 @@ int main(int argc, char** argv) {
     IR Ir = driver.buildIR();
 
     Ir.verify();
+
+    IRPassManager IRPM;
+    IRPM.registerPass<SSAConstruction>();
 
     MIR Mir = MIRBuilder(std::move(Ir)).build();
 

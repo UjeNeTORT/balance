@@ -1,5 +1,6 @@
 #include "DomFrontier.h"
 #include "DomTree.h"
+#include "IR/Instruction.h"
 #include "MachineBB.h"
 #include "MachineFunction.h"
 
@@ -17,24 +18,24 @@ DomFrontier<FuncTy, BBTy>::DomFrontier(FuncTy &F) {
 }
 
 template<typename FuncTy, typename BBTy>
-void DomFrontier<FuncTy, BBTy>::compute(const FuncTy &F) {
+void DomFrontier<FuncTy, BBTy>::compute(FuncTy &F) {
     DomFront.clear();
 
     using Dummy = int;
     auto DT = DomTree<FuncTy, BBTy, Dummy>(F);
 
-    for (const BBTy &BB : F) DomFront.emplace(&BB, NodeSetTy());
-    for (const BBTy &BB : F) {
+    for (BBTy &BB : F) DomFront.emplace(&BB, NodeSetTy());
+    for (BBTy &BB : F) {
         if (BB.getPredecessors().size() < 2) continue;
 
-        const auto &IDom = DT.getIDom(&BB);
+        auto IDom = DT.getIDom(&BB);
 
         // bb with multiple predecessors (BB) is a candidate for a dominance frontier of some previous basic block
         // Algorithm:
         // - we start at some of its predecessors (P) and climb up the dom tree (using idom relationship)
         // - for each bb on this way (Runner), it is true that they dominate P, but do not dominate successor of P (BB)
         // - which exactly means that BB is in dom frontier of Runner
-        for (const BBTy *P : BB.getPredecessors()) {
+        for (BBTy *P : BB.getPredecessors()) {
             auto Runner = P;
 
             // note that situation where Runner == IDom where Runner = P
@@ -50,23 +51,23 @@ void DomFrontier<FuncTy, BBTy>::compute(const FuncTy &F) {
 }
 
 template<typename FuncTy, typename BBTy>
-const typename DomFrontier<FuncTy, BBTy>::NodeSetTy &
-DomFrontier<FuncTy, BBTy>::getFrontier(const BBTy *BB) {
+typename DomFrontier<FuncTy, BBTy>::NodeSetTy
+DomFrontier<FuncTy, BBTy>::getFrontier(BBTy *BB) const {
     assert(DomFront.find(BB) != DomFront.end() && "Unknown DomFront[BB]");
     return DomFront.find(BB)->second;
 }
 
 template<typename FuncTy, typename BBTy>
-const typename DomFrontier<FuncTy, BBTy>::NodeSetTy
-DomFrontier<FuncTy, BBTy>::getFrontier(const NodeSetTy &BBSet) {
-    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](const BBTy *BB) {
+typename DomFrontier<FuncTy, BBTy>::NodeSetTy
+DomFrontier<FuncTy, BBTy>::getFrontier(NodeSetTy &BBSet) const {
+    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](BBTy *BB) {
         return DomFront.count(BB) > 0;
     }) && "Unknown DomFront[BB]");
 
     // S - set of cfg nodes
     // DF(S) = U(DF(n)) for each n in S
     NodeSetTy Result;
-    std::for_each(BBSet.begin(), BBSet.end(), [&](const BBTy *BB) {
+    std::for_each(BBSet.begin(), BBSet.end(), [&](BBTy *BB) {
         auto&& DFn = getFrontier(BB);
         Result.insert(DFn.begin(), DFn.end());
     });
@@ -74,9 +75,9 @@ DomFrontier<FuncTy, BBTy>::getFrontier(const NodeSetTy &BBSet) {
 }
 
 template<typename FuncTy, typename BBTy>
-const typename DomFrontier<FuncTy, BBTy>::NodeSetTy
-DomFrontier<FuncTy, BBTy>::getIteratedFrontier(const NodeSetTy &BBSet) {
-    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](const BBTy *BB) {
+typename DomFrontier<FuncTy, BBTy>::NodeSetTy
+DomFrontier<FuncTy, BBTy>::getIteratedFrontier(NodeSetTy &BBSet) {
+    assert(std::all_of(BBSet.begin(), BBSet.end(), [this](BBTy *BB) {
         return DomFront.count(BB) > 0;
     }) && "Unknown DomFront[BB]");
 

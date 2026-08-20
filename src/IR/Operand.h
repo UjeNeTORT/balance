@@ -164,7 +164,8 @@ struct VirtRegister {
     OpType Type;
     int Id;
 
-    std::optional<BasicBlock*> DefBlock;
+    // valid only after ssa-construction
+    std::optional<BasicBlock*> DefBlock = std::nullopt;
 
     operator int() const { return Id; }
 };
@@ -198,5 +199,11 @@ private:
 using ImmVariant = VariantAppend<ImmBaseVariant, GlobalData*>::type;
 
 } // Balance
+
+template<> struct std::hash<Balance::VirtRegister> {
+    std::size_t operator()(const Balance::VirtRegister &R) const noexcept {
+        return std::hash<int>{}(R.Id);
+    }
+};
 
 #endif // IR_OPERAND_H

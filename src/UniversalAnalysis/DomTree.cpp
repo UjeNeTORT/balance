@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <type_traits>
 
 namespace Balance {
 
@@ -120,7 +121,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::dom(const BBTy *BBA, const BBTy *BBB) const 
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
-bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTy *IA, const InstTy *IB) const {
+template<typename InstTyT, typename>
+bool DomTree<FuncTy, BBTy, InstTy>::dom(const InstTyT *IA, const InstTyT *IB) const {
     assert(DomMap.find(IA->getParent()) != DomMap.end() && "Unknown Dom[IA->getParent()]");
     assert(DomMap.find(IB->getParent()) != DomMap.end() && "Unknown Dom[IB->getParent()]");
 
@@ -151,7 +153,8 @@ bool DomTree<FuncTy, BBTy, InstTy>::sdom(const BBTy *BBA, const BBTy *BBB) const
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
-bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTy *IA, const InstTy *IB) const {
+template<typename InstTyT, typename>
+bool DomTree<FuncTy, BBTy, InstTy>::sdom(const InstTyT *IA, const InstTyT *IB) const {
     const BBTy *ParentA = IA->getParent();
     const BBTy *ParentB = IB->getParent();
 
@@ -174,9 +177,14 @@ DomTree<FuncTy, BBTy, InstTy>::getSDoms(const BBTy *BB) {
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
-const BBTy *DomTree<FuncTy, BBTy, InstTy>::getIDom(const BBTy *BB) {
+const BBTy *DomTree<FuncTy, BBTy, InstTy>::getIDom(const BBTy *BB) const {
     assert(IDomMap.find(BB) != IDomMap.end() && "Unknown IDom[BB]");
     return IDomMap.find(BB)->second;
+}
+
+template<typename FuncTy, typename BBTy, typename InstTy>
+BBTy *DomTree<FuncTy, BBTy, InstTy>::getIDom(BBTy *BB) const {
+    return const_cast<BBTy *>(getIDom(const_cast<const BBTy *>(BB)));
 }
 
 template<typename FuncTy, typename BBTy, typename InstTy>
@@ -187,5 +195,8 @@ void DomTree<FuncTy, BBTy, InstTy>::print(std::ostream &OS) const {
 
 template class DomTree<MachineFunction, MachineBB, MachineInst>;
 template class DomTree<Function, BasicBlock, Instruction>;
+
+template class DomTree<MachineFunction, MachineBB>;
+template class DomTree<Function, BasicBlock>;
 
 } // namespace Balance

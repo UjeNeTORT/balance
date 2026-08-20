@@ -250,7 +250,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                 MIRBlock->addSuccessor(BBRegistry[BrDstBB[0]]);
                 if (Src.size() != 0) {
                     RVOp BROpcode;
-                    bool RevOp;
+                    bool RevOp = true;
                     switch (*CmpType) {
                         case CmpTypes::EQ: BROpcode = RVOp::BEQ; RevOp = false; break;
                         case CmpTypes::NE: BROpcode = RVOp::BNE; RevOp = false; break;
