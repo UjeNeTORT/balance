@@ -1,5 +1,3 @@
-#ifdef BALANCE_TESTING_
-
 #include <gtest/gtest.h>
 
 #include <fstream>
@@ -134,5 +132,3 @@ TEST(Negative, UnclosedBrace) { runFailTest("neg_unclosed_brace"); }
 TEST(Negative, UnterminatedComment) { runFailTest("neg_unterminated_comment"); }
 
 TEST(Negative, ConstWithoutInit) { runFailTest("neg_const_without_init"); }
-
-#endif //< BALANCE_TESTING_

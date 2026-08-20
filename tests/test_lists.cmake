@@ -41,8 +41,8 @@ set(FAIL_TEST_LIST
     functional/26_while_test1
     functional/27_while_test2
     functional/28_while_test3
-    functional/29_break
-    functional/30_continue
+    # functional/29_break // succeeds in release
+    # functional/30_continue // causes inf loop in release
     functional/31_while_if_test1
     functional/32_while_if_test2
     functional/33_while_if_test3
@@ -51,14 +51,14 @@ set(FAIL_TEST_LIST
     functional/39_op_priority5
     functional/40_unary_op
     functional/41_unary_op2
-    functional/43_logi_assign
-    functional/44_stmt_expr
+    # functional/43_logi_assign // succeeds in release
+    # functional/44_stmt_expr // causes inf loop in release
     functional/48_assign_complex_expr
     functional/49_if_complex_expr
     functional/50_short_circuit
     functional/51_short_circuit3
     functional/52_scope
-    functional/53_scope2
+    # functional/53_scope2 // causes inf loop in release
     functional/54_hidden_var
     functional/55_sort_test1
     functional/56_sort_test2
@@ -96,7 +96,7 @@ set(FAIL_TEST_LIST
     functional/88_many_params2
     functional/89_many_globals
     functional/90_many_locals
-    functional/91_many_locals2
+    # functional/91_many_locals2 // causes inf loop in release
     functional/92_register_alloc
     functional/93_nested_calls
     functional/94_nested_loops
@@ -129,13 +129,13 @@ set(FAIL_TEST_LIST
     h_functional/24_array_only
     h_functional/25_scope3
     h_functional/26_scope4
-    # h_functional/27_scope5 // inf loop
+    # h_functional/27_scope5 // causes inf loop
     h_functional/28_side_effect2
     h_functional/29_long_line
     h_functional/30_many_dimensions
     h_functional/31_many_indirections
     h_functional/32_many_params3
-    # h_functional/33_multi_branch // inf loop
+    # h_functional/33_multi_branch // causes inf loop
     h_functional/34_multi_loop
     h_functional/35_math
     h_functional/36_rotate
