@@ -7,6 +7,7 @@
 #include "Frontend/Driver.h"
 #include "IR2MIR/MIRBuilder.h"
 
+#include "MachineLayer/AsmEmitter.h"
 #include "MachineLayer/PassManager.h"
 
 #include "MachineLayer/MIRPasses/VerifierPass.h"
@@ -81,6 +82,8 @@ int main(int argc, char** argv) {
 
     for (auto& Func: Mir)
         Func.print(std::cout);
+
+    AsmEmitter(Mir, std::cout).emit();
 
     return 0;
 }

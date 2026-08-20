@@ -33,6 +33,9 @@ public:
     BasicBlock& operator=(BasicBlock&&) = delete;
 
     void verify() const {
+        if (Instructions.empty())
+            return;
+
         bool IsTerminal = false;
         for (const auto& Instr: Instructions) {
             Instr.verify();

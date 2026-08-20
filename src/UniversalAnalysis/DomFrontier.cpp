@@ -1,7 +1,7 @@
 #include "DomFrontier.h"
 #include "DomTree.h"
-#include "MachineBB.h"
-#include "MachineFunction.h"
+#include "MachineLayer/MachineBB.h"
+#include "MachineLayer/MachineFunction.h"
 
 #include "IR/Function.h"
 #include "IR/BasicBlock.h"

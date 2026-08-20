@@ -182,6 +182,9 @@ void Instruction::verify() const {
             if (!CallFunc.has_value())
                 throwVerifyError("CALL operation must have CallFunc");
 
+            if (CallFunc.value() == nullptr)
+                throwVerifyError("CALL must point to existing function");
+
             const auto& Args = CallFunc.value()->getArgs();
             if (Src.size() != Args.size())
                 throw Instruction::verify_error("CALL Src size must be equal to function argument count");

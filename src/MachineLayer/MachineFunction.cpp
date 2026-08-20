@@ -10,9 +10,11 @@ namespace Balance {
 
 int MachineFunction::getNewMBBIdx() { return MBBIdx++; }
 
-MachineFunction::MachineFunction(const std::string &Name) : Name(Name) {}
+MachineFunction::MachineFunction(const std::string &Name, bool IsDeclaration) :
+    Name(Name), IsDecl(IsDeclaration) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
+bool MachineFunction::isDecl() const { return IsDecl; }
 
 const MachineBB *MachineFunction::entryBB() const {
     auto FindNextWithZeroPreds = [this](const_iterator SearchSince) -> const_iterator {

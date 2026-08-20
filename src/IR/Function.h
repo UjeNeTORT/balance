@@ -4,6 +4,7 @@
 #include "IR/BasicBlock.h"
 #include "IR/Operand.h"
 
+#include <cassert>
 #include <iterator>
 #include <list>
 #include <string>
@@ -22,9 +23,12 @@ public:
     Function(Function&&) = delete;
     Function& operator=(Function&&) = delete;
 
-    Function(std::string Name)
-        : Name(std::move(Name)) {
-        addBasicBlock();
+    Function(std::string Name, bool IsDeclaration = false)
+        : Name(std::move(Name))
+        , IsDecl(IsDeclaration) {
+
+        if (!IsDecl)
+            addBasicBlock();
     }
 
     Function& addArg(OpType Arg) { Args.push_back(Arg); return *this;}
@@ -42,21 +46,18 @@ public:
 
     Instruction& addInstruction(Opcodes Opcode,
                                         std::optional<SourceInfo> SrcInfo = std::nullopt) {
-        iterator LastBB;
-        if (BasicBlocks.empty()) {
-            LastBB = addBasicBlock();
-        } else {
-            LastBB = std::prev(BasicBlocks.end());
-
-            if (!LastBB->empty() && std::prev(LastBB->end())->isTerminal())
-                LastBB = addBasicBlock();
-        }
-        return LastBB->addInstruction(Opcode, SrcInfo);
+        auto& Instr = std::prev(BasicBlocks.end())->addInstruction(Opcode, SrcInfo);
+        if (Instr.isTerminal())
+            addBasicBlock();
+        return Instr;
     }
 
     void verify() const {
-        if (BasicBlocks.empty())
+        if (IsDecl) {
+            assert(BasicBlocks.empty());
             return;
+        }
+        assert(!BasicBlocks.empty());
 
         if (entryBB() == nullptr ||
             entryBB()->begin()->getOpcode() != Opcodes::FUNC_DEF)
@@ -105,12 +106,15 @@ public:
         return FrameSize;
     }
 
+    bool isDecl() const { return IsDecl; }
+
     iterator       begin()       { return BasicBlocks.begin(); }
     iterator       end()         { return BasicBlocks.end(); }
     const_iterator begin() const { return BasicBlocks.cbegin(); }
     const_iterator end()   const { return BasicBlocks.cend(); }
 private:
     std::string Name;
+    bool IsDecl;
     std::vector<OpType> Args;
     std::optional<OpType> RetType;
     size_t FrameSize = 0;

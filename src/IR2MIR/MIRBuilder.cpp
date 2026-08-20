@@ -2,8 +2,10 @@
 
 #include "IR/Operand.h"
 #include "MachineLayer/MachineInst.h"
+#include "MachineOperand.h"
 #include "RISCV/RISCVRegisters.h"
 #include "UniversalAnalysis/RPOTraversal.h"
+#include "Utils.h"
 
 #include <cstdint>
 #include <cstring>
@@ -14,33 +16,6 @@ using namespace Balance;
 using namespace RISCV;
 using RVReg = RISCVRegister;
 using RVOp = RISCVOpcode;
-
-MIR MIRBuilder::build() && {
-    for (auto& Func: IntermRepr)
-        FuncRegistry[&Func] = MachineIR.addFunction(MachineFunction(std::string(Func.getName())));
-
-    auto IRIt = IntermRepr.begin();
-    auto MIRIt = MachineIR.begin();
-    for (; IRIt != IntermRepr.end() && MIRIt != MachineIR.end(); IRIt++, MIRIt++)
-        buildFunction(IRIt, MIRIt);
-
-    return std::move(MachineIR);
-}
-
-void MIRBuilder::buildFunction(const IR::iterator IRIt, const MIR::iterator MIRIt) {
-    auto RPO = RPOTraversal<BasicBlock, Function>(*IRIt).getRPO();
-
-    std::map<const BasicBlock*, MachineBB*> BBRegistry;
-
-    for (auto& Block: RPO)
-        BBRegistry[Block] = MIRIt->createMBB(std::string(Block->getName()));
-
-    auto IRBlock = RPO.begin();
-    auto MIRBlock = MIRIt->begin();
-
-    for (; IRBlock != RPO.end() && MIRBlock != MIRIt->end(); IRBlock++, MIRBlock++)
-        buildBasicBlock(*IRBlock, &*MIRBlock, BBRegistry);
-}
 
 namespace {
 
@@ -101,7 +76,7 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
     size_t StackShift = (8 + (StackArgsCnt * 8) + 15) & ~15; //< (ret addr + stack args).alignUp(16)
 
     MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP).addImm(-StackShift); // TODO: check overflow
-    MIRBlock->createMI(RVOp::SD).addReg(RVReg::RA).addReg(RVReg::SP).addImm(StackShift - 8);
+    MIRBlock->createMI(RVOp::SD).addReg(RVReg::SP).addImm(StackShift - 8).addReg(RVReg::RA);
 
     MachineInst Call = MachineInst(RVOp::CALL);
     if (Dst.size() == 1) {
@@ -154,6 +129,56 @@ void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<V
 
 } // anonymous namespace
 
+MIR MIRBuilder::build() && {
+    for (auto Var = IntermRepr.gdata_cbegin(); Var != IntermRepr.gdata_cend(); Var++) {
+        auto Data = std::visit(overloaded {
+                   [](const std::vector<int>& InitVec) {
+                    static_assert(sizeof(int) == sizeof(uint32_t));
+                    std::vector<uint32_t> Data;
+                    Data.reserve(InitVec.size());
+                    for (auto Val: InitVec)
+                        Data.push_back(static_cast<uint32_t>(Val));
+
+                    return MachineGData::DataVector(std::move(Data));
+                }, [](const std::vector<float>& InitVec) {
+                    static_assert(sizeof(float) == sizeof(uint32_t));
+                    std::vector<uint32_t> Data(InitVec.size());
+                    std::memcpy(Data.data(), InitVec.data(), sizeof(uint32_t));
+
+                    return MachineGData::DataVector(std::move(Data));
+                }
+            }, Var->getInit());
+
+        MachineIR.addGData(MachineGData(std::string(Var->getName()), Var->isConst(), std::move(Data)));
+    }
+
+    for (auto& Func: IntermRepr)
+        FuncRegistry[&Func] = MachineIR.addFunction(MachineFunction(
+                                                        std::string(Func.getName()), Func.isDecl()));
+
+    auto IRIt = IntermRepr.begin();
+    auto MIRIt = MachineIR.begin();
+    for (; IRIt != IntermRepr.end() && MIRIt != MachineIR.end(); IRIt++, MIRIt++)
+        buildFunction(IRIt, MIRIt);
+
+    return std::move(MachineIR);
+}
+
+void MIRBuilder::buildFunction(const IR::iterator IRIt, const MIR::iterator MIRIt) {
+    auto RPO = RPOTraversal<BasicBlock, Function>(*IRIt).getRPO();
+
+    std::map<const BasicBlock*, MachineBB*> BBRegistry;
+
+    for (auto& Block: RPO)
+        BBRegistry[Block] = MIRIt->createMBB(std::string(Block->getName()));
+
+    auto IRBlock = RPO.begin();
+    auto MIRBlock = MIRIt->begin();
+
+    for (; IRBlock != RPO.end() && MIRBlock != MIRIt->end(); IRBlock++, MIRBlock++)
+        buildBasicBlock(*IRBlock, &*MIRBlock, BBRegistry);
+}
+
 void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                                  std::map<const BasicBlock*, MachineBB*>& BBRegistry) {
     for (const auto& Instr: *IRBlock) {
@@ -192,7 +217,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                             MIRBlock->createMI(RVOp::LI).addReg(Dst[0])
                                             .addImm(static_cast<int64_t>(*std::get_if<int>(&*Imm)));
                         else
-                            MIRBlock->createMI(RVOp::LI).addReg(Dst[0])
+                            MIRBlock->createMI(RVOp::LA).addReg(Dst[0])
                                             .addGData(MachineIR.findGData(
                                                         (*std::get_if<GlobalData*>(&*Imm))->getName()));
                     } else {

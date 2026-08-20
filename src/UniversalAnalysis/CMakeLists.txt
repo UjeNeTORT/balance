@@ -6,7 +6,7 @@ add_library(UniversalAnalysis STATIC
     DomFrontier.cpp
 )
 
-target_link_libraries(UniversalAnalysis PRIVATE Utils MachineLayer)
+target_link_libraries(UniversalAnalysis PRIVATE Utils)
 
 target_include_directories(UniversalAnalysis PRIVATE ${PROJECT_SOURCE_DIR}/src)
 

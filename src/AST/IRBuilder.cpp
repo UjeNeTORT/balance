@@ -25,7 +25,7 @@ T getImmediateAndConvert(std::variant<int, float> Value) {
     return std::visit([](auto& Val) { return (T)Val; }, Value);
 }
 
-auto parseArrayDims(std::vector<ExprPtr> Dims, bool IsFuncParam = false) {
+std::vector<size_t> parseArrayDims(std::vector<ExprPtr> Dims, bool IsFuncParam = false) {
     std::vector<size_t> VarDims;
     if (IsFuncParam)
         VarDims.push_back(0);
@@ -53,10 +53,10 @@ OpType convertBaseTypeForVar(BaseType Type) {
     }
 }
 
-OpType convertBaseTypeForArray(BaseType Type, std::vector<size_t>&& Dims) {
+OpType convertBaseTypeForArray(BaseType Type, std::vector<size_t> Dims) {
     switch (Type) {
-        case BaseType::Int:   return OpArray<OpInt>(Dims);
-        case BaseType::Float: return OpArray<OpFloat>(Dims);
+        case BaseType::Int:   return OpArray<OpInt>(std::move(Dims));
+        case BaseType::Float: return OpArray<OpFloat>(std::move(Dims));
         case BaseType::Void:  throw std::runtime_error("Variable can't have void type");
         default: unreachable("unhandled type");
     }
@@ -114,6 +114,7 @@ Variables::Variable& Variables::findVar(std::string Name) {
 }
 
 IRBuilder::IRBuilder() : Ir(), Vars(Ir) {
+    /*
     Ir.addFunction(IR::internalFunc("memset"))->addArg(OpArray<OpInt>({0})).addArg(OpInt()).addArg(OpInt());
 
     auto PreAddr = Ir.getNewVirtReg(OpArray<OpInt>({0}));
@@ -131,7 +132,8 @@ IRBuilder::IRBuilder() : Ir(), Vars(Ir) {
     Ir.addInstruction(Opcodes::PHI).addDst(Addr).addSrc(PreAddr).addSrc(IncAddr);
 
     auto BodyBB = Ir.addInstruction(Opcodes::STORE).addSrc(Addr).addSrc(Val).getParent();
-    Ir.addInstruction(Opcodes::ADD).addDst(IncAddr).addSrc(Addr).addSrc(copyImm((int)OpInt().getSize()));
+    auto ElemSize = copyImm((int)OpInt().getSize());
+    Ir.addInstruction(Opcodes::ADD).addDst(IncAddr).addSrc(Addr).addSrc(ElemSize);
 
     auto& WhileBr = Ir.addInstruction(Opcodes::BR).setCmpType(CmpTypes::LT).addSrc(IncAddr).addSrc(FinAddr);
 
@@ -139,8 +141,22 @@ IRBuilder::IRBuilder() : Ir(), Vars(Ir) {
 
     IfBr.addBrDst(FinBB).addBrDst(BodyBB);
     WhileBr.addBrDst(FinBB).addBrDst(BodyBB);
+    */
 
-    // TODO: add runtime functions
+    Ir.addFunctionDecl("memset")->addArg(OpArray<OpInt>({0})).addArg(OpInt()).addArg(OpInt())
+                                 .setRetType(OpInt());
+
+    Ir.addFunctionDecl("getint")->setRetType(OpInt());
+    Ir.addFunctionDecl("getch")->setRetType(OpInt());
+    Ir.addFunctionDecl("getfloat")->setRetType(OpFloat());
+    Ir.addFunctionDecl("getarray")->setRetType(OpArray<OpInt>({0}));
+    Ir.addFunctionDecl("getfarray")->setRetType(OpArray<OpFloat>({0}));
+    Ir.addFunctionDecl("putint")->addArg(OpInt());
+    Ir.addFunctionDecl("putch")->addArg(OpInt());
+    Ir.addFunctionDecl("putfloat")->addArg(OpFloat());
+    Ir.addFunctionDecl("putarray")->addArg(OpInt()).addArg(OpArray<OpInt>({0}));
+    Ir.addFunctionDecl("putfarray")->addArg(OpInt()).addArg(OpArray<OpFloat>({0}));
+    // Ir.addFunctionDecl("putf"); // variadic arguments are not supported
 }
 
 VirtRegister IRBuilder::convertRegType(OpType NewType, VirtRegister Src) {
@@ -175,11 +191,13 @@ void IRBuilder::convertRegType(VirtRegister Dst, VirtRegister Src) {
 
 VirtRegister IRBuilder::evalArrayOffset(const Variables::Variable& Var, const std::vector<ExprPtr>& Indices) {
     auto OffsetReg = Ir.getNewVirtReg(Var.Type.isArray() ? Var.Type : Var.Type.makeArray({0}));
-    if (Var.isGlobal())
+    if (Var.isGlobal()) {
         Ir.addInstruction(Opcodes::COPY).addDst(OffsetReg).setImmediate(Var.getGData());
-    else
+    } else {
+        auto Imm = copyImm((int)Var.getOffset());
         Ir.addInstruction(Opcodes::ADD).addDst(OffsetReg).addSrc(curFunc()->getFrameVReg())
-                                                         .addSrc(copyImm((int)Var.getOffset()));
+                                                         .addSrc(Imm);
+    }
 
     if (Indices.size() > Var.Type.getDepth())
         throw std::runtime_error("Too many indices for array");
@@ -187,9 +205,12 @@ VirtRegister IRBuilder::evalArrayOffset(const Variables::Variable& Var, const st
     for (const auto* Indice: Indices) {
         auto Regs = Ir.getNewVirtRegs<2>(OffsetReg.Type.getSubdimType(1));
 
+        auto IndiceEval = evalExpr(Indice);
+
+        auto Imm = copyImm((int)OffsetReg.Type.getSubdimSize(1));
         Ir.addInstruction(Opcodes::MUL).addDst(Regs[0])
-                                       .addSrc(evalExpr(Indice))
-                                       .addSrc(copyImm((int)OffsetReg.Type.getSubdimSize(1)));
+                                       .addSrc(IndiceEval)
+                                       .addSrc(Imm);
 
         Ir.addInstruction(Opcodes::ADD).addDst(Regs[1]).addSrc(OffsetReg).addSrc(Regs[0]);
         OffsetReg = Regs[1];
@@ -243,17 +264,22 @@ void IRBuilder::visit(const FuncParamNode& node) {
 
 void IRBuilder::visit(const VarDeclNode& node) {
     for (auto* Def: node.getDefs()) {
-        Variables::Variable Var;
+        Variables::Variable* Var = nullptr;
         if (Def->getDims().size() != 0) {
-            Var = Vars.addArray(Def->getName(), convertBaseTypeForArray(node.getType(),
-                                                parseArrayDims(Def->getDims())), *curFunc(),
-                                node.isConst());
+            Var = &Vars.addArray(Def->getName(), convertBaseTypeForArray(node.getType(),
+                                                                         parseArrayDims(Def->getDims())),
+                                *curFunc(), node.isConst());
         } else {
-            Var = Vars.addVar(Def->getName(), convertBaseTypeForVar(node.getType()), node.isConst());
+            Var = &Vars.addVar(Def->getName(), convertBaseTypeForVar(node.getType()), node.isConst());
         }
 
-        if (Def->hasInit())
+        if (Def->hasInit()) {
             initializerTraversal(Var, Def->getInit());
+        } else if (Var->isGlobal()) {
+            assert(Var->Type.getElemSize() == sizeof(int));
+            Var->getGData()->setInitVals(
+                                std::vector<int>(Var->Type.getSize() / Var->Type.getElemSize(), 0));
+        }
     }
 }
 
@@ -287,15 +313,20 @@ void IRBuilder::visit(const InitValNode& node) {
         assert(CurOffset == 0);
 
         if (Var->isGlobal()) {
-            Var->getGData()->setInitVals(std::vector<int>(0, Var->Type.getSize() / Var->Type.getSize()));
+            assert(Var->Type.getElemSize() == sizeof(int));
+            Var->getGData()->setInitVals(
+                                std::vector<int>(Var->Type.getSize() / Var->Type.getElemSize(), 0));
         } else {
-            auto Reg = Ir.getNewVirtReg(OpInt());
+            auto Reg = Ir.getNewVirtReg(OpArray<OpInt>({0}));
 
+            auto OffsImm = copyImm((int)(CurOffset + Var->getOffset()));
             Ir.addInstruction(Opcodes::ADD ).addDst(Reg).addSrc(curFunc()->getFrameVReg())
-                                                        .addSrc(copyImm((int)(CurOffset + Var->getOffset())));
+                                                        .addSrc(OffsImm);
 
-            Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Ir.findFunction(IR::internalFunc("memset")))
-                                            .addSrc(Reg).addSrc(copyImm(0)).addSrc(copyImm((int)Var->Type.getSize()));
+            auto ZeroImm = copyImm(0);
+            auto SizeImm = copyImm((int)Var->Type.getSize());
+            Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Ir.findFunction("memset"))
+                                            .addSrc(Reg).addSrc(ZeroImm).addSrc(SizeImm);
         }
     }
 
@@ -333,8 +364,8 @@ void IRBuilder::visit(const InitValNode& node) {
 
         auto AddrReg = Ir.getNewVirtReg(Var->Type.getSubdimType(Depth));
 
-        Ir.addInstruction(Opcodes::ADD).addDst(AddrReg).addSrc(curFunc()->getFrameVReg())
-                                                       .addSrc(copyImm((int)CurOffset));
+        auto Imm = copyImm((int)CurOffset);
+        Ir.addInstruction(Opcodes::ADD).addDst(AddrReg).addSrc(curFunc()->getFrameVReg()).addSrc(Imm);
         Ir.addInstruction(Opcodes::STORE).addSrc(AddrReg).addSrc(Res);
         return;
     }
@@ -356,11 +387,11 @@ void IRBuilder::visit(const BlockNode& node) {
 }
 
 void IRBuilder::visit(const ExprStmtNode& node) {
-    if (ExprResRequired != node.hasExpr())
+    if (ExprResRequired && !node.hasExpr())
         throw std::runtime_error("ExprStmt semantic error");
 
     if (node.hasExpr())
-        ExprRes = evalExpr(node.getExpr());
+        node.getExpr()->accept(*this);
 }
 
 void IRBuilder::visit(const AssignNode& node) {
@@ -369,7 +400,7 @@ void IRBuilder::visit(const AssignNode& node) {
     auto Dst = node.getDest();
     auto& Var = Vars.findVar(Dst->getName());
 
-    if (Dst->getIndices().size() != Var.Type.getSize())
+    if (Dst->getIndices().size() != Var.Type.getDepth())
         throw std::runtime_error("Incompatible dimensions in assignment");
 
     if (!Var.Type.isArray()) {
@@ -419,13 +450,15 @@ void IRBuilder::visit(const LValNode& node) {
     ExprRes = Ir.getNewVirtReg(std::visit([](const auto& Type) {
         using T = std::decay_t<decltype(Type)>;
         if constexpr (T::IsArray) {
-            return OpType(typename T::array_t());
+            if (Type.size() == 0)
+                return OpType(typename T::array_t());
+            return OpType(Type);
         } else {
             assert(0 && "array only");
             return OpType();
         }
-    }, Var.Type));
-    Ir.addInstruction(Opcodes::LOAD).addSrc(OffsetReg);
+    }, OffsetReg.Type));
+    Ir.addInstruction(Opcodes::LOAD).addDst(*ExprRes).addSrc(OffsetReg);
 }
 
 void IRBuilder::visit(const UnaryOpNode& node) {
@@ -509,25 +542,23 @@ void IRBuilder::binaryOpVisitCondition(const BinaryOpNode& node) {
         }
         default: unreachable("Unhandled operation");
     }
-    auto& Br = Ir.addInstruction(Opcodes::BR).setCmpType(BrCmp)
-                                             .addSrc(evalExpr(node.getLeft()))
-                                             .addSrc(evalExpr(node.getRight()));
-    CondRes = {Br.getParent(), {Br.addEmptyBrDst()}, {Br.addEmptyBrDst()}};
+    auto LeftEval = evalExpr(node.getLeft());
+    auto RightEval = evalExpr(node.getRight());
 
+    auto& Br = Ir.addInstruction(Opcodes::BR).setCmpType(BrCmp)
+                                             .addSrc(LeftEval)
+                                             .addSrc(RightEval);
+    CondRes = {Br.getParent(), {Br.addEmptyBrDst()}, {Br.addEmptyBrDst()}};
 }
 
 void IRBuilder::binaryOpVisitExpression(const BinaryOpNode& node) {
     auto Left  = evalExpr(node.getLeft());
     auto Right = evalExpr(node.getRight());
 
-    if (Left.Type.isArray() || Right.Type.isArray())
-        throw std::runtime_error("Binary operations aren't allowed for arrays");
-
     if (std::holds_alternative<OpFloat>(Left.Type) || std::holds_alternative<OpFloat>(Right.Type)) {
         Left  = convertRegType(OpFloat(), Left);
         Right = convertRegType(OpFloat(), Right);
     }
-
     switch (node.getOp()) {
         case BinaryOp::Add: 
             ExprRes = Ir.getNewVirtReg(Left.Type);
@@ -589,15 +620,21 @@ void IRBuilder::visit(const FloatLiteralNode& node) {
 }
 
 void IRBuilder::visit(const CallNode& node) {
-    auto Func = Ir.findFunction(node.getCallee());
+    auto* Func = Ir.findFunction(node.getCallee());
 
-    auto& Call = Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Func);
+    if (!Func)
+        throw std::runtime_error("Function \"" + node.getCallee() + "\" wasn't defined");
 
     if (node.getArgs().size() != Func->getArgs().size())
         throw std::runtime_error("Call has invalid number of arguments");
 
+    std::vector<VirtRegister> EvaledArgs;
     for (size_t i = 0; i < node.getArgs().size(); i++)
-        Call.addSrc(convertRegType(Func->getArgs()[i], evalExpr(node.getArgs()[i])));
+        EvaledArgs.push_back(convertRegType(Func->getArgs()[i], evalExpr(node.getArgs()[i])));
+
+    auto& Call = Ir.addInstruction(Opcodes::CALL).setCallFunc(&*Func);
+    for (const auto& Arg: EvaledArgs)
+        Call.addSrc(Arg);
 
     if (Func->getRetType().has_value()) {
         ExprRes = Ir.getNewVirtReg(*Func->getRetType());

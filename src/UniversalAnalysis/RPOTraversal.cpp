@@ -43,6 +43,8 @@ void RPOTraversal<BBTy, FuncTy>::compute(FuncTy &Func) {
 }
 
 template class RPOTraversal<MachineBB, MachineFunction>;
+template class RPOTraversal<const MachineBB, const MachineFunction>;
 template class RPOTraversal<BasicBlock, Function>;
+template class RPOTraversal<const BasicBlock, const Function>;
 
 } // namespace Balance
