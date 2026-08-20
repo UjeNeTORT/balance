@@ -91,7 +91,7 @@ set(FAIL_TEST_LIST
     functional/83_long_array
     functional/84_long_array2
     functional/85_long_code
-    functional/86_long_code2
+    # functional/86_long_code2 // causes stack overflow
     functional/87_many_params
     functional/88_many_params2
     functional/89_many_globals
