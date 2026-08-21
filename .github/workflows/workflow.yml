@@ -48,6 +48,12 @@ jobs:
             - name: Run tests
               run: ctest --test-dir ${{github.workspace}}/build --output-on-failure --parallel
 
+            - name: Ls build
+              run: ls -lah ${{github.workspace}}/build
+
+            - name: Ls build tests
+              run: ls -lah ${{github.workspace}}/build/tests
+
             - name: Upload tests
               uses: actions/upload-artifact@v4
               with:

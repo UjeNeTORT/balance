@@ -36,7 +36,7 @@ def run_test(interpreter, build_dir, test):
     with open(test + ".out", "rb") as file:
         stdout = file.read()
 
-    p = Popen([interpreter,  build_dir + "/tests/" + test],
+    p = Popen([interpreter, build_dir + "/tests/" + test],
               stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     stdout_data, stderr_data = p.communicate(input=stdin)
@@ -57,7 +57,7 @@ def run_test(interpreter, build_dir, test):
         fail = True
 
     if ret != 0:
-        print(f"\t[WARN]return code != 0: got {ret}")
+        print(f"\t[WARN] return code != 0: got {ret}")
 
     if fail:
         print(f"\t[FAIL]")
