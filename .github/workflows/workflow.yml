@@ -29,10 +29,6 @@ jobs:
                   cc: clang
                   cxx: clang++
 
-                exclude:
-                - build_type: Release
-                  sanitizers: "address,undefined"
-
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -101,7 +97,8 @@ jobs:
                 exclude:
                 - os: windows-latest
                   sanitizers: "address,undefined"
-                - build_type: Release
+                - os: macos-latest
+                  compiler: gcc
                   sanitizers: "address,undefined"
 
         steps:
