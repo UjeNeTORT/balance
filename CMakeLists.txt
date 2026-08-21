@@ -9,6 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/tools.cmake)
+include(cmake/third_party.cmake)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, default to Release")
@@ -29,7 +30,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 add_subdirectory(src)
 
-option(BUILD_TESTS "Build unit tests" ON)
+option(BUILD_UNIT_TESTS "Build unit tests" ON)
+option(BUILD_END2END_TESTS "Build end2end tests" OFF)
 
 enable_testing()
 add_subdirectory(tests)

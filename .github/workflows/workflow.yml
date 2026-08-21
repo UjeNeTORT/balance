@@ -9,8 +9,8 @@ on:
         - main
 
 jobs:
-    build-and-test:
-        name: "Build and test ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
+    build-and-all-tests:
+        name: "All tests ubuntu-latest ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
         runs-on: ubuntu-latest
         container: docker.io/ralex2304/balance-ubuntu-ci:v1.0
 
@@ -31,37 +31,37 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Run Cmake
               run: >
-                cmake -B ${{github.workspace}}/build
+                cmake -B ./build
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
                 -DCMAKE_C_COMPILER=${{matrix.cc}}
                 -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
                 -DUSE_SANITIZER='${{matrix.sanitizers}}'
+                -DBUILD_UNIT_TESTS=ON
+                -DBUILD_END2END_TESTS=ON
                 ${{matrix.generator}}
 
             - name: Build
-              run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+              run: cmake --build ./build --config ${{matrix.build_type}}
 
             - name: Run tests
-              run: ctest --test-dir ${{github.workspace}}/build --output-on-failure --parallel
-
-            - name: Ls build
-              run: ls -lah ${{github.workspace}}/build
-
-            - name: Ls build tests
-              run: ls -lah ${{github.workspace}}/build/tests
+              run: ctest --test-dir ./build -C ${{matrix.build_type}} --output-on-failure --parallel
 
             - name: Upload tests
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
-                name: 'tests'
-                path: ${{github.workspace}}/build/tests
+                name: "all_tests_ubuntu_latest_${{matrix.compiler}}_${{matrix.build_type}}${{matrix.sanitizers != '' && '_asan' || ''}}"
+                path: |
+                  build/tests/functional/
+                  build/tests/h_functional/
+                  build/tests/performance/
+                if-no-files-found: error
 
-    cross-platform-build:
-        name: "Build ${{ matrix.os }} ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
+    build-and-unit-tests:
+        name: "Unit tests ${{ matrix.os }} ${{ matrix.compiler }} (${{ matrix.build_type }}${{ matrix.sanitizers != '' && ' with sanitizers' || '' }})"
         runs-on: ${{ matrix.os }}
 
         strategy:
@@ -79,11 +79,6 @@ jobs:
                 - compiler: clang
                   cc: clang
                   cxx: clang++
-
-                - os: macos-latest
-                  compiler: gcc
-                  cc: gcc-14
-                  cxx: g++-14
 
                 - os: windows-latest
                   generator: -G "MinGW Makefiles"
@@ -105,21 +100,32 @@ jobs:
                   sanitizers: "address,undefined"
                 - os: macos-latest
                   compiler: gcc
-                  sanitizers: "address,undefined"
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
+
+            - name: MacOS packages installation
+              if: ${{ matrix.os == 'macos-latest' }}
+              run: |
+                  brew untap aws/tap
+                  brew update
+                  brew install automake texinfo
 
             - name: Run Cmake
               run: >
-                cmake -B ${{github.workspace}}/build
+                cmake -B ./build
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
                 -DCMAKE_C_COMPILER=${{matrix.cc}}
                 -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
                 -DUSE_SANITIZER='${{matrix.sanitizers}}'
+                -DBUILD_UNIT_TESTS=ON
+                -DBUILD_END2END_TESTS=OFF
                 ${{matrix.generator}}
 
             - name: Build
-              run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+              run: cmake --build ./build --config ${{matrix.build_type}}
+
+            - name: Run unit tests
+              run: ctest --test-dir ./build -C ${{matrix.build_type}} --output-on-failure --parallel
 
