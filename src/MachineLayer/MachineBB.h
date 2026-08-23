@@ -77,8 +77,8 @@ public:
     void updateReferenceName();
     void print(std::ostream &OS, bool DebugData = false) const;
 
-    std::list<MachineBB *> getSuccessors() const;
-    std::list<MachineBB *> getPredecessors() const;
+    const std::list<MachineBB *>& getSuccessors() const;
+    const std::list<MachineBB *>& getPredecessors() const;
 
     iterator begin();
     iterator end();

@@ -70,25 +70,14 @@ public:
     bool           empty()  const { return Instructions.empty(); }
 
     void addPredecessor(BasicBlock* BB) { Predecessors.insert(Predecessors.end(), BB); }
-    bb_storage getPredecessors() const { return Predecessors; }
+    const bb_storage& getPredecessors() const { return Predecessors; }
 
-    bb_iterator       predecessorsBegin()        { return Predecessors.begin(); }
-    bb_iterator       predecessorsEnd()          { return Predecessors.end(); }
-    bb_const_iterator predecessorsCBegin() const { return Predecessors.cbegin(); }
-    bb_const_iterator predecessorsCEnd()   const { return Predecessors.cend(); }
-
-    std::list<BasicBlock*> getSuccessors() const {
-        std::list<BasicBlock*> Successors;
-        if (Instructions.empty())
-            return Successors;
-
-        for (auto& Succ: std::prev(Instructions.end())->getBrDstBB())
-            Successors.push_back(Succ);
-        return Successors;
-    }
+    void addSuccessor(BasicBlock* BB) { Successors.insert(Successors.end(), BB); }
+    const bb_storage& getSuccessors() const { return Successors; }
 
 private:
     instructions_storage Instructions;
+    bb_storage Successors;
     bb_storage Predecessors;
     Function* ParentFunction;
     std::string Name;

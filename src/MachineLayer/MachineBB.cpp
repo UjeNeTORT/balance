@@ -205,8 +205,8 @@ void MachineBB::print(std::ostream &OS, bool DebugData) const {
     }
 }
 
-std::list<MachineBB *> MachineBB::getSuccessors() const { return Successors; }
-std::list<MachineBB *> MachineBB::getPredecessors() const { return Predecessors; }
+const std::list<MachineBB *>& MachineBB::getSuccessors() const { return Successors; }
+const std::list<MachineBB *>& MachineBB::getPredecessors() const { return Predecessors; }
 
 MachineBB::iterator MachineBB::begin() { return Instructions.begin(); }
 MachineBB::iterator MachineBB::end()   { return Instructions.end(); }
