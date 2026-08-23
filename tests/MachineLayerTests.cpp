@@ -1,20 +1,21 @@
-#include "MIROpcodes.h"
-#include "MachineInst.h"
-#include "MachineOperand.h"
-#include "MachineBB.h"
-#include "MachineFunction.h"
-#include "PassManager.h"
+#include <gtest/gtest.h>
 
-#include "MIRPasses/VerifierPass.h"
-#include "MIRPasses/LivenessAnalysis.h"
-#include "MIRPasses/PhiElimination.h"
-#include "MIRPasses/LinearScanRAL.h"
-#include "MIRPasses/DCE.h"
+#include "MachineLayer/MIROpcodes.h"
+#include "MachineLayer/MachineInst.h"
+#include "MachineLayer/MachineOperand.h"
+#include "MachineLayer/MachineBB.h"
+#include "MachineLayer/MachineFunction.h"
+#include "MachineLayer/PassManager.h"
+
+#include "MachineLayer/MIRPasses/VerifierPass.h"
+#include "MachineLayer/MIRPasses/LivenessAnalysis.h"
+#include "MachineLayer/MIRPasses/PhiElimination.h"
+#include "MachineLayer/MIRPasses/LinearScanRAL.h"
+#include "MachineLayer/MIRPasses/DCE.h"
 
 #include "RISCV/RISCVRegisters.h"
 
 #include <iostream>
-#include <memory>
 
 using namespace Balance;
 
@@ -180,7 +181,7 @@ MachineFunction createTestMF() {
     return MFMain;
 }
 
-int main() {
+TEST(Phi, Swap) {
     MachineFunction TestMF = createPhiSwapTestMF();
 
     PassManager PM;
@@ -206,6 +207,4 @@ int main() {
     PMPhi.run(TestMF);
 
     TestMF.print(std::cout);
-
-    return 0;
 }

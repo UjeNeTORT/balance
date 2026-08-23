@@ -1,4 +1,5 @@
 #include <exception>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -22,6 +23,7 @@ using namespace AST;
 int main(int argc, char** argv) {
     bool dotOutput = false;
     std::string fileName;
+    std::string outFileName;
 
     int argIndex = 1;
 
@@ -31,7 +33,10 @@ int main(int argc, char** argv) {
     }
 
     if (argIndex < argc)
-        fileName = argv[argIndex];
+        fileName = argv[argIndex++];
+
+    if (argIndex < argc)
+        outFileName = argv[argIndex++];
 
     Balance::Driver driver;
 
@@ -74,16 +79,20 @@ int main(int argc, char** argv) {
     PM.registerPass<VerifierPass>();
     PM.registerPass<LinearScanRAL>();
 
-    for (auto& Func: Mir)
-        Func.print(std::cout);
-
-    for (auto& Func: Mir)
-        PM.run(Func);
+    auto* Main = Mir.findFunction("main");
 
     for (auto& Func: Mir)
         Func.print(std::cout);
 
-    AsmEmitter(Mir, std::cout).emit();
+    PM.run(*Main);
+
+    for (auto& Func: Mir)
+        Func.print(std::cout);
+
+    std::ofstream OS;
+    OS.open(outFileName);
+    AsmEmitter(Mir, OS).emit();
+    OS.close();
 
     return 0;
 }

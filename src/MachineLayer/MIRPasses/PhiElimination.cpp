@@ -31,11 +31,11 @@ bool PhiElimination::run(MachineFunction &MF) {
                 return MI.getOpcode() == RISCVOpcode::PHI;
             });
 
-            if (InstPHI == MBB.end()) continue;
+            if (InstPHI == MBB.end()) break;
 
             prepareEliminatePHI(MBB, *InstPHI, CopyCandidates);
             MBB.eraseMI(InstPHI);
-        } while (InstPHI != MBB.end());
+        } while (1);
     }
 
     // avoid situation when two PHIs swap two regs:

@@ -1,7 +1,7 @@
 #ifndef MIR_PASSES_VERIFIER_PASS_H
 #define MIR_PASSES_VERIFIER_PASS_H
 
-#include "MachineFunction.h"
+#include "MachineLayer/MachineFunction.h"
 #include "Pass.h"
 
 #include <iostream>
