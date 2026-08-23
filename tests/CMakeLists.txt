@@ -7,22 +7,52 @@ if (BUILD_END2END_TESTS)
 endif()
 
 if(BUILD_UNIT_TESTS)
-    add_executable(unit_tests
+    CPMAddPackage(
+        NAME GTest
+        GITHUB_REPOSITORY google/googletest
+        VERSION 1.17.0
+        OPTIONS
+            "gtest_force_shared_crt ON" # Avoids MSVC runtime conflicts
+    )
+    include(GoogleTest)
+
+    add_executable(FrontendTests
         FrontendTests.cpp
     )
 
-    target_link_libraries(unit_tests PRIVATE
+    target_link_libraries(FrontendTests PRIVATE
         Frontend
-        GTest::gtest
-        GTest::gtest_main
+        GTest::gtest GTest::gtest_main
     )
 
-    target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src)
-    target_compile_options(unit_tests PRIVATE ${BALANCE_COMPILE_OPTIONS})
+    target_include_directories(FrontendTests PRIVATE ${PROJECT_SOURCE_DIR}/src)
+    target_compile_options(FrontendTests PRIVATE ${BALANCE_COMPILE_OPTIONS})
 
-    target_compile_definitions(unit_tests PRIVATE
+    target_compile_definitions(FrontendTests PRIVATE
         TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     )
 
-    gtest_discover_tests(unit_tests TEST_PREFIX "Frontend.")
+    gtest_discover_tests(
+        FrontendTests 
+        TEST_PREFIX "Frontend."
+        PROPERTIES LABELS unit LABELS frontend
+    )
+
+    add_executable(MachineLayerTests
+        MachineLayerTests.cpp
+    )
+
+    target_link_libraries(MachineLayerTests PRIVATE
+        MachineLayer MIRInfo MIRPasses Utils RISCV Analysis
+        GTest::gtest GTest::gtest_main
+    )
+
+    target_include_directories(MachineLayerTests PRIVATE ${PROJECT_SOURCE_DIR}/src)
+    target_compile_options(MachineLayerTests PRIVATE ${BALANCE_COMPILE_OPTIONS})
+
+    gtest_discover_tests(
+        MachineLayerTests
+        TEST_PREFIX "MachineLayer."
+        PROPERTIES LABELS unit LABELS machine
+    )
 endif()

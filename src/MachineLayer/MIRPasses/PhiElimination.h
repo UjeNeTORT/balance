@@ -2,8 +2,8 @@
 #define MIR_PASSES_PHI_ELIMINATION_H
 
 #include "Pass.h"
-#include "MachineBB.h"
-#include "MachineFunction.h"
+#include "MachineLayer/MachineBB.h"
+#include "MachineLayer/MachineFunction.h"
 
 #include <string>
 #include <list>

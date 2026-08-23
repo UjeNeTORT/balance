@@ -9,7 +9,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/tools.cmake)
-include(cmake/third_party.cmake)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, default to Release")
