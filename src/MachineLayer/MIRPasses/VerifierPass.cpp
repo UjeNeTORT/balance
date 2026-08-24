@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <unordered_set>
 
 using namespace Balance;
 
@@ -89,11 +90,29 @@ bool VerifierPass::verifyMBB(MachineFunction &MF, std::string &Msg) const {
 
     bool Fail = false;
     for (const MachineBB &MBB : MF) {
+        std::unordered_set<const MachineBB*> InInstrSucc;
+        const auto &Succ = MBB.getSuccessors();
         for (const MachineInst &MI : MBB) {
             if (MI.getParent() != &MBB) {
                 Msg += "\"" + MI.getAsmString() + "\" does not point to " + std::string(MBB.getReferenceName()) + "\n";
                 Fail = true;
             }
+
+            if (isControlTransferInst(MI.getOpcode())) {
+                for (const auto &MO : MI.getOperands()) {
+                    if (!MO.isMBB()) continue;
+                    InInstrSucc.insert(MO.getMBB());
+                    if (std::find(Succ.begin(), Succ.end(), MO.getMBB()) == Succ.end()) {
+                        Msg += "\"" + MI.getAsmString() + "\" destination not found in MBB successors\n";
+                        Fail = true;
+                    }
+                }
+            }
+        }
+        if (InInstrSucc.size() != Succ.size() ||
+            !std::is_permutation(Succ.begin(), Succ.end(), InInstrSucc.begin())) {
+            Msg += std::string(MBB.getReferenceName()) + " has invalid successors list\n";
+            Fail = true;
         }
     }
     return Fail;

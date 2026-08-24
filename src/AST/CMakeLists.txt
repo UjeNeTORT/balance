@@ -9,6 +9,6 @@ add_library(BalanceAST STATIC
     IRBuilder.cpp
 )
 
-target_link_libraries(BalanceAST PRIVATE Utils)
+target_link_libraries(BalanceAST PRIVATE Utils UniversalAnalysis IR)
 
 target_include_directories(BalanceAST PUBLIC ${CMAKE_SOURCE_DIR}/src)

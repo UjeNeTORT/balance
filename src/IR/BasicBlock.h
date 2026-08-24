@@ -32,20 +32,7 @@ public:
     BasicBlock(BasicBlock&&) = delete;
     BasicBlock& operator=(BasicBlock&&) = delete;
 
-    void verify() const {
-        if (Instructions.empty())
-            return;
-
-        bool IsTerminal = false;
-        for (const auto& Instr: Instructions) {
-            Instr.verify();
-            if (IsTerminal)
-                throw Instruction::verify_error("Terminal instruction not in the end of basic block");
-            IsTerminal = Instr.isTerminal();
-        }
-        if (!IsTerminal)
-            throw Instruction::verify_error("No terminal instruction in the end of basic block");
-    }
+    void verify() const;
 
     Instruction& insertInstruction(iterator It, Opcodes Opcode, std::optional<SourceInfo> SrcInf = std::nullopt) {
         auto Instr = Instruction(Opcode, this, SrcInf);

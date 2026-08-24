@@ -2,6 +2,7 @@
 
 #include "AST/ConstantFolding.h"
 #include "AST/Node.h"
+#include "UniversalAnalysis/RPOTraversal.h"
 #include "Utils/Utils.h"
 #include "IR/Operand.h"
 #include "IR/Function.h"
@@ -218,11 +219,32 @@ VirtRegister IRBuilder::evalArrayOffset(const Variables::Variable& Var, const st
     return OffsetReg;
 }
 
+IR IRBuilder::build(const Ast& Tree) && {
+    Tree.getCompUnit()->accept(*this);
+    buildSuccPred();
+    return std::move(Ir);
+}
+
 void IRBuilder::visit(const CompUnitNode& node) {
     VariablesScoped Scope(Vars);
 
     for (const auto* Item: node.getItems())
         Item->accept(*this);
+}
+
+void IRBuilder::buildSuccPred() {
+    for (auto& Func: Ir) {
+        for (auto* BB: RPOTraversal<BasicBlock, Function>(Func).getRPO()) {
+            for (const auto& Inst: *BB) {
+                if (Inst.getOpcode() == Opcodes::BR) {
+                    for (auto* BBDst: Inst.getBrDstBB()) {
+                        BB->addSuccessor(BBDst);
+                        BBDst->addPredecessor(BB);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void IRBuilder::visit(const FuncDefNode& node) {
@@ -244,6 +266,9 @@ void IRBuilder::visit(const FuncDefNode& node) {
 
     for (auto& Var: Scope.getScopeVars())
         FuncDef.addDst(Var.second.getReg());
+
+    auto& EntryBlockBR = Ir.addInstruction(Opcodes::BR);
+    EntryBlockBR.addBrDst(&*std::prev(Ir.getLastFunction()->end()));
 
     node.getBody()->accept(*this);
 
