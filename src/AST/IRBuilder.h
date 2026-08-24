@@ -72,6 +72,11 @@ public:
     VariablesScoped(Variables& VarsRef) : Vars(VarsRef), ScopeIndex(Vars.enterScope()) {}
     ~VariablesScoped() { Vars.leaveScope(); }
 
+    VariablesScoped(const VariablesScoped&) = delete;
+    VariablesScoped& operator=(const VariablesScoped&) = delete;
+    VariablesScoped(VariablesScoped&&) = delete;
+    VariablesScoped& operator=(VariablesScoped&&) = delete;
+
     const auto& getScopeVars() const { return Vars.getScopes()[ScopeIndex]; }
 
 private:
@@ -83,10 +88,7 @@ class IRBuilder final: public AST::Visitor {
 public:
     explicit IRBuilder();
 
-    IR build(const Ast& Tree)&& {
-        Tree.getCompUnit()->accept(*this);
-        return std::move(Ir);
-    }
+    IR build(const Ast& Tree) &&;
 
     virtual void visit(const CompUnitNode& node) override;
     virtual void visit(const VarDeclNode& node) override;
@@ -111,6 +113,8 @@ public:
 private:
     void binaryOpVisitCondition(const BinaryOpNode& node);
     void binaryOpVisitExpression(const BinaryOpNode& node);
+
+    void buildSuccPred();
 
     IR Ir;
     Variables Vars;

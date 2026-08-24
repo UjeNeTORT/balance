@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(IR STATIC
     Instruction.cpp
+    BasicBlock.cpp
+    Function.cpp
     IR.cpp
 )
 

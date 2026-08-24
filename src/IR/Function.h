@@ -52,20 +52,7 @@ public:
         return Instr;
     }
 
-    void verify() const {
-        if (IsDecl) {
-            assert(BasicBlocks.empty());
-            return;
-        }
-        assert(!BasicBlocks.empty());
-
-        if (entryBB() == nullptr ||
-            entryBB()->begin()->getOpcode() != Opcodes::FUNC_DEF)
-            throw Instruction::verify_error("Function's first basic block must begin with FUNC_DEF");
-
-        for (const auto& BB: BasicBlocks)
-            BB.verify();
-    }
+    void verify() const;
 
     BasicBlock* entryBB() {
         if (BasicBlocks.empty())

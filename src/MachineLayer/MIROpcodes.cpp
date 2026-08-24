@@ -215,7 +215,7 @@ static const MIRInstrInfo MIRInstructionDB[] = {
     { "C_SWSP",        false, 0, 2, 2 },
     { "C_SDSP",        false, 0, 2, 2 },
     { "CALL",          false, 1, -1, -1 },
-    { "RET",           true,  0, -1, -1 },
+    { "RET",           false, 0, -1, -1 },
     { "LI",            false, 1, 0, 2 },
     { "LA",            false, 1, 0, 2 },
     { "PHI",           false, 1, -1, -1, false },
