@@ -96,7 +96,6 @@ private:
     void expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool);
     void spillAtInterval(const LiveInterval &LI);
     void applyRegMapping(MachineFunction &MF);
-    void allocateSpillSpace(MachineFunction &MF);
     Register getFreeSpillReservedReg();
     void resetSpillReservedRegs();
     UniqueStorage getStackSlot() const;

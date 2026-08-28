@@ -131,7 +131,6 @@ bool LinearScanRAL::run(MachineFunction &MF) {
     }
 
     applyRegMapping(MF);
-    allocateSpillSpace(MF);
 
     #if 0
     for (auto RM : RegMapping) {
@@ -169,7 +168,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                     MBB->insertMI(MI.getIterator(), RISCVOpcode::LW)
                         .addReg(SpillTmp)
                         .addReg(RISCV::RISCVRegister::SP)
-                        .addImm(US.getStackId() * 4);
+                        .addImm(MF.getFrameSize() + US.getStackId() * 4);
                 }
 
                 // insert spill after MI if register was not a use
@@ -181,7 +180,7 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
                     continue;
                 MBB->insertMI(std::next(MI.getIterator()), RISCVOpcode::SW)
                     .addReg(RISCV::RISCVRegister::SP)
-                    .addImm(US.getStackId() * 4)
+                    .addImm(MF.getFrameSize() + US.getStackId() * 4)
                     .addReg(SpillTmp);
             } else {
                 unreachable("what are we even doing here?");
@@ -190,14 +189,8 @@ void LinearScanRAL::applyRegMapping(MachineFunction &MF) {
 
         resetSpillReservedRegs();
     }
-}
 
-void LinearScanRAL::allocateSpillSpace(MachineFunction &MF) {
-    MachineBB &Entry = *MF.entryBB();
-    Entry.insertMI(Entry.begin(), RISCVOpcode::ADDI)
-        .addReg(RISCV::RISCVRegister::SP)
-        .addReg(RISCV::RISCVRegister::SP)
-        .addImm(-(int64_t)StackSlotCnt * 4);
+    MF.setFrameSize(MF.getFrameSize() + 4 * StackSlotCnt);
 }
 
 void LinearScanRAL::expireOldIntervals(const LiveInterval &LI, std::unordered_set<Register> &Pool) {

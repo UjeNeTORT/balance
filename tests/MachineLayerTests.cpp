@@ -34,7 +34,7 @@ MachineFunction createPhiSwapTestMF() {
         return a;
     }
     */
-    MachineFunction MF("phi_swap_test");
+    MachineFunction MF("phi_swap_test", 0);
 
     MachineBB *MBB0_preheader = MF.createMBB("preheader");
     MachineBB *MBB1_loop_header = MF.createMBB("loop_header");
@@ -110,7 +110,7 @@ MachineFunction createPhiSwapTestMF() {
 }
 
 MachineFunction createDiamondTestMF() {
-    MachineFunction MFMain("main_diamond");
+    MachineFunction MFMain("main_diamond", 0);
 
     MachineBB *MBB0 = MFMain.createMBB("entry");
     MachineBB *MBB1 = MFMain.createMBB("if.true");
@@ -158,7 +158,7 @@ MachineFunction createDiamondTestMF() {
 }
 
 MachineFunction createTestMF() {
-    MachineFunction MFMain("main");
+    MachineFunction MFMain("main", 0);
 
     MachineBB *MBB0 = MFMain.createMBB("entry");
     MachineBB *MBB1 = MFMain.createMBB("exit");

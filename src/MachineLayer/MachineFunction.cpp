@@ -10,10 +10,11 @@ namespace Balance {
 
 int MachineFunction::getNewMBBIdx() { return MBBIdx++; }
 
-MachineFunction::MachineFunction(const std::string &Name, bool IsDeclaration) :
-    Name(Name), IsDecl(IsDeclaration) {}
+MachineFunction::MachineFunction(const std::string &Name, size_t StackFrameSize, bool IsDeclaration) :
+    Name(Name), FrameSize(StackFrameSize), IsDecl(IsDeclaration) {}
 
 std::string_view MachineFunction::getName() const { return Name; }
+size_t MachineFunction::getFrameSize() const { return FrameSize; }
 bool MachineFunction::isDecl() const { return IsDecl; }
 
 const MachineBB *MachineFunction::entryBB() const {

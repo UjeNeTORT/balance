@@ -27,7 +27,7 @@ void createBinaryOp(MachineBB* MIRBlock, RISCVOpcode IntOpcode, RISCVOpcode Floa
         MIRBlock->createMI(FloatOpcode).addReg(Dst[0]).addReg(Src[0]).addReg(Src[1]);
 }
 
-size_t createFuncDef(MachineBB* MIRBlock, int FrameSize, const std::vector<VirtRegister>& Dst) {
+void createFuncDef(MachineBB* MIRBlock, const std::vector<VirtRegister>& Dst) {
     size_t IRegCnt = 0;
     size_t FRegCnt = 0;
     size_t StackCnt = 0;
@@ -51,11 +51,7 @@ size_t createFuncDef(MachineBB* MIRBlock, int FrameSize, const std::vector<VirtR
         }
     }
 
-    MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
-                                  .addImm(-static_cast<int64_t>(FrameSize)); // TODO: check overflow
     MIRBlock->createMI(RVOp::ADDI).addReg(Dst[0]).addReg(RVReg::SP).addImm(0);
-
-    return FrameSize;
 }
 
 void createCall(MachineBB* MIRBlock, MachineFunction* MFunc, const std::vector<VirtRegister>& Src, const std::vector<VirtRegister>& Dst) {
@@ -153,8 +149,8 @@ MIR MIRBuilder::build() && {
     }
 
     for (auto& Func: IntermRepr)
-        FuncRegistry[&Func] = MachineIR.addFunction(MachineFunction(
-                                                        std::string(Func.getName()), Func.isDecl()));
+        FuncRegistry[&Func] = MachineIR.addFunction(MachineFunction(std::string(Func.getName()),
+                                                                    Func.getFrameSize(), Func.isDecl()));
 
     auto IRIt = IntermRepr.begin();
     auto MIRIt = MachineIR.begin();
@@ -266,9 +262,6 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                         Ret.addReg(RVReg::FA0);
                     }
                 }
-
-                MIRBlock->createMI(RVOp::ADDI).addReg(RVReg::SP).addReg(RVReg::SP)
-                                              .addImm(static_cast<int64_t>(IRBlock->getParentFunction()->getFrameSize())); // TODO: check overflow
                 MIRBlock->insertMI(std::move(Ret));
             } break;
             case Opcodes::BR:
@@ -305,7 +298,7 @@ void MIRBuilder::buildBasicBlock(BasicBlock* IRBlock, MachineBB* MIRBlock,
                                              .addReg(Src[1]).addMBB(BBRegistry[*Src[1].DefBlock]);
                 break;
             case Opcodes::FUNC_DEF:
-                createFuncDef(MIRBlock, IRBlock->getParentFunction()->getFrameSize(), Dst); break;
+                createFuncDef(MIRBlock, Dst); break;
 
             default:
                 assert(0);
