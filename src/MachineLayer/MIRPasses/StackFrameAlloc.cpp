@@ -9,7 +9,7 @@
 using namespace Balance;
 
 bool StackFrameAlloc::run(MachineFunction &MF) {
-    size_t FrameSize = MF.getFrameSize();
+    size_t FrameSize = (MF.getFrameSize() + 15) & ~15; //< align up to 16 multiplier
     if (FrameSize == 0)
         return false;
 
