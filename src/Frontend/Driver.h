@@ -50,7 +50,7 @@ class Driver final
 
     const AST::CompUnitNode* getCompUnit() const { return Tree.getCompUnit(); }
 
-    int parse(const std::string& fileName);
+    void parse(const std::string& fileName);
 
     void foldConstants() {
         Tree = AST::AstConstantFolder().fold(std::move(Tree));

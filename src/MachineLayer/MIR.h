@@ -48,6 +48,8 @@ public:
         return nullptr;
     }
 
+    void runPasses();
+
 private:
     FunctionStorage Functions;
     MachineGDataStorage GData;

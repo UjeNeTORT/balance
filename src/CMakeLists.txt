@@ -10,7 +10,13 @@ add_subdirectory(Frontend)
 add_subdirectory(Grammar)
 add_subdirectory(IR2MIR)
 
-add_executable(balance main.cpp)
+CPMAddPackage(
+    NAME cxxopts
+    GITHUB_REPOSITORY jarro2783/cxxopts
+    GIT_TAG v3.3.1
+)
 
-target_link_libraries(balance Frontend Grammar BalanceAST Utils IR IR2MIR MachineLayer MIRPasses Analysis MIRInfo)
-target_include_directories(balance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable(balancc main.cpp)
+
+target_link_libraries(balancc cxxopts Frontend Grammar BalanceAST Utils IR IR2MIR MachineLayer MIRPasses Analysis MIRInfo)
+target_include_directories(balancc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

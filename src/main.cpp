@@ -1,4 +1,6 @@
+#include <cxxopts.hpp>
 #include <exception>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -9,88 +11,65 @@
 #include "IR2MIR/MIRBuilder.h"
 
 #include "MachineLayer/AsmEmitter.h"
-#include "MachineLayer/PassManager.h"
-
-#include "MachineLayer/MIRPasses/VerifierPass.h"
-#include "MachineLayer/MIRPasses/LivenessAnalysis.h"
-#include "MachineLayer/MIRPasses/PhiElimination.h"
-#include "MachineLayer/MIRPasses/LinearScanRAL.h"
-#include "MachineLayer/MIRPasses/DCE.h"
 
 using namespace Balance;
 using namespace AST;
 
 int main(int argc, char** argv) {
-    bool dotOutput = false;
-    std::string fileName;
-    std::string outFileName;
+    cxxopts::Options Options("balancc", "Balance compiler");
 
-    int argIndex = 1;
+    Options.add_options()
+        ("S,asm", "Generate assembly", cxxopts::value<bool>()->default_value("true"))
+        ("o,output", "Output file path", cxxopts::value<std::filesystem::path>()->
+                                                  default_value("a.s"))
+        ("d,dot", "Enable dot output")
+        ("h,help", "Print help")
+    ;
 
-    if (argIndex < argc && std::string(argv[argIndex]) == "--dot") {
-        dotOutput = true;
-        ++argIndex;
+    Options.positional_help("<file>");
+    Options.show_positional_help();
+    auto OptRes = Options.parse(argc, argv);
+
+    if (OptRes.count("help")) {
+        std::cout << Options.help() << std::endl;
+        return 0;
     }
 
-    if (argIndex < argc)
-        fileName = argv[argIndex++];
+    const auto& OptUnmatched = OptRes.unmatched();
 
-    if (argIndex < argc)
-        outFileName = argv[argIndex++];
-
-    Balance::Driver driver;
-
-    int status = 0;
-
-    try {
-        // No file name: read from stdin.
-        status = driver.parse(fileName);
-    } catch (std::exception& e) {
-        std::cerr << e.what() << '\n';
+    if (OptUnmatched.size() != 1) {
+        std::cout << "error: no input file or too many given" << std::endl;
         return 1;
     }
 
-    if (status != 0)
-        return status;
+    Driver Driver;
 
-    driver.foldConstants();
+    Driver.parse(OptUnmatched[0]);
 
-    if (dotOutput) {
-        Balance::AST::AstDotDumper dumper(std::cout);
-        dumper.dump(*driver.getCompUnit());
-    } else {
-        Balance::AST::AstDumper dumper(std::cout);
-        driver.getCompUnit()->accept(dumper);
-    }
+    Driver.foldConstants();
 
-    IR Ir = driver.buildIR();
+    Balance::AST::AstDotDumper Dumper(std::cout);
+    if (OptRes.count("dot"))
+        Dumper.dump(*Driver.getCompUnit());
+    else
+        Driver.getCompUnit()->accept(Dumper);
+
+    IR Ir = Driver.buildIR();
 
     Ir.verify();
 
     MIR Mir = MIRBuilder(std::move(Ir)).build();
 
-    PassManager PM;
-    PM.registerPass<VerifierPass>();
-    PM.registerPass<DeadCodeElimination>();
-    PM.registerPass<VerifierPass>();
-    PM.registerPass<PhiElimination>();
-    PM.registerPass<VerifierPass>();
-    PM.registerPass<LivenessAnalysis>();
-    PM.registerPass<VerifierPass>();
-    PM.registerPass<LinearScanRAL>();
-
-    auto* Main = Mir.findFunction("main");
-
     for (auto& Func: Mir)
         Func.print(std::cout);
 
-    PM.run(*Main);
+    Mir.runPasses();
 
     for (auto& Func: Mir)
         Func.print(std::cout);
 
     std::ofstream OS;
-    OS.open(outFileName);
+    OS.open(OptRes["output"].as<std::filesystem::path>());
     AsmEmitter(Mir, OS).emit();
     OS.close();
 
