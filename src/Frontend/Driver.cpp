@@ -1,11 +1,12 @@
 #include "Frontend/Driver.h"
 
 #include <stdexcept>
+#include <string>
 
 namespace Balance
 {
 
-int Driver::parse(const std::string& fileName)
+void Driver::parse(const std::string& fileName)
 {
     File = fileName;
 
@@ -19,7 +20,8 @@ int Driver::parse(const std::string& fileName)
 
     scanEnd();
 
-    return status;
+    if (status != 0)
+        throw std::runtime_error("Frontend error: " + std::to_string(status));
 }
 
 void Driver::scanBegin()

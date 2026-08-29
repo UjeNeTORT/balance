@@ -19,9 +19,7 @@ std::string dumpFile(const std::string& sourceName)
 {
     Balance::Driver driver;
 
-    int status = driver.parse(dataPath(sourceName));
-
-    EXPECT_EQ(status, 0) << "parse failed for " << sourceName;
+    EXPECT_NO_THROW(driver.parse(dataPath(sourceName))) << "parse failed for " << sourceName;
 
     std::stringstream result;
 
@@ -53,18 +51,9 @@ void runFailTest(const std::string& name)
 {
     Balance::Driver driver;
 
-    int status = 0;
-
-    try
-    {
-        status = driver.parse(dataPath(name + ".sy"));
-    }
-    catch (std::exception&)
-    {
-        status = 1;
-    }
-
-    EXPECT_NE(status, 0) << name << " should fail to parse";
+    EXPECT_ANY_THROW({
+        driver.parse(dataPath(name + ".sy"));
+    }) << name << " should fail to parse";
 }
 
 } // namespace

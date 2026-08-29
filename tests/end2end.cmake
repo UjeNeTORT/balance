@@ -1,7 +1,7 @@
 
 include(test_lists.cmake)
 
-set(COMPILER ${CMAKE_BINARY_DIR}/bin/balance)
+set(COMPILER ${CMAKE_BINARY_DIR}/bin/balancc)
 set(BIN_DIR ${CMAKE_BINARY_DIR})
 set(BUILD_DEPS ${COMPILER} runtime/sylib.c runtime/sylib.h)
 

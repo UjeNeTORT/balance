@@ -5,6 +5,8 @@ set(TEST_LIST
     functional/03_arr_defn2
     functional/06_const_var_defn2
     functional/07_const_var_defn3
+    functional/09_func_defn
+    functional/10_var_defn_func
     functional/11_add2
     functional/12_addc
     functional/14_subc
@@ -22,6 +24,8 @@ set(TEST_LIST
     functional/47_hex_oct_add
     h_functional/00_comment2
     h_functional/01_multiple_returns
+    h_functional/05_param_name
+    h_functional/06_func_name
     h_functional/08_global_arr_init
 )
 
@@ -29,8 +33,6 @@ set(FAIL_TEST_LIST
     functional/04_arr_defn3
     functional/05_arr_defn4
     functional/08_const_array_defn
-    functional/09_func_defn
-    functional/10_var_defn_func
     functional/13_sub2
     functional/20_rem
     functional/21_if_test2
@@ -108,8 +110,6 @@ set(FAIL_TEST_LIST
     h_functional/02_ret_in_block
     h_functional/03_branch
     h_functional/04_break_continue
-    h_functional/05_param_name
-    h_functional/06_func_name
     h_functional/07_arr_init_nd
     h_functional/09_BFS
     h_functional/10_DFS
@@ -134,7 +134,7 @@ set(FAIL_TEST_LIST
     h_functional/29_long_line
     h_functional/30_many_dimensions
     h_functional/31_many_indirections
-    h_functional/32_many_params3
+    # h_functional/32_many_params3 // causes inf loop
     # h_functional/33_multi_branch // causes inf loop
     h_functional/34_multi_loop
     h_functional/35_math

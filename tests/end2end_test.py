@@ -6,10 +6,8 @@ def create_build_dir(build_dir, test):
     Path(build_dir + "/tests/" + test).parent.mkdir(parents=True, exist_ok=True)
 
 def compile(compiler, build_dir, test):
-    # compile_res = Popen([compiler, "-S", "-o", build_dir + "/tests/" + test + ".s",
-    #                                            "./" + test + ".sy"])
-    compile_res = Popen([compiler, "./" + test + ".sy",
-                                   build_dir + "/tests/" + test + ".s"])
+    compile_res = Popen([compiler, "-S", "-o", build_dir + "/tests/" + test + ".s",
+                                               "./" + test + ".sy"])
 
     compile_res.wait()
     if compile_res.returncode != 0:
@@ -70,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument("test", help="test name")
     parser.add_argument("--compile-only", action='store_true', default=False,
                                             help="compile and not run")
-    parser.add_argument("-c", "--compiler", default="../build/compiler",
+    parser.add_argument("-c", "--compiler", default="../build/balancc",
                                             help="compiler executable path")
     parser.add_argument("-l", "--asm-linker", default="riscv64-linux-gnu-gcc",
                                             help="assembler/linker executable path")
